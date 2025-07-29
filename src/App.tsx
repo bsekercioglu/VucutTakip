@@ -1,0 +1,60 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useUser } from './contexts/UserContext';
+import LandingPage from './pages/LandingPage';
+import RegisterPage from './pages/RegisterPage';
+import LoginPage from './pages/LoginPage';
+import Dashboard from './pages/Dashboard';
+import MeasurementsPage from './pages/MeasurementsPage';
+import ConsultantPage from './pages/ConsultantPage';
+import ProductsPage from './pages/ProductsPage';
+import ProfilePage from './pages/ProfilePage';
+
+const AppContent: React.FC = () => {
+  const { loading, isLoggedIn } = useUser();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    // Redirect to dashboard if user is logged in and on login/register page
+    if (isLoggedIn && (window.location.pathname === '/login' || window.location.pathname === '/register')) {
+      navigate('/dashboard');
+    }
+  }, [isLoggedIn, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/measurements" element={<MeasurementsPage />} />
+      <Route path="/consultant" element={<ConsultantPage />} />
+      <Route path="/products" element={<ProductsPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
+function App() {
+  return (
+    <Router>
+      <div className="min-h-screen bg-gray-50">
+        <AppContent />
+      </div>
+    </Router>
+  );
+}
+
+export default App;
