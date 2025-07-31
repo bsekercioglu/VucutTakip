@@ -220,17 +220,20 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return false;
   };
 
-  const updateDailyTracking = async (trackingId: string, tracking: Partial<DailyTracking>): Promise<boolean> => {
-    if (!user) return false;
-    
+ const updateDailyTracking = async (trackingId: string, tracking: Partial<DailyTracking>): Promise<boolean> => {
+  if (!user) return false;
+  try {
     const result = await firebaseService.updateDailyTracking(trackingId, tracking);
-    
     if (result.success) {
       await loadUserData(user.id);
       return true;
     }
     return false;
-  };
+  } catch (error) {
+    console.error('updateDailyTracking error:', error);
+    return false;
+  }
+};
 
   const deleteDailyTracking = async (trackingId: string): Promise<boolean> => {
     if (!user) return false;
