@@ -47,6 +47,7 @@ export const useUser = () => {
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [dailyRecords, setDailyRecords] = useState<DailyRecord[]>([]);
+  const [dailyTracking, setDailyTracking] = useState<DailyTracking[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
