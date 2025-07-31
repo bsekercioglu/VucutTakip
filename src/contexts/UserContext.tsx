@@ -206,6 +206,45 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return false;
   };
 
+  const addDailyTracking = async (tracking: Omit<DailyTracking, 'id' | 'userId'>): Promise<boolean> => {
+    if (!user) return false;
+    
+    const result = await firebaseService.addDailyTracking({
+      ...tracking,
+      userId: user.id
+    });
+    
+    if (result.success) {
+      await loadUserData(user.id);
+      return true;
+    }
+    return false;
+  };
+
+  const updateDailyTracking = async (trackingId: string, tracking: Partial<DailyTracking>): Promise<boolean> => {
+    if (!user) return false;
+    
+    const result = await firebaseService.updateDailyTracking(trackingId, tracking);
+    
+    if (result.success) {
+      await loadUserData(user.id);
+      return true;
+    }
+    return false;
+  };
+
+  const deleteDailyTracking = async (trackingId: string): Promise<boolean> => {
+    if (!user) return false;
+    
+    const result = await firebaseService.deleteDailyTracking(trackingId);
+    
+    if (result.success) {
+      await loadUserData(user.id);
+      return true;
+    }
+    return false;
+  };
+
   const addQuestion = async (question: Omit<Question, 'id' | 'userId' | 'timestamp' | 'status'>): Promise<boolean> => {
     if (!user) return false;
     
@@ -251,6 +290,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       login,
       loginWithGoogle,
       loginWithFacebook,
+      register,
+      registerUser,
       logout,
       addDailyRecord,
       addDailyTracking,
