@@ -16,27 +16,42 @@
 ### Security Rules
 Firestore Database > Rules bölümünde aşağıdaki kuralları ekleyin:
 
+**ÖNEMLİ: Detaylı kurulum için `FIREBASE_RULES_SETUP.md` dosyasını okuyun.**
+
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users collection
+    // Users collection - users can only read/write their own data
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Daily records
+    // Daily records - users can only access their own records
     match /dailyRecords/{recordId} {
       allow read, write: if request.auth != null && 
         (resource == null || resource.data.userId == request.auth.uid) &&
         (request.resource == null || request.resource.data.userId == request.auth.uid);
     }
     
-    // Questions
+    // Daily tracking - users can only access their own tracking data
+    match /dailyTracking/{trackingId} {
+      allow read, write: if request.auth != null && 
+        (resource == null || resource.data.userId == request.auth.uid) &&
+        (request.resource == null || request.resource.data.userId == request.auth.uid);
+    }
+    
+    // Questions - users can only access their own questions
     match /questions/{questionId} {
       allow read, write: if request.auth != null && 
         (resource == null || resource.data.userId == request.auth.uid) &&
         (request.resource == null || request.resource.data.userId == request.auth.uid);
+    }
+    
+    // Admin access for consultants (optional - for future use)
+    match /questions/{questionId} {
+      allow read, update: if request.auth != null && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
   }
 }
@@ -114,6 +129,7 @@ Firebase Console > Firestore Database > Indexes bölümünde aşağıdaki compos
    - Collection: `questions` 
    - Fields: `userId` (Ascending), `timestamp` (Descending)
 
+**ÖNEMLİ: Index'ler oluşturulduktan sonra "Building" durumundan "Enabled" durumuna geçmesini bekleyin. Bu işlem birkaç dakika sürebilir.**
 ## 4. Environment Variables
 
 `.env` dosyasında Firebase yapılandırma bilgilerinizi ekleyin:
