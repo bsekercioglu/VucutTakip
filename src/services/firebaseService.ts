@@ -112,7 +112,7 @@ export const updateUser = async (userId: string, userData: Partial<User>) => {
 };
 
 // Daily tracking operations
-export const addDailyTracking = async (tracking: Omit<DailyTracking, 'id'>) => {
+export const addDailyTracking = async (tracking: Omit<DailyTracking, 'id' | 'userId'>, userId: string) => {
   try {
     const trackingWithTimestamp = {
       ...tracking,
