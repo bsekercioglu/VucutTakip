@@ -44,6 +44,19 @@ export interface DailyRecord {
   musclePercentage?: number;
 }
 
+export interface DailyTracking {
+  id: string;
+  userId: string;
+  date: string;
+  weight: number;
+  bodyFat?: number;
+  waterPercentage?: number;
+  musclePercentage?: number;
+  notes?: string;
+  createdAt?: any;
+  updatedAt?: any;
+}
+
 export interface Question {
   id: string;
   userId: string;
@@ -94,6 +107,61 @@ export const updateUser = async (userId: string, userData: Partial<User>) => {
     return { success: true };
   } catch (error) {
     console.error('Error updating user:', error);
+    return { success: false, error };
+  }
+};
+
+// Daily tracking operations
+export const addDailyTracking = async (tracking: Omit<DailyTracking, 'id'>) => {
+  try {
+    const trackingWithTimestamp = {
+      ...tracking,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+    const docRef = await addDoc(collection(db, 'dailyTracking'), trackingWithTimestamp);
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    console.error('Error adding daily tracking:', error);
+    return { success: false, error };
+  }
+};
+
+export const getUserDailyTracking = async (userId: string): Promise<DailyTracking[]> => {
+  try {
+    const q = query(
+      collection(db, 'dailyTracking'),
+      where('userId', '==', userId),
+      orderBy('date', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyTracking));
+  } catch (error) {
+    console.error('Error getting daily tracking:', error);
+    return [];
+  }
+};
+
+export const updateDailyTracking = async (trackingId: string, trackingData: Partial<DailyTracking>) => {
+  try {
+    const updateData = {
+      ...trackingData,
+      updatedAt: serverTimestamp()
+    };
+    await updateDoc(doc(db, 'dailyTracking', trackingId), updateData);
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating daily tracking:', error);
+    return { success: false, error };
+  }
+};
+
+export const deleteDailyTracking = async (trackingId: string) => {
+  try {
+    await deleteDoc(doc(db, 'dailyTracking', trackingId));
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting daily tracking:', error);
     return { success: false, error };
   }
 };

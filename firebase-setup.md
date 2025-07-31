@@ -106,7 +106,11 @@ Firebase Console > Firestore Database > Indexes bölümünde aşağıdaki compos
    - Collection: `dailyRecords`
    - Fields: `userId` (Ascending), `date` (Ascending)
 
-2. **questions koleksiyonu için:**
+2. **dailyTracking koleksiyonu için:**
+   - Collection: `dailyTracking`
+   - Fields: `userId` (Ascending), `date` (Descending)
+
+3. **questions koleksiyonu için:**
    - Collection: `questions` 
    - Fields: `userId` (Ascending), `timestamp` (Descending)
 

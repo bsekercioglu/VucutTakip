@@ -10,13 +10,14 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider, facebookProvider } from '../config/firebase';
 import * as firebaseService from '../services/firebaseService';
-import { User, DailyRecord, Question } from '../services/firebaseService';
+import { User, DailyRecord, Question, DailyTracking } from '../services/firebaseService';
 
 import { useEffect } from 'react';
 
 interface UserContextType {
   user: User | null;
   dailyRecords: DailyRecord[];
+  dailyTracking: DailyTracking[];
   questions: Question[];
   isLoggedIn: boolean;
   loading: boolean;
@@ -26,6 +27,9 @@ interface UserContextType {
   register: (userData: Omit<User, 'id' | 'registrationDate'>) => Promise<boolean>;
   logout: () => Promise<void>;
   addDailyRecord: (record: Omit<DailyRecord, 'id' | 'userId'>) => Promise<boolean>;
+  addDailyTracking: (tracking: Omit<DailyTracking, 'id' | 'userId'>) => Promise<boolean>;
+  updateDailyTracking: (trackingId: string, tracking: Partial<DailyTracking>) => Promise<boolean>;
+  deleteDailyTracking: (trackingId: string) => Promise<boolean>;
   addQuestion: (question: Omit<Question, 'id' | 'userId' | 'timestamp' | 'status'>) => Promise<boolean>;
   updateProfile: (userData: Partial<User>) => Promise<boolean>;
   refreshData: () => Promise<void>;
@@ -103,6 +107,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(null);
         setIsLoggedIn(false);
         setDailyRecords([]);
+        setDailyTracking([]);
         setQuestions([]);
       }
       setLoading(false);
@@ -112,11 +117,13 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const loadUserData = async (userId: string) => {
-    const [records, userQuestions] = await Promise.all([
+    const [records, tracking, userQuestions] = await Promise.all([
       firebaseService.getUserDailyRecords(userId),
+      firebaseService.getUserDailyTracking(userId),
       firebaseService.getUserQuestions(userId)
     ]);
     setDailyRecords(records);
+    setDailyTracking(tracking);
     setQuestions(userQuestions);
   };
 
@@ -237,6 +244,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     <UserContext.Provider value={{
       user,
       dailyRecords,
+      dailyTracking,
       questions,
       isLoggedIn,
       loading,
@@ -247,6 +255,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       registerUser,
       logout,
       addDailyRecord,
+      addDailyTracking,
+      updateDailyTracking,
+      deleteDailyTracking,
       addQuestion,
       updateProfile,
       refreshData
