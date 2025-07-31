@@ -24,7 +24,6 @@ interface UserContextType {
   login: (email: string, password: string) => void;
   loginWithGoogle: () => Promise<boolean>;
   loginWithFacebook: () => Promise<boolean>;
-  register: (userData: Omit<User, 'id' | 'registrationDate'>) => Promise<boolean>;
   logout: () => Promise<void>;
   addDailyRecord: (record: Omit<DailyRecord, 'id' | 'userId'>) => Promise<boolean>;
   addDailyTracking: (tracking: Omit<DailyTracking, 'id' | 'userId'>) => Promise<boolean>;
@@ -252,8 +251,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       login,
       loginWithGoogle,
       loginWithFacebook,
-      register,
-      registerUser,
       logout,
       addDailyRecord,
       addDailyTracking,
