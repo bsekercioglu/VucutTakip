@@ -89,7 +89,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               thigh: 50
             },
             registrationDate: new Date().toISOString().split('T')[0],
-            photoURL: firebaseUser.photoURL || undefined
+            photoURL: firebaseUser.photoURL || null
           };
           
           const result = await firebaseService.createUser(firebaseUser.uid, newUser);
