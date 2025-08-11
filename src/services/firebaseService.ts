@@ -176,8 +176,18 @@ export const deleteDailyTracking = async (trackingId: string) => {
 export const addDailyRecord = async (record: Omit<DailyRecord, 'id'>) => {
   try {
     console.log('Firebase: Adding daily record:', record);
-    const recordWithTimestamp = {
+    
+    // Convert string values to numbers for consistency
+    const processedRecord = {
       ...record,
+      weight: typeof record.weight === 'string' ? parseFloat(record.weight) : record.weight,
+      bodyFat: record.bodyFat && typeof record.bodyFat === 'string' ? parseFloat(record.bodyFat) : record.bodyFat,
+      waterPercentage: record.waterPercentage && typeof record.waterPercentage === 'string' ? parseFloat(record.waterPercentage) : record.waterPercentage,
+      musclePercentage: record.musclePercentage && typeof record.musclePercentage === 'string' ? parseFloat(record.musclePercentage) : record.musclePercentage
+    };
+    
+    const recordWithTimestamp = {
+      ...processedRecord,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };

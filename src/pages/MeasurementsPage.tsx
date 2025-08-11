@@ -252,13 +252,6 @@ const MeasurementsPage: React.FC = () => {
           
           {dailyRecords && dailyRecords.length > 0 ? (
             <div className="overflow-x-auto">
-              <div className="p-4">
-                <p className="text-sm text-gray-600 mb-4">
-                {dailyRecords.length} kayıt bulundu
-                <br />
-                İlk kayıt: {JSON.stringify(dailyRecords[0], null, 2)}
-                </p>
-              </div>
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
@@ -297,7 +290,9 @@ const MeasurementsPage: React.FC = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {dailyRecords.slice().reverse().map((record, index) => {
                     const prevRecord = index < dailyRecords.length - 1 ? dailyRecords[dailyRecords.length - 2 - index] : null;
-                    const weightChange = prevRecord ? record.weight - prevRecord.weight : 0;
+                    const currentWeight = parseFloat(record.weight?.toString() || '0');
+                    const prevWeight = prevRecord ? parseFloat(prevRecord.weight?.toString() || '0') : 0;
+                    const weightChange = prevRecord ? currentWeight - prevWeight : 0;
                     
                     console.log('Rendering record:', record);
                     console.log('Record ID:', record.id, 'Date:', record.date, 'Weight:', record.weight);
@@ -308,16 +303,16 @@ const MeasurementsPage: React.FC = () => {
                           {record.date ? new Date(record.date).toLocaleDateString('tr-TR') : 'Tarih yok'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.weight ? `${record.weight} kg` : 'Ağırlık yok'}
+                          {record.weight ? `${parseFloat(record.weight.toString())} kg` : 'Ağırlık yok'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.bodyFat ? `${record.bodyFat}%` : '-'}
+                          {record.bodyFat ? `${parseFloat(record.bodyFat.toString())}%` : '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.waterPercentage ? `${record.waterPercentage}%` : '-'}
+                          {record.waterPercentage ? `${parseFloat(record.waterPercentage.toString())}%` : '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.musclePercentage ? `${record.musclePercentage}%` : '-'}
+                          {record.musclePercentage ? `${parseFloat(record.musclePercentage.toString())}%` : '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           {weightChange !== 0 && (
@@ -343,10 +338,6 @@ const MeasurementsPage: React.FC = () => {
               <p className="text-gray-600 mb-4">
                 İlk ölçümünüzü ekleyerek başlayın. 
                 {user && ` (User ID: ${user.id})`}
-                <br />
-                Debug: dailyRecords.length = {dailyRecords.length}
-                <br />
-                Records: {JSON.stringify(dailyRecords, null, 2)}
               </p>
               <button
                 onClick={() => setShowForm(true)}
