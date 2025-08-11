@@ -224,6 +224,43 @@ export const getUserDailyRecords = async (userId: string): Promise<DailyRecord[]
   }
 };
 
+export const updateDailyRecord = async (recordId: string, recordData: Partial<DailyRecord>) => {
+  try {
+    console.log('Firebase: Updating daily record:', recordId, recordData);
+    
+    // Convert string values to numbers for consistency
+    const processedRecord = {
+      ...recordData,
+      weight: recordData.weight && typeof recordData.weight === 'string' ? parseFloat(recordData.weight) : recordData.weight,
+      bodyFat: recordData.bodyFat && typeof recordData.bodyFat === 'string' ? parseFloat(recordData.bodyFat) : recordData.bodyFat,
+      waterPercentage: recordData.waterPercentage && typeof recordData.waterPercentage === 'string' ? parseFloat(recordData.waterPercentage) : recordData.waterPercentage,
+      musclePercentage: recordData.musclePercentage && typeof recordData.musclePercentage === 'string' ? parseFloat(recordData.musclePercentage) : recordData.musclePercentage
+    };
+    
+    const updateData = {
+      ...processedRecord,
+      updatedAt: serverTimestamp()
+    };
+    await updateDoc(doc(db, 'dailyRecords', recordId), updateData);
+    console.log('Firebase: Daily record updated successfully');
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating daily record:', error);
+    return { success: false, error };
+  }
+};
+
+export const deleteDailyRecord = async (recordId: string) => {
+  try {
+    console.log('Firebase: Deleting daily record:', recordId);
+    await deleteDoc(doc(db, 'dailyRecords', recordId));
+    console.log('Firebase: Daily record deleted successfully');
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting daily record:', error);
+    return { success: false, error };
+  }
+};
 // Questions operations
 export const addQuestion = async (question: Omit<Question, 'id'>) => {
   try {

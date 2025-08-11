@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Plus, Scale, Droplets, TrendingDown, TrendingUp } from 'lucide-react';
+import { Plus, Scale, Droplets, TrendingDown, TrendingUp, Edit3, Trash2, Save, X } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import Layout from '../components/Layout';
 
@@ -14,8 +14,9 @@ interface MeasurementFormData {
 }
 
 const MeasurementsPage: React.FC = () => {
-  const { user, dailyRecords, addDailyRecord, isLoggedIn, loading } = useUser();
+  const { user, dailyRecords, addDailyRecord, updateDailyRecord, deleteDailyRecord, isLoggedIn, loading } = useUser();
   const [showForm, setShowForm] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { register, handleSubmit, reset, formState: { errors } } = useForm<MeasurementFormData>({
@@ -24,6 +25,7 @@ const MeasurementsPage: React.FC = () => {
     }
   });
 
+  const { register: registerEdit, handleSubmit: handleSubmitEdit, reset: resetEdit, setValue, formState: { errors: editErrors } } = useForm<MeasurementFormData>();
   console.log('MeasurementsPage - User:', user?.id);
   console.log('MeasurementsPage - Daily Records:', dailyRecords);
   console.log('MeasurementsPage - Loading:', loading);
@@ -54,13 +56,24 @@ const MeasurementsPage: React.FC = () => {
   const onSubmit = async (data: MeasurementFormData) => {
     setIsSubmitting(true);
     try {
-      const success = await addDailyRecord({
-        date: data.date,
-        weight: data.weight,
-        bodyFat: data.bodyFat,
-        waterPercentage: data.waterPercentage,
-        musclePercentage: data.musclePercentage
-      });
+      let success;
+      if (editingRecord) {
+        success = await updateDailyRecord(editingRecord, {
+          date: data.date,
+          weight: data.weight,
+          bodyFat: data.bodyFat,
+          waterPercentage: data.waterPercentage,
+          musclePercentage: data.musclePercentage
+        });
+      } else {
+        success = await addDailyRecord({
+          date: data.date,
+          weight: data.weight,
+          bodyFat: data.bodyFat,
+          waterPercentage: data.waterPercentage,
+          musclePercentage: data.musclePercentage
+        });
+      }
       
       if (success) {
         reset({
@@ -71,24 +84,60 @@ const MeasurementsPage: React.FC = () => {
           musclePercentage: undefined
         });
         setShowForm(false);
-        alert('Ölçüm başarıyla kaydedildi!');
+        setEditingRecord(null);
+        alert(editingRecord ? 'Ölçüm başarıyla güncellendi!' : 'Ölçüm başarıyla kaydedildi!');
       } else {
-        alert('Ölçüm kaydedilirken hata oluştu. Lütfen tekrar deneyin.');
+        alert(editingRecord ? 'Ölçüm güncellenirken hata oluştu. Lütfen tekrar deneyin.' : 'Ölçüm kaydedilirken hata oluştu. Lütfen tekrar deneyin.');
       }
     } catch {
-      alert('Ölçüm kaydedilirken hata oluştu. Lütfen tekrar deneyin.');
+      alert(editingRecord ? 'Ölçüm güncellenirken hata oluştu. Lütfen tekrar deneyin.' : 'Ölçüm kaydedilirken hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleEdit = (record: any) => {
+    setEditingRecord(record.id);
+    setValue('date', record.date);
+    setValue('weight', record.weight);
+    setValue('bodyFat', record.bodyFat || '');
+    setValue('waterPercentage', record.waterPercentage || '');
+    setValue('musclePercentage', record.musclePercentage || '');
+    setShowForm(true);
+  };
+
+  const handleDelete = async (recordId: string) => {
+    if (window.confirm('Bu ölçümü silmek istediğinizden emin misiniz?')) {
+      const success = await deleteDailyRecord(recordId);
+      if (success) {
+        alert('Ölçüm başarıyla silindi!');
+      } else {
+        alert('Ölçüm silinirken hata oluştu. Lütfen tekrar deneyin.');
+      }
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingRecord(null);
+    setShowForm(false);
+    reset({
+      date: new Date().toISOString().split('T')[0],
+      weight: undefined,
+      bodyFat: undefined,
+      waterPercentage: undefined,
+      musclePercentage: undefined
+    });
+  };
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">Günlük Ölçümler</h1>
           <button
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              setEditingRecord(null);
+              setShowForm(true);
+            }}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
           >
             <Plus className="h-5 w-5 mr-2" />
@@ -98,7 +147,9 @@ const MeasurementsPage: React.FC = () => {
 
         {showForm && (
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Yeni Ölçüm Ekle</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {editingRecord ? 'Ölçümü Düzenle' : 'Yeni Ölçüm Ekle'}
+            </h3>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Tarih</label>
@@ -160,7 +211,7 @@ const MeasurementsPage: React.FC = () => {
               <div className="flex space-x-4">
                 <button
                   type="button"
-                  onClick={() => setShowForm(false)}
+                  onClick={handleCancelEdit}
                   className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
                 >
                   İptal
@@ -170,7 +221,7 @@ const MeasurementsPage: React.FC = () => {
                   disabled={isSubmitting}
                   className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
+                  {isSubmitting ? (editingRecord ? 'Güncelleniyor...' : 'Kaydediliyor...') : (editingRecord ? 'Güncelle' : 'Kaydet')}
                 </button>
               </div>
             </form>
@@ -194,6 +245,7 @@ const MeasurementsPage: React.FC = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Su Oranı</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kas Oranı</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Değişim</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -237,6 +289,24 @@ const MeasurementsPage: React.FC = () => {
                               {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} kg
                             </span>
                           )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleEdit(record)}
+                              className="text-blue-600 hover:text-blue-800 transition-colors"
+                              title="Düzenle"
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(record.id)}
+                              className="text-red-600 hover:text-red-800 transition-colors"
+                              title="Sil"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

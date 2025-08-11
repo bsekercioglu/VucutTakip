@@ -30,6 +30,8 @@ interface UserContextType {
   ) => Promise<boolean>;
   logout: () => Promise<void>;
   addDailyRecord: (record: Omit<DailyRecord, 'id' | 'userId'>) => Promise<boolean>;
+  updateDailyRecord: (recordId: string, record: Partial<DailyRecord>) => Promise<boolean>;
+  deleteDailyRecord: (recordId: string) => Promise<boolean>;
   addDailyTracking: (tracking: Omit<DailyTracking, 'id' | 'userId'>) => Promise<boolean>;
   updateDailyTracking: (trackingId: string, tracking: Partial<DailyTracking>) => Promise<boolean>;
   deleteDailyTracking: (trackingId: string) => Promise<boolean>;
@@ -286,6 +288,31 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return false;
   };
 
+  const updateDailyRecord = async (recordId: string, record: Partial<DailyRecord>) => {
+    if (!user) return false;
+    console.log('Updating daily record:', recordId, record);
+    const result = await firebaseService.updateDailyRecord(recordId, record);
+    console.log('Update daily record result:', result);
+    if (result.success) {
+      console.log('Daily record updated successfully, refreshing data...');
+      await loadUserData(user.id);
+      return true;
+    }
+    return false;
+  };
+
+  const deleteDailyRecord = async (recordId: string) => {
+    if (!user) return false;
+    console.log('Deleting daily record:', recordId);
+    const result = await firebaseService.deleteDailyRecord(recordId);
+    console.log('Delete daily record result:', result);
+    if (result.success) {
+      console.log('Daily record deleted successfully, refreshing data...');
+      await loadUserData(user.id);
+      return true;
+    }
+    return false;
+  };
   const addDailyTracking = async (tracking: Omit<DailyTracking, 'id' | 'userId'>) => {
     if (!user) return false;
     const result = await firebaseService.addDailyTracking({ ...tracking, userId: user.id });
@@ -361,6 +388,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         registerUser,
         logout,
         addDailyRecord,
+        updateDailyRecord,
+        deleteDailyRecord,
         addDailyTracking,
         updateDailyTracking,
         deleteDailyTracking,
