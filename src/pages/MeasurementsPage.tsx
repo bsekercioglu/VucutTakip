@@ -14,10 +14,9 @@ interface MeasurementFormData {
 }
 
 const MeasurementsPage: React.FC = () => {
-  const { user, dailyRecords, addDailyRecord, isLoggedIn, loading, refreshData } = useUser();
+  const { user, dailyRecords, addDailyRecord, isLoggedIn, loading } = useUser();
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [localLoading, setLocalLoading] = useState(true);
   
   const { register, handleSubmit, reset, formState: { errors } } = useForm<MeasurementFormData>({
     defaultValues: {
@@ -25,25 +24,32 @@ const MeasurementsPage: React.FC = () => {
     }
   });
 
-  // Düzeltilmiş veri yükleme useEffect'i
-  React.useEffect(() => {
-    const loadData = async () => {
-      setLocalLoading(true);
-      await refreshData();
-      setLocalLoading(false);
-    };
-    
-    if (!loading && user && isLoggedIn) {
-      loadData();
-    }
-  }, [user, isLoggedIn, loading, refreshData]);
+  console.log('MeasurementsPage - User:', user?.id);
+  console.log('MeasurementsPage - Daily Records:', dailyRecords);
+  console.log('MeasurementsPage - Loading:', loading);
+  console.log('MeasurementsPage - isLoggedIn:', isLoggedIn);
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
 
+  // Basit loading kontrolü - sadece auth loading'i kontrol et
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2 text-gray-600">Yükleniyor...</span>
+        </div>
+      </Layout>
+    );
+  }
+
   const recordsCount = dailyRecords?.length || 0;
   const hasRecords = recordsCount > 0;
+
+  console.log('MeasurementsPage - Records count:', recordsCount);
+  console.log('MeasurementsPage - Has records:', hasRecords);
 
   const onSubmit = async (data: MeasurementFormData) => {
     setIsSubmitting(true);
@@ -76,17 +82,6 @@ const MeasurementsPage: React.FC = () => {
     }
   };
 
-  if (loading || localLoading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">Veriler yükleniyor...</span>
-        </div>
-      </Layout>
-    );
-  }
-
   return (
     <Layout>
       <div className="space-y-6">
@@ -105,9 +100,79 @@ const MeasurementsPage: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Yeni Ölçüm Ekle</h3>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {/* Form alanları burada... (Değişmedi) */}
-              {/* Tarih, Ağırlık, Yağ Oranı, Su Oranı, Kas Oranı */}
-              {/* ... */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Tarih</label>
+                <input
+                  type="date"
+                  {...register('date', { required: 'Tarih gerekli' })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+                {errors.date && (
+                  <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Ağırlık (kg)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  {...register('weight', { required: 'Ağırlık gerekli', min: 30, max: 200 })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+                {errors.weight && (
+                  <p className="text-red-500 text-sm mt-1">{errors.weight.message}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Yağ Oranı (%)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    {...register('bodyFat', { min: 5, max: 50 })}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Su Oranı (%)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    {...register('waterPercentage', { min: 30, max: 80 })}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Kas Oranı (%)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    {...register('musclePercentage', { min: 20, max: 60 })}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+              </div>
             </form>
           </div>
         )}
@@ -123,30 +188,52 @@ const MeasurementsPage: React.FC = () => {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th>Tarih</th>
-                    <th>Ağırlık</th>
-                    <th>Yağ Oranı</th>
-                    <th>Su Oranı</th>
-                    <th>Kas Oranı</th>
-                    <th>Değişim</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarih</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ağırlık</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Yağ Oranı</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Su Oranı</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kas Oranı</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Değişim</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-white divide-y divide-gray-200">
                   {dailyRecords.slice().reverse().map((record, index) => {
+                    console.log('Rendering record:', record.id, record.date, record.weight);
+                    
                     const prevRecord = index < recordsCount - 1 ? dailyRecords[recordsCount - 2 - index] : null;
                     const currentWeight = parseFloat(record.weight?.toString() || '0');
                     const prevWeight = prevRecord ? parseFloat(prevRecord.weight?.toString() || '0') : 0;
                     const weightChange = prevRecord ? currentWeight - prevWeight : 0;
+                    
                     return (
-                      <tr key={record.id}>
-                        <td>{record.date || 'Tarih yok'}</td>
-                        <td>{record.weight ? `${currentWeight} kg` : 'Ağırlık yok'}</td>
-                        <td>{record.bodyFat ? `${parseFloat(record.bodyFat.toString())}%` : '-'}</td>
-                        <td>{record.waterPercentage ? `${parseFloat(record.waterPercentage.toString())}%` : '-'}</td>
-                        <td>{record.musclePercentage ? `${parseFloat(record.musclePercentage.toString())}%` : '-'}</td>
-                        <td>
+                      <tr key={record.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {new Date(record.date).toLocaleDateString('tr-TR')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {currentWeight.toFixed(1)} kg
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.bodyFat ? `${parseFloat(record.bodyFat.toString()).toFixed(1)}%` : '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.waterPercentage ? `${parseFloat(record.waterPercentage.toString()).toFixed(1)}%` : '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.musclePercentage ? `${parseFloat(record.musclePercentage.toString()).toFixed(1)}%` : '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
                           {weightChange !== 0 && (
-                            <span className={weightChange > 0 ? 'text-red-600' : 'text-green-600'}>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              weightChange > 0 
+                                ? 'bg-red-100 text-red-800' 
+                                : 'bg-green-100 text-green-800'
+                            }`}>
+                              {weightChange > 0 ? (
+                                <TrendingUp className="h-3 w-3 mr-1" />
+                              ) : (
+                                <TrendingDown className="h-3 w-3 mr-1" />
+                              )}
                               {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} kg
                             </span>
                           )}
@@ -161,6 +248,7 @@ const MeasurementsPage: React.FC = () => {
             <div className="text-center py-12">
               <Scale className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz ölçüm yok</h3>
+              <p className="text-gray-600 mb-4">İlk ölçümünüzü ekleyerek başlayın</p>
               <button
                 onClick={() => setShowForm(true)}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -169,6 +257,16 @@ const MeasurementsPage: React.FC = () => {
               </button>
             </div>
           )}
+        </div>
+
+        {/* Debug bilgileri - geliştirme için */}
+        <div className="bg-gray-100 p-4 rounded-lg text-sm">
+          <h4 className="font-semibold mb-2">Debug Bilgileri:</h4>
+          <p>User ID: {user?.id}</p>
+          <p>Loading: {loading.toString()}</p>
+          <p>Records Count: {recordsCount}</p>
+          <p>Has Records: {hasRecords.toString()}</p>
+          <p>Daily Records Array: {Array.isArray(dailyRecords) ? 'Yes' : 'No'}</p>
         </div>
       </div>
     </Layout>
