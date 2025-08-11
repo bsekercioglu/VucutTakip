@@ -380,16 +380,6 @@ const ProfilePage: React.FC = () => {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-500">Cinsiyet</label>
-                      <p className="text-lg text-gray-900">{user.gender === 'male' ? 'Erkek' : 'Kadın'}</p>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500">Doğum Tarihi</label>
-                      <p className="text-lg text-gray-900">{new Date(user.birthDate).toLocaleDateString('tr-TR')}</p>
-                    </div>
-                    
-                    <div>
                       <label className="block text-sm font-medium text-gray-500">Boy</label>
                       <p className="text-lg text-gray-900">{user.height} cm</p>
                     </div>
