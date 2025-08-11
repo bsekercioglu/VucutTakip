@@ -42,9 +42,9 @@ const Dashboard: React.FC = () => {
   const ranges = user ? getBodyCompositionRanges(age, user.gender) : null;
   
   // Calculate current BFP and BMR
-  const currentBFP = (latestRecord?.bodyFat ? parseFloat(latestRecord.bodyFat.toString()) : null) || 
+  const currentBFP = (latestRecord?.bodyFat ? parseFloat(latestRecord.bodyFat.toString()) : null) ||
     (latestRecord?.measurements?.waist && latestRecord?.measurements?.neck && user ? 
-      calculateBFP(user.gender, user.height, latestRecord.measurements.waist, latestRecord.measurements.neck, latestRecord.measurements.hips) : null);
+      parseFloat(calculateBFP(user.gender, user.height, latestRecord.measurements.waist, latestRecord.measurements.neck, latestRecord.measurements.hips).toString()) : null);
   
   const currentBMR = user ? parseFloat(calculateBMR(currentWeight, user.height, age, user.gender).toString()) : 0;
   const initialBMR = user ? parseFloat(calculateBMR(initialWeight, user.height, age, user.gender).toString()) : 0;
@@ -83,7 +83,7 @@ const Dashboard: React.FC = () => {
       isMetricOnly: !record.bodyFat && !record.waterPercentage && !record.musclePercentage && !!record.measurements,
       bmr: user ? calculateBMR(record.weight, user.height, age, user.gender) : 0,
       bfpFinal: bodyFat || (record.measurements?.waist && record.measurements?.neck && user ? 
-        calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips) : null),
+        parseFloat(calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips).toString()) : null),
       bfpCalculated: !bodyFat && record.measurements?.waist && record.measurements?.neck && user ? 
         parseFloat(calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips).toString()) : null
     };
@@ -127,8 +127,8 @@ const Dashboard: React.FC = () => {
     },
     {
       title: 'Metabolizma (BMR)',
-      value: `${currentBMR.toFixed(0)} kcal`,
-      change: bmrChange !== 0 ? `${bmrChange > 0 ? '+' : ''}${bmrChange.toFixed(0)} kcal` : '',
+      value: `${parseFloat(currentBMR.toString()).toFixed(0)} kcal`,
+      change: bmrChange !== 0 ? `${bmrChange > 0 ? '+' : ''}${parseFloat(bmrChange.toString()).toFixed(0)} kcal` : '',
       icon: TrendingUp,
       color: bmrChange > 0 ? 'text-green-600' : bmrChange < 0 ? 'text-red-600' : 'text-gray-600'
     }
@@ -254,7 +254,7 @@ const Dashboard: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-900">Yağ Oranı Gelişimi (BFP)</h3>
               {bfpStatus && (
                 <div className={`px-3 py-1 rounded-full text-sm font-medium ${bfpStatus.bgColor} ${bfpStatus.color}`}>
-                  {bfpStatus.label}: {currentBFP?.toFixed(1)}%
+                  {bfpStatus.label}: {currentBFP ? parseFloat(currentBFP.toString()).toFixed(1) : 'N/A'}%
                 </div>
               )}
             </div>
@@ -507,13 +507,13 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {currentBFP ? `${currentBFP.toFixed(1)}%` : '-'}
+                {currentBFP ? `${parseFloat(currentBFP.toString()).toFixed(1)}%` : '-'}
               </div>
               <div className="text-sm text-gray-600">Yağ Oranı</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
-                {bmrChange !== 0 ? `${bmrChange > 0 ? '+' : ''}${bmrChange.toFixed(0)}` : '0'}
+                {bmrChange !== 0 ? `${bmrChange > 0 ? '+' : ''}${parseFloat(bmrChange.toString()).toFixed(0)}` : '0'}
               </div>
               <div className="text-sm text-gray-600">BMR Değişimi</div>
             </div>
@@ -556,10 +556,10 @@ const Dashboard: React.FC = () => {
                        `${parseFloat(calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips).toString()).toFixed(1)}% (H)` : '-'}
                     </td>
                     <td className="py-3 text-sm text-gray-900">
-                      {record.waterPercentage ? `${record.waterPercentage}%` : '-'}
+                      {record.waterPercentage ? `${parseFloat(record.waterPercentage.toString()).toFixed(1)}%` : '-'}
                     </td>
                     <td className="py-3 text-sm text-gray-900">
-                      {record.musclePercentage ? `${record.musclePercentage}%` : '-'}
+                      {record.musclePercentage ? `${parseFloat(record.musclePercentage.toString()).toFixed(1)}%` : '-'}
                     </td>
                   </tr>
                 ))}
