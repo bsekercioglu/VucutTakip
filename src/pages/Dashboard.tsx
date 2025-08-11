@@ -30,13 +30,35 @@ const Dashboard: React.FC = () => {
   const ranges = user ? getBodyCompositionRanges(age, user.gender) : null;
 
   // Prepare chart data
-  const chartData = dailyRecords.map(record => ({
-    date: new Date(record.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }),
-    weight: record.weight,
-    bodyFat: record.bodyFat,
-    water: record.waterPercentage,
-    muscle: record.musclePercentage
-  }));
+  const chartData = dailyRecords.map((record, index) => {
+    // If current record doesn't have digital values, find the last digital measurement
+    let bodyFat = record.bodyFat;
+    let water = record.waterPercentage;
+    let muscle = record.musclePercentage;
+    
+    // If this is a metric-only measurement (no digital values)
+    if (!bodyFat && !water && !muscle && record.measurements) {
+      // Look backwards for the last digital measurement
+      for (let i = index - 1; i >= 0; i--) {
+        const prevRecord = dailyRecords[i];
+        if (prevRecord.bodyFat || prevRecord.waterPercentage || prevRecord.musclePercentage) {
+          bodyFat = prevRecord.bodyFat;
+          water = prevRecord.waterPercentage;
+          muscle = prevRecord.musclePercentage;
+          break;
+        }
+      }
+    }
+    
+    return {
+      date: new Date(record.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }),
+      weight: record.weight,
+      bodyFat: bodyFat,
+      water: water,
+      muscle: muscle,
+      isMetricOnly: !record.bodyFat && !record.waterPercentage && !record.musclePercentage && !!record.measurements
+    };
+  });
 
   const shareProgress = async () => {
     const element = document.getElementById('progress-charts');
@@ -197,6 +219,10 @@ const Dashboard: React.FC = () => {
           {/* Body Fat Chart */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Yağ Oranı Gelişimi</h3>
+            <div className="mb-2 text-xs text-gray-500">
+              <span className="inline-block w-3 h-1 bg-red-500 mr-2"></span>Dijital ölçüm
+              <span className="inline-block w-3 h-1 bg-red-500 ml-4 mr-2" style={{backgroundImage: 'repeating-linear-gradient(to right, #EF4444 0, #EF4444 3px, transparent 3px, transparent 6px)'}}></span>Metrik ölçüm (son dijital değer)
+            </div>
             {ranges && (
               <div className="mb-4 text-sm text-gray-600">
                 <span className="inline-block w-3 h-3 bg-green-200 mr-2"></span>
@@ -224,6 +250,12 @@ const Dashboard: React.FC = () => {
                       border: '1px solid #ccc',
                       borderRadius: '8px'
                     }}
+                    formatter={(value, name, props) => {
+                      if (props.payload?.isMetricOnly && (name === 'Yağ Oranı (%)' || name === 'Su Oranı (%)' || name === 'Kas Oranı (%)')) {
+                        return [value ? `${value}% (son dijital)` : '-', name];
+                      }
+                      return [value || '-', name];
+                    }}
                   />
                   <Line 
                     type="monotone" 
@@ -231,6 +263,13 @@ const Dashboard: React.FC = () => {
                     stroke="#EF4444" 
                     strokeWidth={2}
                     name="Yağ Oranı (%)"
+                    strokeDasharray={(entry) => entry?.isMetricOnly ? "5 5" : "0"}
+                    dot={(props) => {
+                      if (props.payload?.isMetricOnly) {
+                        return <circle cx={props.cx} cy={props.cy} r={3} fill="#EF4444" stroke="#EF4444" strokeWidth={2} strokeDasharray="2 2" />;
+                      }
+                      return <circle cx={props.cx} cy={props.cy} r={4} fill="#EF4444" stroke="#EF4444" strokeWidth={2} />;
+                    }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -240,6 +279,10 @@ const Dashboard: React.FC = () => {
           {/* Water Percentage Chart */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Su Oranı Gelişimi</h3>
+            <div className="mb-2 text-xs text-gray-500">
+              <span className="inline-block w-3 h-1 bg-cyan-500 mr-2"></span>Dijital ölçüm
+              <span className="inline-block w-3 h-1 bg-cyan-500 ml-4 mr-2" style={{backgroundImage: 'repeating-linear-gradient(to right, #06B6D4 0, #06B6D4 3px, transparent 3px, transparent 6px)'}}></span>Metrik ölçüm (son dijital değer)
+            </div>
             {ranges && (
               <div className="mb-4 text-sm text-gray-600">
                 <span className="inline-block w-3 h-3 bg-green-200 mr-2"></span>
@@ -267,6 +310,12 @@ const Dashboard: React.FC = () => {
                       border: '1px solid #ccc',
                       borderRadius: '8px'
                     }}
+                    formatter={(value, name, props) => {
+                      if (props.payload?.isMetricOnly && name === 'Su Oranı (%)') {
+                        return [value ? `${value}% (son dijital)` : '-', name];
+                      }
+                      return [value || '-', name];
+                    }}
                   />
                   <Line 
                     type="monotone" 
@@ -274,6 +323,13 @@ const Dashboard: React.FC = () => {
                     stroke="#06B6D4" 
                     strokeWidth={2}
                     name="Su Oranı (%)"
+                    strokeDasharray={(entry) => entry?.isMetricOnly ? "5 5" : "0"}
+                    dot={(props) => {
+                      if (props.payload?.isMetricOnly) {
+                        return <circle cx={props.cx} cy={props.cy} r={3} fill="#06B6D4" stroke="#06B6D4" strokeWidth={2} strokeDasharray="2 2" />;
+                      }
+                      return <circle cx={props.cx} cy={props.cy} r={4} fill="#06B6D4" stroke="#06B6D4" strokeWidth={2} />;
+                    }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -283,6 +339,10 @@ const Dashboard: React.FC = () => {
           {/* Muscle Percentage Chart */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Kas Oranı Gelişimi</h3>
+           <div className="mb-2 text-xs text-gray-500">
+             <span className="inline-block w-3 h-1 bg-purple-500 mr-2"></span>Dijital ölçüm
+             <span className="inline-block w-3 h-1 bg-purple-500 ml-4 mr-2" style={{backgroundImage: 'repeating-linear-gradient(to right, #8B5CF6 0, #8B5CF6 3px, transparent 3px, transparent 6px)'}}></span>Metrik ölçüm (son dijital değer)
+           </div>
             {ranges && (
               <div className="mb-4 text-sm text-gray-600">
                 <span className="inline-block w-3 h-3 bg-green-200 mr-2"></span>
@@ -310,6 +370,12 @@ const Dashboard: React.FC = () => {
                       border: '1px solid #ccc',
                       borderRadius: '8px'
                     }}
+                    formatter={(value, name, props) => {
+                      if (props.payload?.isMetricOnly && name === 'Kas Oranı (%)') {
+                        return [value ? `${value}% (son dijital)` : '-', name];
+                      }
+                      return [value || '-', name];
+                    }}
                   />
                   <Line 
                     type="monotone" 
@@ -317,6 +383,13 @@ const Dashboard: React.FC = () => {
                     stroke="#8B5CF6" 
                     strokeWidth={2}
                     name="Kas Oranı (%)"
+                    strokeDasharray={(entry) => entry?.isMetricOnly ? "5 5" : "0"}
+                    dot={(props) => {
+                      if (props.payload?.isMetricOnly) {
+                        return <circle cx={props.cx} cy={props.cy} r={3} fill="#8B5CF6" stroke="#8B5CF6" strokeWidth={2} strokeDasharray="2 2" />;
+                      }
+                      return <circle cx={props.cx} cy={props.cy} r={4} fill="#8B5CF6" stroke="#8B5CF6" strokeWidth={2} />;
+                    }}
                   />
                 </LineChart>
               </ResponsiveContainer>
