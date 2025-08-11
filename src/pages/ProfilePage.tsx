@@ -80,11 +80,14 @@ const ProfilePage: React.FC = () => {
   };
 
   const handlePhotoUpload = async (file: File) => {
+    console.log('ProfilePage: Starting photo upload');
     const uploadSuccess = await uploadProfilePhoto(file);
     if (uploadSuccess) {
+      console.log('ProfilePage: Photo upload successful');
       success('Başarılı!', 'Profil fotoğrafı güncellendi');
       return true;
     } else {
+      console.log('ProfilePage: Photo upload failed');
       error('Hata!', 'Fotoğraf yüklenirken hata oluştu');
       return false;
     }

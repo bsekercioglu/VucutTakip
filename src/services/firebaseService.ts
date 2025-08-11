@@ -131,24 +131,36 @@ export const updateUser = async (userId: string, userData: Partial<User>) => {
 // Profile photo operations
 export const uploadProfilePhoto = async (userId: string, file: File) => {
   try {
+    console.log('Starting profile photo upload for user:', userId);
+    
     // Create a reference to the file location
-    const photoRef = ref(storage, `profile-photos/${userId}/${Date.now()}_${file.name}`);
+    const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const photoRef = ref(storage, `profile-photos/${userId}/${fileName}`);
+    
+    console.log('Upload path:', `profile-photos/${userId}/${fileName}`);
     
     // Upload the file
+    console.log('Uploading file...');
     const snapshot = await uploadBytes(photoRef, file);
+    console.log('File uploaded successfully');
     
     // Get the download URL
+    console.log('Getting download URL...');
     const downloadURL = await getDownloadURL(snapshot.ref);
+    console.log('Download URL obtained:', downloadURL);
     
     // Update user document with new photo URL
+    console.log('Updating user document...');
     await updateDoc(doc(db, 'users', userId), {
       photoURL: downloadURL,
       updatedAt: serverTimestamp()
     });
+    console.log('User document updated successfully');
     
     return { success: true, photoURL: downloadURL };
   } catch (error) {
     console.error('Error uploading profile photo:', error);
+    console.error('Error details:', error.code, error.message);
     return { success: false, error };
   }
 };

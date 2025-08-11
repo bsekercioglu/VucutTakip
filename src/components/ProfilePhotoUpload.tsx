@@ -34,12 +34,15 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
       return;
     }
 
+    console.log('File selected:', file.name, file.size, file.type);
+    
     setIsUploading(true);
     try {
       const success = await onUpload(file);
       if (success) {
-        // Success feedback will be handled by parent component
+        console.log('Photo upload successful');
       } else {
+        console.error('Photo upload failed');
         alert('Fotoğraf yüklenirken hata oluştu.');
       }
     } catch (error) {
