@@ -57,13 +57,13 @@ const Dashboard: React.FC = () => {
   // currentBFP hesaplama (öncelikle direkt bodyFat, değilse ölçümlerden hesap)
   let currentBFP: number | null = null;
   if (latestRecord && latestRecord.bodyFat !== undefined && latestRecord.bodyFat !== null && latestRecord.bodyFat !== '') {
-    currentBFP = safeParse(latestRecord.bodyFat, NaN);
-    if (!isFinite(currentBFP)) currentBFP = null;
+    const parsed = safeParse(latestRecord.bodyFat);
+    currentBFP = isFinite(parsed) ? parsed : null;
   } else if (latestRecord && latestRecord.measurements && user) {
     try {
-      const w = safeParse(latestRecord.measurements.waist, NaN);
-      const n = safeParse(latestRecord.measurements.neck, NaN);
-      const hps = safeParse(latestRecord.measurements.hips, NaN);
+      const w = safeParse(latestRecord.measurements.waist);
+      const n = safeParse(latestRecord.measurements.neck);
+      const hps = safeParse(latestRecord.measurements.hips);
       const calc = calculateBFP(user.gender, user.height, w, n, hps);
       currentBFP = isFinite(calc) ? calc : null;
     } catch {
@@ -81,15 +81,29 @@ const Dashboard: React.FC = () => {
 
   // Chart verisi hazırlanması - tüm sayısal alanlar güvenli parse ile çevriliyor
   const chartData = (dailyRecords || []).map((record) => {
-    let bodyFatVal = (record.bodyFat !== undefined && record.bodyFat !== null && record.bodyFat !== '') ? safeParse(record.bodyFat, NaN) : null;
-    let waterVal = (record.waterPercentage !== undefined && record.waterPercentage !== null && record.waterPercentage !== '') ? safeParse(record.waterPercentage, NaN) : null;
-    let muscleVal = (record.musclePercentage !== undefined && record.musclePercentage !== null && record.musclePercentage !== '') ? safeParse(record.musclePercentage, NaN) : null;
+    let bodyFatVal = (record.bodyFat !== undefined && record.bodyFat !== null && record.bodyFat !== '') ? safeParse(record.bodyFat) : null;
+    let waterVal = (record.waterPercentage !== undefined && record.waterPercentage !== null && record.waterPercentage !== '') ? safeParse(record.waterPercentage) : null;
+    let muscleVal = (record.musclePercentage !== undefined && record.musclePercentage !== null && record.musclePercentage !== '') ? safeParse(record.musclePercentage) : null;
 
-    // Eğer dijital değer yok ve measurements varsa, önceki dijital değerden al
-    if ((bodyFatVal === null || !isFinite(bodyFatVal)) && record.measurements) {
-      // backward lookup
-      // (bunu optimize edebilirsin; burada basit yaklaşım var)
-      // Not: index bilmiyoruz burada, bu yüzden bu lookup MeasurementsPage'deki gibi index ile yapılmalı.
+    // Validate parsed values
+    if (bodyFatVal !== null && (!isFinite(bodyFatVal) || isNaN(bodyFatVal))) bodyFatVal = null;
+    if (waterVal !== null && (!isFinite(waterVal) || isNaN(waterVal))) waterVal = null;
+    if (muscleVal !== null && (!isFinite(muscleVal) || isNaN(muscleVal))) muscleVal = null;
+
+    // Calculate BFP from measurements if no digital value
+    let bfpCalculated = null;
+    if (bodyFatVal === null && record.measurements && user) {
+      try {
+        const w = safeParse(record.measurements.waist);
+        const n = safeParse(record.measurements.neck);
+        const hps = safeParse(record.measurements.hips);
+        if (isFinite(w) && isFinite(n)) {
+          const calc = calculateBFP(user.gender, user.height, w, n, hps);
+          bfpCalculated = isFinite(calc) ? calc : null;
+        }
+      } catch {
+        bfpCalculated = null;
+      }
     }
 
     const dateLabel = (() => {
@@ -104,14 +118,19 @@ const Dashboard: React.FC = () => {
       }
     })();
 
+    const recordWeight = safeParse(record.weight);
+    const bmrValue = user && isFinite(recordWeight) ? calculateBMR(recordWeight, user.height, age, user.gender) : 0;
+
     return {
       date: dateLabel,
-      weight: isFinite(safeParse(record.weight, NaN)) ? safeParse(record.weight, NaN) : null,
-      bodyFat: isFinite(bodyFatVal as number) ? bodyFatVal : null,
-      water: isFinite(waterVal as number) ? waterVal : null,
-      muscle: isFinite(muscleVal as number) ? muscleVal : null,
+      weight: isFinite(recordWeight) ? recordWeight : null,
+      bodyFat: bodyFatVal,
+      water: waterVal,
+      muscle: muscleVal,
+      bfpFinal: bodyFatVal || bfpCalculated,
+      bfpCalculated: bfpCalculated,
       isMetricOnly: !(record.bodyFat || record.waterPercentage || record.musclePercentage) && !!record.measurements,
-      bmr: user ? safeParse(calculateBMR(safeParse(record.weight, safeParse(initialWeight)), user.height, age, user.gender), 0) : 0
+      bmr: isFinite(bmrValue) ? bmrValue : 0
     };
   });
 
@@ -128,37 +147,39 @@ const Dashboard: React.FC = () => {
   };
 
   // Helper to format numbers safely
-  const fmt = (n: number | null | undefined, digits = 1, fallback = 'N/A') => {
-    if (n === null || n === undefined || !isFinite(n)) return fallback;
-    return Number(n).toFixed(digits);
+  const fmt = (n: any, digits = 1, fallback = 'N/A') => {
+    if (n === null || n === undefined || n === '' || n === 'N/A') return fallback;
+    const num = typeof n === 'string' ? parseFloat(n) : Number(n);
+    if (isNaN(num) || !isFinite(num)) return fallback;
+    return num.toFixed(digits);
   };
 
   const statCards = [
     {
       title: 'Mevcut Ağırlık',
-      value: `${fmt(currentWeight, 1, '0')} kg`,
-      change: weightChange !== 0 ? `${weightChange > 0 ? '+' : ''}${fmt(weightChange, 1, '0')} kg` : '',
+      value: `${fmt(currentWeight)} kg`,
+      change: weightChange !== 0 ? `${weightChange > 0 ? '+' : ''}${fmt(weightChange)} kg` : '',
       icon: Scale,
       color: weightChange > 0 ? 'text-red-600' : weightChange < 0 ? 'text-green-600' : 'text-gray-600'
     },
     {
       title: 'Mevcut BMI',
-      value: `${fmt(currentBMI, 1, '0')}`,
-      change: bmiChange !== 0 ? `${bmiChange > 0 ? '+' : ''}${fmt(bmiChange, 1, '0')}` : '',
+      value: fmt(currentBMI),
+      change: bmiChange !== 0 ? `${bmiChange > 0 ? '+' : ''}${fmt(bmiChange)}` : '',
       icon: TrendingDown,
       color: bmiChange > 0 ? 'text-red-600' : bmiChange < 0 ? 'text-green-600' : 'text-gray-600'
     },
     {
       title: 'Yağ Oranı (BFP)',
-      value: currentBFP !== null ? `${fmt(currentBFP, 1, '0')}%` : 'N/A',
-      change: bodyFatChange !== 0 ? `${bodyFatChange > 0 ? '+' : ''}${fmt(bodyFatChange, 1, '0')}%` : '',
+      value: currentBFP !== null ? `${fmt(currentBFP)}%` : 'N/A',
+      change: bodyFatChange !== 0 ? `${bodyFatChange > 0 ? '+' : ''}${fmt(bodyFatChange)}%` : '',
       icon: TrendingDown,
       color: bodyFatChange > 0 ? 'text-red-600' : bodyFatChange < 0 ? 'text-green-600' : 'text-gray-600'
     },
     {
       title: 'Metabolizma (BMR)',
-      value: `${fmt(currentBMR, 0, '0')} kcal`,
-      change: bmrChange !== 0 ? `${bmrChange > 0 ? '+' : ''}${fmt(bmrChange, 0, '0')} kcal` : '',
+      value: `${fmt(currentBMR, 0)} kcal`,
+      change: bmrChange !== 0 ? `${bmrChange > 0 ? '+' : ''}${fmt(bmrChange, 0)} kcal` : '',
       icon: TrendingUp,
       color: bmrChange > 0 ? 'text-green-600' : bmrChange < 0 ? 'text-red-600' : 'text-gray-600'
     }
@@ -229,22 +250,22 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div>
                     <div className="text-blue-100">Başlangıç</div>
-                    <div className="font-semibold">{initialWeight.toFixed(1)} kg</div>
+                    <div className="font-semibold">{fmt(initialWeight)} kg</div>
                   </div>
                   <div>
                     <div className="text-blue-100">Mevcut</div>
-                    <div className="font-semibold">{currentWeight.toFixed(1)} kg</div>
+                    <div className="font-semibold">{fmt(currentWeight)} kg</div>
                   </div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-blue-100 text-sm">Ağırlık Değişimi</div>
                 <div className="text-2xl font-bold">
-                  {weightChange !== 0 ? `${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)} kg` : '0 kg'}
+                  {weightChange !== 0 ? `${weightChange > 0 ? '+' : ''}${fmt(weightChange)} kg` : '0 kg'}
                 </div>
                 <div className="text-blue-100 text-sm">
-                  BMI: {initialBMI.toFixed(1)} → {currentBMI.toFixed(1)} 
-                  ({bmiChange > 0 ? '+' : ''}{bmiChange.toFixed(1)})
+                  BMI: {fmt(initialBMI)} → {fmt(currentBMI)} 
+                  ({bmiChange > 0 ? '+' : ''}{fmt(bmiChange)})
                 </div>
               </div>
             </div>
@@ -284,7 +305,7 @@ const Dashboard: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-900">Yağ Oranı Gelişimi (BFP)</h3>
               {bfpStatus && (
                 <div className={`px-3 py-1 rounded-full text-sm font-medium ${bfpStatus.bgColor} ${bfpStatus.color}`}>
-                  {bfpStatus.label}: {currentBFP ? parseFloat(currentBFP.toString()).toFixed(1) : 'N/A'}%
+                  {bfpStatus.label}: {fmt(currentBFP)}%
                 </div>
               )}
             </div>
@@ -525,25 +546,25 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {weightChange !== 0 ? `${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)}` : '0'}
+                {weightChange !== 0 ? `${weightChange > 0 ? '+' : ''}${fmt(weightChange)}` : '0'}
               </div>
               <div className="text-sm text-gray-600">kg Değişim</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-red-600">
-                {bmiChange !== 0 ? `${bmiChange > 0 ? '+' : ''}${bmiChange.toFixed(1)}` : '0'}
+                {bmiChange !== 0 ? `${bmiChange > 0 ? '+' : ''}${fmt(bmiChange)}` : '0'}
               </div>
               <div className="text-sm text-gray-600">BMI Değişimi</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {currentBFP ? `${parseFloat(currentBFP.toString()).toFixed(1)}%` : '-'}
+                {currentBFP !== null ? `${fmt(currentBFP)}%` : '-'}
               </div>
               <div className="text-sm text-gray-600">Yağ Oranı</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
-                {bmrChange !== 0 ? `${bmrChange > 0 ? '+' : ''}${parseFloat(bmrChange.toString()).toFixed(0)}` : '0'}
+                {bmrChange !== 0 ? `${bmrChange > 0 ? '+' : ''}${fmt(bmrChange, 0)}` : '0'}
               </div>
               <div className="text-sm text-gray-600">BMR Değişimi</div>
             </div>
@@ -579,17 +600,17 @@ const Dashboard: React.FC = () => {
                     <td className="py-3 text-sm text-gray-900">
                       {new Date(record.date).toLocaleDateString('tr-TR')}
                     </td>
-                    <td className="py-3 text-sm text-gray-900">{record.weight} kg</td>
+                    <td className="py-3 text-sm text-gray-900">{fmt(record.weight)} kg</td>
                     <td className="py-3 text-sm text-gray-900">
-                      {record.bodyFat ? `${record.bodyFat}% (D)` : 
+                      {record.bodyFat ? `${fmt(record.bodyFat)}% (D)` : 
                        (record.measurements?.waist && record.measurements?.neck && user) ? 
-                       `${parseFloat(calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips).toString()).toFixed(1)}% (H)` : '-'}
+                       `${fmt(calculateBFP(user.gender, user.height, safeParse(record.measurements.waist), safeParse(record.measurements.neck), safeParse(record.measurements.hips)))}% (H)` : '-'}
                     </td>
                     <td className="py-3 text-sm text-gray-900">
-                      {record.waterPercentage ? `${parseFloat(record.waterPercentage.toString()).toFixed(1)}%` : '-'}
+                      {record.waterPercentage ? `${fmt(record.waterPercentage)}%` : '-'}
                     </td>
                     <td className="py-3 text-sm text-gray-900">
-                      {record.musclePercentage ? `${parseFloat(record.musclePercentage.toString()).toFixed(1)}%` : '-'}
+                      {record.musclePercentage ? `${fmt(record.musclePercentage)}%` : '-'}
                     </td>
                   </tr>
                 ))}
@@ -598,7 +619,7 @@ const Dashboard: React.FC = () => {
                   <td className="py-3 text-sm text-blue-900 font-medium">
                     Başlangıç (Profil)
                   </td>
-                  <td className="py-3 text-sm text-blue-900 font-medium">{initialWeight.toFixed(1)} kg</td>
+                  <td className="py-3 text-sm text-blue-900 font-medium">{fmt(initialWeight)} kg</td>
                   <td className="py-3 text-sm text-blue-900">-</td>
                   <td className="py-3 text-sm text-blue-900">-</td>
                   <td className="py-3 text-sm text-blue-900">-</td>
