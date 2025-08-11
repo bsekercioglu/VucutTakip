@@ -56,6 +56,10 @@ const MeasurementsPage: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
+  // Force re-render when data changes
+  const recordsCount = dailyRecords?.length || 0;
+  const hasRecords = recordsCount > 0;
+
   const onSubmit = async (data: MeasurementFormData) => {
     setIsSubmitting(true);
     try {
@@ -93,8 +97,8 @@ const MeasurementsPage: React.FC = () => {
   // Debug logging
   console.log('MeasurementsPage - User:', user?.id);
   console.log('MeasurementsPage - Daily Records:', dailyRecords);
-  console.log('MeasurementsPage - Daily Records detailed:', JSON.stringify(dailyRecords, null, 2));
-  console.log('MeasurementsPage - First record structure:', dailyRecords[0]);
+  console.log('MeasurementsPage - Records Count:', recordsCount);
+  console.log('MeasurementsPage - Has Records:', hasRecords);
   console.log('MeasurementsPage - Loading:', loading);
 
   if (loading || localLoading) {
@@ -108,20 +112,19 @@ const MeasurementsPage: React.FC = () => {
     );
   }
 
-  // Force re-render when dailyRecords changes
-  console.log('MeasurementsPage: Rendering with records:', dailyRecords.length, dailyRecords);
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Debug Info - Remove in production */}
+        {/* Debug Info */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <h4 className="font-medium text-yellow-800">Debug Info:</h4>
           <p className="text-sm text-yellow-700">User ID: {user?.id}</p>
-          <p className="text-sm text-yellow-700">Records Count: {dailyRecords.length}</p>
+          <p className="text-sm text-yellow-700">Records Count: {recordsCount}</p>
+          <p className="text-sm text-yellow-700">Has Records: {hasRecords ? 'Yes' : 'No'}</p>
           <p className="text-sm text-yellow-700">Global Loading: {loading ? 'Yes' : 'No'}</p>
           <p className="text-sm text-yellow-700">Local Loading: {localLoading ? 'Yes' : 'No'}</p>
           <p className="text-sm text-yellow-700">Is Logged In: {isLoggedIn ? 'Yes' : 'No'}</p>
-          <p className="text-sm text-yellow-700">Sample Records: {JSON.stringify(dailyRecords.slice(0, 1), null, 2)}</p>
+          <p className="text-sm text-yellow-700">Array Type: {Array.isArray(dailyRecords) ? 'Array' : typeof dailyRecords}</p>
           <button 
             onClick={async () => {
               setLocalLoading(true);
@@ -245,13 +248,16 @@ const MeasurementsPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Ölçüm Geçmişi</h3>
               <span className="text-sm text-gray-500">
-                Toplam {dailyRecords.length} kayıt
+                Toplam {recordsCount} kayıt
               </span>
             </div>
           </div>
           
-          {dailyRecords && dailyRecords.length > 0 ? (
+          {hasRecords ? (
             <div className="overflow-x-auto">
+              <div className="bg-green-50 p-2 mb-4 text-sm text-green-800">
+                Rendering {recordsCount} records...
+              </div>
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
@@ -289,21 +295,19 @@ const MeasurementsPage: React.FC = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {dailyRecords.slice().reverse().map((record, index) => {
-                    const prevRecord = index < dailyRecords.length - 1 ? dailyRecords[dailyRecords.length - 2 - index] : null;
+                    console.log('Rendering record:', index, record);
+                    const prevRecord = index < recordsCount - 1 ? dailyRecords[recordsCount - 2 - index] : null;
                     const currentWeight = parseFloat(record.weight?.toString() || '0');
                     const prevWeight = prevRecord ? parseFloat(prevRecord.weight?.toString() || '0') : 0;
                     const weightChange = prevRecord ? currentWeight - prevWeight : 0;
                     
-                    console.log('Rendering record:', record);
-                    console.log('Record ID:', record.id, 'Date:', record.date, 'Weight:', record.weight);
-                    
                     return (
                       <tr key={record.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.date ? new Date(record.date).toLocaleDateString('tr-TR') : 'Tarih yok'}
+                          {record.date || 'Tarih yok'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.weight ? `${parseFloat(record.weight.toString())} kg` : 'Ağırlık yok'}
+                          {record.weight ? `${currentWeight} kg` : 'Ağırlık yok'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {record.bodyFat ? `${parseFloat(record.bodyFat.toString())}%` : '-'}
@@ -337,7 +341,7 @@ const MeasurementsPage: React.FC = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz ölçüm yok</h3>
               <p className="text-gray-600 mb-4">
                 İlk ölçümünüzü ekleyerek başlayın. 
-                {user && ` (User ID: ${user.id})`}
+                <br />Debug: Records={recordsCount}, Array={Array.isArray(dailyRecords) ? 'Yes' : 'No'}
               </p>
               <button
                 onClick={() => setShowForm(true)}
@@ -358,7 +362,7 @@ const MeasurementsPage: React.FC = () => {
               </span>
               {user && (
                 <span className="text-blue-600 ml-2">
-                  | Kayıt Sayısı: {dailyRecords.length}
+                  | Kayıt Sayısı: {recordsCount}
                 </span>
               )}
             </div>
