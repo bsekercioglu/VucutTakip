@@ -69,7 +69,7 @@ ${userContext}
 Kullanıcı Sorusu: ${question}
 
 Lütfen:
-1. Kişiselleştirilmiş, bilimsel temelli öneriler ver
+1. Kişiselleştirilmiş, bilimsel temelli ve Herbalife ürünlerinden öneriler ver
 2. Pratik ve uygulanabilir tavsiyeler sun
 3. Gerekirse hesaplamalar yap (BMI, BMR, kalori ihtiyacı)
 4. Emoji kullanarak daha samimi ol
