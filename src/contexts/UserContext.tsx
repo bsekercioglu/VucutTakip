@@ -37,6 +37,8 @@ interface UserContextType {
   deleteDailyTracking: (trackingId: string) => Promise<boolean>;
   addQuestion: (question: Omit<Question, 'id' | 'userId' | 'timestamp' | 'status'>) => Promise<boolean>;
   updateProfile: (userData: Partial<User>) => Promise<boolean>;
+  uploadProfilePhoto: (file: File) => Promise<boolean>;
+  deleteProfilePhoto: () => Promise<boolean>;
   refreshData: () => Promise<void>;
 }
 
@@ -373,6 +375,26 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return false;
   };
 
+  const uploadProfilePhoto = async (file: File) => {
+    if (!user) return false;
+    const result = await firebaseService.uploadProfilePhoto(user.id, file);
+    if (result.success) {
+      setUser({ ...user, photoURL: result.photoURL });
+      return true;
+    }
+    return false;
+  };
+
+  const deleteProfilePhoto = async () => {
+    if (!user || !user.photoURL) return false;
+    const result = await firebaseService.deleteProfilePhoto(user.id, user.photoURL);
+    if (result.success) {
+      setUser({ ...user, photoURL: undefined });
+      return true;
+    }
+    return false;
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -395,6 +417,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         deleteDailyTracking,
         addQuestion,
         updateProfile,
+        uploadProfilePhoto,
+        deleteProfilePhoto,
         refreshData,
       }}
     >

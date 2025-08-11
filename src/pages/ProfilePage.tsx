@@ -3,6 +3,8 @@ import { Navigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { User, Edit3, Save, X } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
+import { useToast } from '../hooks/useToast';
+import ProfilePhotoUpload from '../components/ProfilePhotoUpload';
 import Layout from '../components/Layout';
 
 interface ProfileFormData {
@@ -21,7 +23,8 @@ interface ProfileFormData {
 }
 
 const ProfilePage: React.FC = () => {
-  const { user, updateProfile, isLoggedIn } = useUser();
+  const { user, updateProfile, uploadProfilePhoto, deleteProfilePhoto, isLoggedIn } = useUser();
+  const { success, error } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ProfileFormData>({
@@ -46,7 +49,7 @@ const ProfilePage: React.FC = () => {
   }
 
   const onSubmit = (data: ProfileFormData) => {
-    updateProfile({
+    const updateSuccess = updateProfile({
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
@@ -62,12 +65,40 @@ const ProfilePage: React.FC = () => {
         thigh: data.thigh
       }
     });
-    setIsEditing(false);
+    
+    if (updateSuccess) {
+      success('Başarılı!', 'Profil bilgileri güncellendi');
+      setIsEditing(false);
+    } else {
+      error('Hata!', 'Profil güncellenirken hata oluştu');
+    }
   };
 
   const handleCancel = () => {
     reset();
     setIsEditing(false);
+  };
+
+  const handlePhotoUpload = async (file: File) => {
+    const uploadSuccess = await uploadProfilePhoto(file);
+    if (uploadSuccess) {
+      success('Başarılı!', 'Profil fotoğrafı güncellendi');
+      return true;
+    } else {
+      error('Hata!', 'Fotoğraf yüklenirken hata oluştu');
+      return false;
+    }
+  };
+
+  const handlePhotoDelete = async () => {
+    const deleteSuccess = await deleteProfilePhoto();
+    if (deleteSuccess) {
+      success('Başarılı!', 'Profil fotoğrafı silindi');
+      return true;
+    } else {
+      error('Hata!', 'Fotoğraf silinirken hata oluştu');
+      return false;
+    }
   };
 
   const bmi = user.initialWeight / Math.pow(user.height / 100, 2);
@@ -109,10 +140,15 @@ const ProfilePage: React.FC = () => {
           {/* Profile Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="text-center mb-6">
+                <ProfilePhotoUpload
+                  currentPhotoURL={user.photoURL}
+                  onUpload={handlePhotoUpload}
+                  onDelete={handlePhotoDelete}
+                  userName={`${user.firstName} ${user.lastName}`}
+                />
+              </div>
               <div className="text-center">
-                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <User className="h-10 w-10 text-blue-600" />
-                </div>
                 <h3 className="text-xl font-semibold text-gray-900">
                   {user.firstName} {user.lastName}
                 </h3>

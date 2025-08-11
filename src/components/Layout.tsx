@@ -45,6 +45,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
             
             <div className="flex items-center space-x-4">
+              {user?.photoURL && (
+                <img
+                  src={user.photoURL}
+                  alt={`${user.firstName} profil fotoğrafı`}
+                  className="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
+                  onError={(e) => {
+                    // Hide image if it fails to load
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              )}
               <span className="text-sm text-gray-700">
                 Hoş geldin, {user?.firstName}
               </span>

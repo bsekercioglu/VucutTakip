@@ -12,7 +12,8 @@ import {
   deleteDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '../config/firebase';
 
 export interface User {
   id: string;
@@ -123,6 +124,52 @@ export const updateUser = async (userId: string, userData: Partial<User>) => {
     return { success: true };
   } catch (error) {
     console.error('Error updating user:', error);
+    return { success: false, error };
+  }
+};
+
+// Profile photo operations
+export const uploadProfilePhoto = async (userId: string, file: File) => {
+  try {
+    // Create a reference to the file location
+    const photoRef = ref(storage, `profile-photos/${userId}/${Date.now()}_${file.name}`);
+    
+    // Upload the file
+    const snapshot = await uploadBytes(photoRef, file);
+    
+    // Get the download URL
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    // Update user document with new photo URL
+    await updateDoc(doc(db, 'users', userId), {
+      photoURL: downloadURL,
+      updatedAt: serverTimestamp()
+    });
+    
+    return { success: true, photoURL: downloadURL };
+  } catch (error) {
+    console.error('Error uploading profile photo:', error);
+    return { success: false, error };
+  }
+};
+
+export const deleteProfilePhoto = async (userId: string, photoURL: string) => {
+  try {
+    // Delete from storage if it's a Firebase Storage URL
+    if (photoURL.includes('firebasestorage.googleapis.com')) {
+      const photoRef = ref(storage, photoURL);
+      await deleteObject(photoRef);
+    }
+    
+    // Update user document to remove photo URL
+    await updateDoc(doc(db, 'users', userId), {
+      photoURL: null,
+      updatedAt: serverTimestamp()
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting profile photo:', error);
     return { success: false, error };
   }
 };
