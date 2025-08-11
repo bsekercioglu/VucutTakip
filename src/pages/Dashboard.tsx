@@ -159,28 +159,28 @@ const Dashboard: React.FC = () => {
       title: 'Mevcut Ağırlık',
       value: `${fmt(currentWeight)} kg`,
       change: weightChange !== 0 ? `${weightChange > 0 ? '+' : ''}${fmt(weightChange)} kg` : '',
-      icon: Scale,
+      icon: weightChange > 0 ? TrendingUp : weightChange < 0 ? TrendingDown : Scale,
       color: weightChange > 0 ? 'text-red-600' : weightChange < 0 ? 'text-green-600' : 'text-gray-600'
     },
     {
       title: 'Mevcut BMI',
       value: fmt(currentBMI),
       change: bmiChange !== 0 ? `${bmiChange > 0 ? '+' : ''}${fmt(bmiChange)}` : '',
-      icon: TrendingDown,
+      icon: bmiChange > 0 ? TrendingUp : bmiChange < 0 ? TrendingDown : Target,
       color: bmiChange > 0 ? 'text-red-600' : bmiChange < 0 ? 'text-green-600' : 'text-gray-600'
     },
     {
       title: 'Yağ Oranı (BFP)',
       value: currentBFP !== null ? `${fmt(currentBFP)}%` : 'N/A',
       change: bodyFatChange !== 0 ? `${bodyFatChange > 0 ? '+' : ''}${fmt(bodyFatChange)}%` : '',
-      icon: TrendingDown,
+      icon: bodyFatChange > 0 ? TrendingUp : bodyFatChange < 0 ? TrendingDown : Activity,
       color: bodyFatChange > 0 ? 'text-red-600' : bodyFatChange < 0 ? 'text-green-600' : 'text-gray-600'
     },
     {
       title: 'Metabolizma (BMR)',
       value: `${fmt(currentBMR, 0)} kcal`,
       change: bmrChange !== 0 ? `${bmrChange > 0 ? '+' : ''}${fmt(bmrChange, 0)} kcal` : '',
-      icon: TrendingUp,
+      icon: bmrChange > 0 ? TrendingUp : bmrChange < 0 ? TrendingDown : Activity,
       color: bmrChange > 0 ? 'text-green-600' : bmrChange < 0 ? 'text-red-600' : 'text-gray-600'
     }
   ];
@@ -205,8 +205,18 @@ const Dashboard: React.FC = () => {
             return (
               <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-2 bg-gray-50 rounded-lg">
-                    <Icon className="h-6 w-6 text-gray-600" />
+                  <div className={`p-2 rounded-lg ${
+                    stat.change && stat.change !== '' 
+                      ? (stat.color === 'text-green-600' ? 'bg-green-50' : 
+                         stat.color === 'text-red-600' ? 'bg-red-50' : 'bg-gray-50')
+                      : 'bg-gray-50'
+                  }`}>
+                    <Icon className={`h-6 w-6 ${
+                      stat.change && stat.change !== '' 
+                        ? (stat.color === 'text-green-600' ? 'text-green-600' : 
+                           stat.color === 'text-red-600' ? 'text-red-600' : 'text-gray-600')
+                        : 'text-gray-600'
+                    }`} />
                   </div>
                   {stat.change && (
                     <span className={`text-sm font-medium ${stat.color}`}>
