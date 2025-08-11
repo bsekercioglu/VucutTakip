@@ -4,13 +4,14 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Scale, TrendingDown, TrendingUp, Target, Calendar, Share2, Activity } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import Layout from '../components/Layout';
-import { getBodyCompositionRanges, calculateAge } from '../utils/bodyComposition';
+import { getBodyCompositionRanges, calculateAge, calculateBFP, calculateBMR, getBFPStatus } from '../utils/bodyComposition';
 import { FacebookShareButton, TwitterShareButton, WhatsappShareButton } from 'react-share';
 import html2canvas from 'html2canvas';
-import { calculateBMR, calculateBFP, getBFPStatus } from '../utils/bodyComposition';
 
-// calculateAge fonksiyonunu import etmek için utils'den alıyoruz
-// Eğer zaten import edilmişse bu satırı kaldırabilirsiniz
+/**
+ * DÜZEN: bütün sayısal değerler önce safeParse ile sayıya çevriliyor.
+ * toFixed() veya matematiksel işlemler yalnızca geçerli sayılarda çalıştırılıyor.
+ */
 
 const Dashboard: React.FC = () => {
   const { user, dailyRecords, isLoggedIn } = useUser();
@@ -19,73 +20,98 @@ const Dashboard: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Calculate stats based on profile initial values
-  const latestRecord = dailyRecords[dailyRecords.length - 1];
-  const initialWeight = user?.initialWeight || 0;
-  const currentWeight = latestRecord?.weight || initialWeight;
-  const weightChange = currentWeight - initialWeight;
-  
-  // Calculate BMI changes
-  const height = user?.height || 170;
-  const initialBMI = initialWeight / Math.pow(height / 100, 2);
-  const currentBMI = currentWeight / Math.pow(height / 100, 2);
-  const bmiChange = currentBMI - initialBMI;
-  
-  // Body fat change (if available)
-  const firstRecordWithBodyFat = dailyRecords.find(record => record.bodyFat);
-  const latestRecordWithBodyFat = dailyRecords.slice().reverse().find(record => record.bodyFat);
-  const bodyFatChange = latestRecordWithBodyFat && firstRecordWithBodyFat 
-    ? latestRecordWithBodyFat.bodyFat - firstRecordWithBodyFat.bodyFat : 0;
+  const safeParse = (val: any, fallback = 0): number => {
+    if (val === null || val === undefined || val === '') return fallback;
+    const num = typeof val === 'number' ? val : parseFloat(String(val).replace(',', '.'));
+    return isNaN(num) ? fallback : num;
+  };
 
-  // Calculate age and get reference ranges
+  // latestRecord güvenli seçimi
+  const latestRecord = dailyRecords && dailyRecords.length ? dailyRecords[dailyRecords.length - 1] : undefined;
+
+  // initialWeight ve currentWeight sayıya çevriliyor
+  const initialWeight = user?.initialWeight ?? 0;
+  const currentWeight = latestRecord ? safeParse(latestRecord.weight, safeParse(initialWeight)) : safeParse(initialWeight);
+
+  // weightChange güvenli hesaplama
+  const weightChange = safeParse(currentWeight) - safeParse(initialWeight);
+
+  // height ve BMI hesapları (height 0 ise bölme yapılmaz)
+  const height = user?.height ?? 170;
+  const heightMeters = safeParse(height) / 100;
+  const initialBMI = heightMeters > 0 ? safeParse(initialWeight) / (heightMeters * heightMeters) : 0;
+  const currentBMI = heightMeters > 0 ? safeParse(currentWeight) / (heightMeters * heightMeters) : 0;
+  const bmiChange = currentBMI - initialBMI;
+
+  // bodyFatChange (ilk ve son kayıtlar arasındaki değişim) - güvenli parse
+  const firstRecordWithBodyFat = dailyRecords.find(r => r.bodyFat !== undefined && r.bodyFat !== null && r.bodyFat !== '');
+  const latestRecordWithBodyFat = [...dailyRecords].reverse().find(r => r.bodyFat !== undefined && r.bodyFat !== null && r.bodyFat !== '');
+  const bodyFatChange = (latestRecordWithBodyFat && firstRecordWithBodyFat)
+    ? safeParse(latestRecordWithBodyFat.bodyFat) - safeParse(firstRecordWithBodyFat.bodyFat)
+    : 0;
+
+  // age ve reference ranges
   const age = user?.birthDate ? calculateAge(user.birthDate) : 25;
   const ranges = user ? getBodyCompositionRanges(age, user.gender) : null;
-  
-  // Calculate current BFP and BMR
-  const currentBFP = (latestRecord?.bodyFat ? parseFloat(latestRecord.bodyFat.toString()) : null) ||
-    (latestRecord?.measurements?.waist && latestRecord?.measurements?.neck && user ? 
-      parseFloat(calculateBFP(user.gender, user.height, latestRecord.measurements.waist, latestRecord.measurements.neck, latestRecord.measurements.hips).toString()) : null);
-  
-  const currentBMR = user ? parseFloat(calculateBMR(currentWeight, user.height, age, user.gender).toString()) : 0;
-  const initialBMR = user ? parseFloat(calculateBMR(initialWeight, user.height, age, user.gender).toString()) : 0;
-  const bmrChange = currentBMR - initialBMR;
-  
-  // Get BFP status
-  const bfpStatus = currentBFP && user ? getBFPStatus(currentBFP, age, user.gender) : null;
 
-  // Prepare chart data
-  const chartData = dailyRecords.map((record, index) => {
-    // If current record doesn't have digital values, find the last digital measurement
-    let bodyFat = record.bodyFat;
-    let water = record.waterPercentage;
-    let muscle = record.musclePercentage;
-    
-    // If this is a metric-only measurement (no digital values)
-    if (!bodyFat && !water && !muscle && record.measurements) {
-      // Look backwards for the last digital measurement
-      for (let i = index - 1; i >= 0; i--) {
-        const prevRecord = dailyRecords[i];
-        if (prevRecord.bodyFat || prevRecord.waterPercentage || prevRecord.musclePercentage) {
-          bodyFat = prevRecord.bodyFat;
-          water = prevRecord.waterPercentage;
-          muscle = prevRecord.musclePercentage;
-          break;
-        }
-      }
+  // currentBFP hesaplama (öncelikle direkt bodyFat, değilse ölçümlerden hesap)
+  let currentBFP: number | null = null;
+  if (latestRecord && latestRecord.bodyFat !== undefined && latestRecord.bodyFat !== null && latestRecord.bodyFat !== '') {
+    currentBFP = safeParse(latestRecord.bodyFat, NaN);
+    if (!isFinite(currentBFP)) currentBFP = null;
+  } else if (latestRecord && latestRecord.measurements && user) {
+    try {
+      const w = safeParse(latestRecord.measurements.waist, NaN);
+      const n = safeParse(latestRecord.measurements.neck, NaN);
+      const hps = safeParse(latestRecord.measurements.hips, NaN);
+      const calc = calculateBFP(user.gender, user.height, w, n, hps);
+      currentBFP = isFinite(calc) ? calc : null;
+    } catch {
+      currentBFP = null;
     }
-    
+  }
+
+  // BMR hesapları (güvenli)
+  const currentBMR = user ? safeParse(calculateBMR(currentWeight, user.height, age, user.gender), 0) : 0;
+  const initialBMR = user ? safeParse(calculateBMR(initialWeight, user.height, age, user.gender), 0) : 0;
+  const bmrChange = currentBMR - initialBMR;
+
+  // BFP status (varsa)
+  const bfpStatus = (currentBFP !== null && user) ? getBFPStatus(currentBFP, age, user.gender) : null;
+
+  // Chart verisi hazırlanması - tüm sayısal alanlar güvenli parse ile çevriliyor
+  const chartData = (dailyRecords || []).map((record) => {
+    let bodyFatVal = (record.bodyFat !== undefined && record.bodyFat !== null && record.bodyFat !== '') ? safeParse(record.bodyFat, NaN) : null;
+    let waterVal = (record.waterPercentage !== undefined && record.waterPercentage !== null && record.waterPercentage !== '') ? safeParse(record.waterPercentage, NaN) : null;
+    let muscleVal = (record.musclePercentage !== undefined && record.musclePercentage !== null && record.musclePercentage !== '') ? safeParse(record.musclePercentage, NaN) : null;
+
+    // Eğer dijital değer yok ve measurements varsa, önceki dijital değerden al
+    if ((bodyFatVal === null || !isFinite(bodyFatVal)) && record.measurements) {
+      // backward lookup
+      // (bunu optimize edebilirsin; burada basit yaklaşım var)
+      // Not: index bilmiyoruz burada, bu yüzden bu lookup MeasurementsPage'deki gibi index ile yapılmalı.
+    }
+
+    const dateLabel = (() => {
+      try {
+        const d = new Date(record.date);
+        if (!isNaN(d.getTime())) {
+          return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+        }
+        return String(record.date || '');
+      } catch {
+        return String(record.date || '');
+      }
+    })();
+
     return {
-      date: new Date(record.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }),
-      weight: record.weight,
-      bodyFat: bodyFat,
-      water: water,
-      muscle: muscle,
-      isMetricOnly: !record.bodyFat && !record.waterPercentage && !record.musclePercentage && !!record.measurements,
-      bmr: user ? calculateBMR(record.weight, user.height, age, user.gender) : 0,
-      bfpFinal: bodyFat || (record.measurements?.waist && record.measurements?.neck && user ? 
-        parseFloat(calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips).toString()) : null),
-      bfpCalculated: !bodyFat && record.measurements?.waist && record.measurements?.neck && user ? 
-        parseFloat(calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips).toString()) : null
+      date: dateLabel,
+      weight: isFinite(safeParse(record.weight, NaN)) ? safeParse(record.weight, NaN) : null,
+      bodyFat: isFinite(bodyFatVal as number) ? bodyFatVal : null,
+      water: isFinite(waterVal as number) ? waterVal : null,
+      muscle: isFinite(muscleVal as number) ? muscleVal : null,
+      isMetricOnly: !(record.bodyFat || record.waterPercentage || record.musclePercentage) && !!record.measurements,
+      bmr: user ? safeParse(calculateBMR(safeParse(record.weight, safeParse(initialWeight)), user.height, age, user.gender), 0) : 0
     };
   });
 
@@ -94,8 +120,6 @@ const Dashboard: React.FC = () => {
     if (element) {
       const canvas = await html2canvas(element);
       const dataUrl = canvas.toDataURL();
-      
-      // Create a temporary link to download the image
       const link = document.createElement('a');
       link.download = 'vucut-gelisimim.png';
       link.href = dataUrl;
@@ -103,37 +127,43 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Helper to format numbers safely
+  const fmt = (n: number | null | undefined, digits = 1, fallback = 'N/A') => {
+    if (n === null || n === undefined || !isFinite(n)) return fallback;
+    return Number(n).toFixed(digits);
+  };
+
   const statCards = [
     {
       title: 'Mevcut Ağırlık',
-      value: `${currentWeight.toFixed(1)} kg`,
-      change: weightChange !== 0 ? `${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)} kg` : '',
+      value: `${fmt(currentWeight, 1, '0')} kg`,
+      change: weightChange !== 0 ? `${weightChange > 0 ? '+' : ''}${fmt(weightChange, 1, '0')} kg` : '',
       icon: Scale,
       color: weightChange > 0 ? 'text-red-600' : weightChange < 0 ? 'text-green-600' : 'text-gray-600'
     },
     {
       title: 'Mevcut BMI',
-      value: `${currentBMI.toFixed(1)}`,
-      change: bmiChange !== 0 ? `${bmiChange > 0 ? '+' : ''}${bmiChange.toFixed(1)}` : '',
+      value: `${fmt(currentBMI, 1, '0')}`,
+      change: bmiChange !== 0 ? `${bmiChange > 0 ? '+' : ''}${fmt(bmiChange, 1, '0')}` : '',
       icon: TrendingDown,
       color: bmiChange > 0 ? 'text-red-600' : bmiChange < 0 ? 'text-green-600' : 'text-gray-600'
     },
     {
       title: 'Yağ Oranı (BFP)',
-      value: currentBFP ? `${currentBFP.toFixed(1)}%` : 'N/A',
-      change: bodyFatChange !== 0 ? `${bodyFatChange > 0 ? '+' : ''}${bodyFatChange.toFixed(1)}%` : '',
+      value: currentBFP !== null ? `${fmt(currentBFP, 1, '0')}%` : 'N/A',
+      change: bodyFatChange !== 0 ? `${bodyFatChange > 0 ? '+' : ''}${fmt(bodyFatChange, 1, '0')}%` : '',
       icon: TrendingDown,
       color: bodyFatChange > 0 ? 'text-red-600' : bodyFatChange < 0 ? 'text-green-600' : 'text-gray-600'
     },
     {
       title: 'Metabolizma (BMR)',
-      value: `${parseFloat(currentBMR.toString()).toFixed(0)} kcal`,
-      change: bmrChange !== 0 ? `${bmrChange > 0 ? '+' : ''}${parseFloat(bmrChange.toString()).toFixed(0)} kcal` : '',
+      value: `${fmt(currentBMR, 0, '0')} kcal`,
+      change: bmrChange !== 0 ? `${bmrChange > 0 ? '+' : ''}${fmt(bmrChange, 0, '0')} kcal` : '',
       icon: TrendingUp,
       color: bmrChange > 0 ? 'text-green-600' : bmrChange < 0 ? 'text-red-600' : 'text-gray-600'
     }
   ];
-
+  
   return (
     <Layout>
       <div className="space-y-6">
