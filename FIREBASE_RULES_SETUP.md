@@ -1,5 +1,27 @@
 # Firebase Firestore Security Rules Kurulum Rehberi
 
+## ⚠️ ACİL: İzin Hatası Çözümü
+
+Eğer "Missing or insufficient permissions" hatası alıyorsanız:
+
+1. [Firebase Console](https://console.firebase.google.com/) → Projenizi seçin
+2. **Firestore Database** → **Rules** sekmesi
+3. Aşağıdaki kuralları kopyalayıp yapıştırın ve **Publish** butonuna tıklayın:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Temporary rule for debugging - allows all authenticated users
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+**NOT: Bu geçici bir çözümdür. Production'da daha güvenli kurallar kullanılmalıdır.**
+
 ## 1. Firebase Console'a Giriş
 
 1. [Firebase Console](https://console.firebase.google.com/) adresine gidin
