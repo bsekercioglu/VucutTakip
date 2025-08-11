@@ -142,7 +142,41 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const loginWithGoogle = async () => {
     try {
-      await signInWithRedirect(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      if (result.user) {
+        // Check if user exists in our database
+        const userData = await firebaseService.getUser(result.user.uid);
+        if (userData) {
+          // User exists, login successful
+          return true;
+        } else {
+          // User doesn't exist in our database, create profile
+          const names = result.user.displayName?.split(' ') || ['', ''];
+          const newUserData = {
+            firstName: names[0] || 'Google',
+            lastName: names.slice(1).join(' ') || 'User',
+            email: result.user.email || '',
+            birthDate: '1990-01-01',
+            gender: 'male' as const,
+            height: 170,
+            initialWeight: 70,
+            measurements: {
+              chest: 90,
+              waist: 80,
+              hips: 90,
+              arm: 30,
+              thigh: 50
+            },
+            registrationDate: new Date().toISOString().split('T')[0],
+            photoURL: result.user.photoURL || undefined
+          };
+          
+          const createResult = await firebaseService.createUser(result.user.uid, newUserData);
+          if (createResult.success) {
+            return true;
+          }
+        }
+      }
       return true;
     } catch (error) {
       console.error('Google login error:', error);

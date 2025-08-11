@@ -26,8 +26,12 @@ const LoginPage: React.FC = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      await loginWithGoogle();
-      // Redirect will handle navigation automatically
+      const success = await loginWithGoogle();
+      if (success) {
+        navigate('/dashboard');
+      } else {
+        alert('Google ile giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
+      }
     } catch (error) {
       console.error('Google login failed:', error);
       alert('Google ile giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
