@@ -30,20 +30,22 @@ const MeasurementsPage: React.FC = () => {
     const loadData = async () => {
       if (user && isLoggedIn) {
         console.log('MeasurementsPage: Loading data for user:', user.id, 'Current records:', dailyRecords.length);
-        setLocalLoading(true);
-        await refreshData();
+        if (dailyRecords.length === 0) {
+          setLocalLoading(true);
+          await refreshData();
+          setLocalLoading(false);
+        }
         console.log('MeasurementsPage: Data loaded, records count:', dailyRecords.length);
-        setLocalLoading(false);
       }
     };
     
-    if (!loading && user) {
+    if (!loading && user && isLoggedIn) {
       console.log('MeasurementsPage: Effect triggered - User:', user.id, 'Loading:', loading, 'Records:', dailyRecords.length);
       loadData();
     } else {
       console.log('MeasurementsPage: Effect skipped - Loading:', loading, 'User:', user?.id);
     }
-  }, [user, isLoggedIn, loading, refreshData]);
+  }, [user, isLoggedIn, loading, refreshData, dailyRecords.length]);
 
   // Additional effect to monitor dailyRecords changes
   React.useEffect(() => {
@@ -104,6 +106,8 @@ const MeasurementsPage: React.FC = () => {
     );
   }
 
+  // Force re-render when dailyRecords changes
+  console.log('MeasurementsPage: Rendering with records:', dailyRecords.length, dailyRecords);
   return (
     <Layout>
       <div className="space-y-6">
@@ -244,11 +248,13 @@ const MeasurementsPage: React.FC = () => {
             </div>
           </div>
           
-          {dailyRecords.length > 0 ? (
+          {dailyRecords && dailyRecords.length > 0 ? (
             <div className="overflow-x-auto">
-              <p className="text-sm text-gray-600 mb-4">
+              <div className="p-4">
+                <p className="text-sm text-gray-600 mb-4">
                 {dailyRecords.length} kayıt bulundu
-              </p>
+                </p>
+              </div>
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
@@ -288,6 +294,8 @@ const MeasurementsPage: React.FC = () => {
                   {dailyRecords.slice().reverse().map((record, index) => {
                     const prevRecord = index < dailyRecords.length - 1 ? dailyRecords[dailyRecords.length - 2 - index] : null;
                     const weightChange = prevRecord ? record.weight - prevRecord.weight : 0;
+                    
+                    console.log('Rendering record:', record);
                     
                     return (
                       <tr key={record.id} className="hover:bg-gray-50">
@@ -330,6 +338,10 @@ const MeasurementsPage: React.FC = () => {
               <p className="text-gray-600 mb-4">
                 İlk ölçümünüzü ekleyerek başlayın. 
                 {user && ` (User ID: ${user.id})`}
+                <br />
+                Debug: dailyRecords.length = {dailyRecords.length}
+                <br />
+                Records: {JSON.stringify(dailyRecords.slice(0, 1))}
               </p>
               <button
                 onClick={() => setShowForm(true)}
