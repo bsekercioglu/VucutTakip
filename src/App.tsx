@@ -2,6 +2,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useUser, UserProvider } from './contexts/UserContext';
+import { useToast } from './hooks/useToast';
+import ToastContainer from './components/ToastContainer';
 import LandingPage from './pages/LandingPage';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
@@ -13,6 +15,7 @@ import ProfilePage from './pages/ProfilePage';
 
 const AppContent: React.FC = () => {
   const { loading, isLoggedIn } = useUser();
+  const { toasts, removeToast } = useToast();
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -33,17 +36,20 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/measurements" element={<MeasurementsPage />} />
-      <Route path="/consultant" element={<ConsultantPage />} />
-      <Route path="/products" element={<ProductsPage />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/measurements" element={<MeasurementsPage />} />
+        <Route path="/consultant" element={<ConsultantPage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+    </>
   );
 };
 

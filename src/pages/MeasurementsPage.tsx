@@ -3,6 +3,8 @@ import { Navigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Plus, Scale, Droplets, TrendingDown, TrendingUp, Edit3, Trash2, Save, X } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
+import { useToast } from '../hooks/useToast';
+import ConfirmDialog from '../components/ConfirmDialog';
 import Layout from '../components/Layout';
 
 interface MeasurementFormData {
@@ -15,9 +17,19 @@ interface MeasurementFormData {
 
 const MeasurementsPage: React.FC = () => {
   const { user, dailyRecords, addDailyRecord, updateDailyRecord, deleteDailyRecord, isLoggedIn, loading } = useUser();
+  const { success, error } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    recordId: string;
+    recordDate: string;
+  }>({
+    isOpen: false,
+    recordId: '',
+    recordDate: ''
+  });
   
   const { register, handleSubmit, reset, formState: { errors } } = useForm<MeasurementFormData>({
     defaultValues: {
@@ -85,12 +97,16 @@ const MeasurementsPage: React.FC = () => {
         });
         setShowForm(false);
         setEditingRecord(null);
-        alert(editingRecord ? 'Ölçüm başarıyla güncellendi!' : 'Ölçüm başarıyla kaydedildi!');
+        if (editingRecord) {
+          success('Başarılı!', 'Ölçüm başarıyla güncellendi');
+        } else {
+          success('Başarılı!', 'Ölçüm başarıyla kaydedildi');
+        }
       } else {
-        alert(editingRecord ? 'Ölçüm güncellenirken hata oluştu. Lütfen tekrar deneyin.' : 'Ölçüm kaydedilirken hata oluştu. Lütfen tekrar deneyin.');
+        error('Hata!', editingRecord ? 'Ölçüm güncellenirken hata oluştu' : 'Ölçüm kaydedilirken hata oluştu');
       }
     } catch {
-      alert(editingRecord ? 'Ölçüm güncellenirken hata oluştu. Lütfen tekrar deneyin.' : 'Ölçüm kaydedilirken hata oluştu. Lütfen tekrar deneyin.');
+      error('Hata!', 'Beklenmeyen bir hata oluştu');
     } finally {
       setIsSubmitting(false);
     }
@@ -106,15 +122,26 @@ const MeasurementsPage: React.FC = () => {
     setShowForm(true);
   };
 
-  const handleDelete = async (recordId: string) => {
-    if (window.confirm('Bu ölçümü silmek istediğinizden emin misiniz?')) {
-      const success = await deleteDailyRecord(recordId);
-      if (success) {
-        alert('Ölçüm başarıyla silindi!');
-      } else {
-        alert('Ölçüm silinirken hata oluştu. Lütfen tekrar deneyin.');
-      }
+  const handleDeleteClick = (recordId: string, recordDate: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      recordId,
+      recordDate
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const deleteSuccess = await deleteDailyRecord(confirmDialog.recordId);
+    if (deleteSuccess) {
+      success('Başarılı!', 'Ölçüm başarıyla silindi');
+    } else {
+      error('Hata!', 'Ölçüm silinirken hata oluştu');
     }
+    setConfirmDialog({ isOpen: false, recordId: '', recordDate: '' });
+  };
+
+  const handleDeleteCancel = () => {
+    setConfirmDialog({ isOpen: false, recordId: '', recordDate: '' });
   };
 
   const handleCancelEdit = () => {
@@ -228,6 +255,18 @@ const MeasurementsPage: React.FC = () => {
           </div>
         )}
 
+        {/* Confirm Dialog */}
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          title="Ölçümü Sil"
+          message={`${new Date(confirmDialog.recordDate).toLocaleDateString('tr-TR')} tarihli ölçümü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`}
+          confirmText="Sil"
+          cancelText="İptal"
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+          type="danger"
+        />
+
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="p-6 border-b border-gray-200 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">Ölçüm Geçmişi</h3>
@@ -300,7 +339,7 @@ const MeasurementsPage: React.FC = () => {
                               <Edit3 className="h-4 w-4" />
                             </button>
                             <button
-                              onClick={() => handleDelete(record.id)}
+                              onClick={() => handleDeleteClick(record.id, record.date)}
                               className="text-red-600 hover:text-red-800 transition-colors"
                               title="Sil"
                             >
