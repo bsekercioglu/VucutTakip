@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signInWithRedirect,
   getRedirectResult,
   signOut,
@@ -12,8 +12,6 @@ import { auth, googleProvider, facebookProvider } from '../config/firebase';
 import * as firebaseService from '../services/firebaseService';
 import { User, DailyRecord, Question, DailyTracking } from '../services/firebaseService';
 
-import { useEffect } from 'react';
-
 interface UserContextType {
   user: User | null;
   dailyRecords: DailyRecord[];
@@ -21,9 +19,14 @@ interface UserContextType {
   questions: Question[];
   isLoggedIn: boolean;
   loading: boolean;
-  login: (email: string, password: string) => void;
+  login: (email: string, password: string) => Promise<boolean>;
   loginWithGoogle: () => Promise<boolean>;
   loginWithFacebook: () => Promise<boolean>;
+  registerUser: (
+    email: string,
+    password: string,
+    userData: Omit<User, 'id' | 'registrationDate'>
+  ) => Promise<boolean>;
   logout: () => Promise<void>;
   addDailyRecord: (record: Omit<DailyRecord, 'id' | 'userId'>) => Promise<boolean>;
   addDailyTracking: (tracking: Omit<DailyTracking, 'id' | 'userId'>) => Promise<boolean>;
@@ -52,14 +55,25 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Kullanıcı verilerini yükleme
+  const loadUserData = async (userId: string) => {
+    const [records, tracking, userQuestions] = await Promise.all([
+      firebaseService.getUserDailyRecords(userId),
+      firebaseService.getUserDailyTracking(userId),
+      firebaseService.getUserQuestions(userId)
+    ]);
+    setDailyRecords(records);
+    setDailyTracking(tracking);
+    setQuestions(userQuestions);
+  };
+
+  // Oturum yönetimi
   useEffect(() => {
-    // Handle redirect result from Google/Facebook login
     const handleRedirectResult = async () => {
       try {
         const result = await getRedirectResult(auth);
         if (result?.user) {
-          console.log('Google redirect result:', result.user);
-          // User will be handled by onAuthStateChanged
+          console.log('Google/Facebook redirect result:', result.user);
         }
       } catch (error) {
         console.error('Redirect result error:', error);
@@ -76,7 +90,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setIsLoggedIn(true);
           await loadUserData(firebaseUser.uid);
         } else {
-          // Create new user profile for Google/Facebook users
           const newUser: Omit<User, 'id'> = {
             firstName: firebaseUser.displayName?.split(' ')[0] || 'Google',
             lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || 'User',
@@ -95,12 +108,12 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             registrationDate: new Date().toISOString().split('T')[0],
             photoURL: firebaseUser.photoURL || null
           };
-          
+
           const result = await firebaseService.createUser(firebaseUser.uid, newUser);
           if (result.success) {
             setUser({ id: firebaseUser.uid, ...newUser });
             setIsLoggedIn(true);
-            console.log('Google user profile created successfully');
+            console.log('New Google/Facebook user profile created');
           }
         }
       } else {
@@ -116,18 +129,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => unsubscribe();
   }, []);
 
-  const loadUserData = async (userId: string) => {
-    const [records, tracking, userQuestions] = await Promise.all([
-      firebaseService.getUserDailyRecords(userId),
-      firebaseService.getUserDailyTracking(userId),
-      firebaseService.getUserQuestions(userId)
-    ]);
-    setDailyRecords(records);
-    setDailyTracking(tracking);
-    setQuestions(userQuestions);
-  };
-
-  const login = async (email: string, password: string): Promise<boolean> => {
+  // Auth işlemleri
+  const login = async (email: string, password: string) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       return true;
@@ -137,7 +140,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const loginWithGoogle = async (): Promise<boolean> => {
+  const loginWithGoogle = async () => {
     try {
       await signInWithRedirect(auth, googleProvider);
       return true;
@@ -147,7 +150,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const loginWithFacebook = async (): Promise<boolean> => {
+  const loginWithFacebook = async () => {
     try {
       await signInWithRedirect(auth, facebookProvider);
       return true;
@@ -157,18 +160,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const register = async (userData: Omit<User, 'id' | 'registrationDate'>): Promise<boolean> => {
-    try {
-      // This function is no longer used - registration is handled in RegisterPage
-      console.warn('This register function is deprecated. Use RegisterPage directly.');
-      return false;
-    } catch (error) {
-      console.error('Registration error:', error);
-      return false;
-    }
-  };
-
-  const registerUser = async (email: string, password: string, userData: Omit<User, 'id' | 'registrationDate'>): Promise<boolean> => {
+  const registerUser = async (
+    email: string,
+    password: string,
+    userData: Omit<User, 'id' | 'registrationDate'>
+  ) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const newUser: Omit<User, 'id'> = {
@@ -183,7 +179,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const logout = async (): Promise<void> => {
+  const logout = async () => {
     try {
       await signOut(auth);
     } catch (error) {
@@ -191,14 +187,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const addDailyRecord = async (record: Omit<DailyRecord, 'id' | 'userId'>): Promise<boolean> => {
+  // CRUD işlemleri
+  const addDailyRecord = async (record: Omit<DailyRecord, 'id' | 'userId'>) => {
     if (!user) return false;
-    
-    const result = await firebaseService.addDailyRecord({
-      ...record,
-      userId: user.id
-    });
-    
+    const result = await firebaseService.addDailyRecord({ ...record, userId: user.id });
     if (result.success) {
       await loadUserData(user.id);
       return true;
@@ -206,14 +198,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return false;
   };
 
-  const addDailyTracking = async (tracking: Omit<DailyTracking, 'id' | 'userId'>): Promise<boolean> => {
+  const addDailyTracking = async (tracking: Omit<DailyTracking, 'id' | 'userId'>) => {
     if (!user) return false;
-    
-    const result = await firebaseService.addDailyTracking({
-      ...tracking,
-      userId: user.id
-    });
-    
+    const result = await firebaseService.addDailyTracking({ ...tracking, userId: user.id });
     if (result.success) {
       await loadUserData(user.id);
       return true;
@@ -221,26 +208,24 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return false;
   };
 
- const updateDailyTracking = async (trackingId: string, tracking: Partial<DailyTracking>): Promise<boolean> => {
-  if (!user) return false;
-  try {
-    const result = await firebaseService.updateDailyTracking(trackingId, tracking);
-    if (result.success) {
-      await loadUserData(user.id);
-      return true;
-    }
-    return false;
-  } catch (error) {
-    console.error('updateDailyTracking error:', error);
-    return false;
-  }
-};
-
-  const deleteDailyTracking = async (trackingId: string): Promise<boolean> => {
+  const updateDailyTracking = async (trackingId: string, tracking: Partial<DailyTracking>) => {
     if (!user) return false;
-    
+    try {
+      const result = await firebaseService.updateDailyTracking(trackingId, tracking);
+      if (result.success) {
+        await loadUserData(user.id);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('updateDailyTracking error:', error);
+      return false;
+    }
+  };
+
+  const deleteDailyTracking = async (trackingId: string) => {
+    if (!user) return false;
     const result = await firebaseService.deleteDailyTracking(trackingId);
-    
     if (result.success) {
       await loadUserData(user.id);
       return true;
@@ -248,16 +233,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return false;
   };
 
-  const addQuestion = async (question: Omit<Question, 'id' | 'userId' | 'timestamp' | 'status'>): Promise<boolean> => {
+  const addQuestion = async (question: Omit<Question, 'id' | 'userId' | 'timestamp' | 'status'>) => {
     if (!user) return false;
-    
     const result = await firebaseService.addQuestion({
       ...question,
       userId: user.id,
       timestamp: new Date().toISOString(),
       status: 'pending'
     });
-    
     if (result.success) {
       await loadUserData(user.id);
       return true;
@@ -265,9 +248,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return false;
   };
 
-  const updateProfile = async (userData: Partial<User>): Promise<boolean> => {
+  const updateProfile = async (userData: Partial<User>) => {
     if (!user) return false;
-    
     const result = await firebaseService.updateUser(user.id, userData);
     if (result.success) {
       setUser({ ...user, ...userData });
@@ -276,34 +258,35 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return false;
   };
 
-  const refreshData = async (): Promise<void> => {
+  const refreshData = async () => {
     if (user) {
       await loadUserData(user.id);
     }
   };
 
   return (
-    <UserContext.Provider value={{
-      user,
-      dailyRecords,
-      dailyTracking,
-      questions,
-      isLoggedIn,
-      loading,
-      login,
-      loginWithGoogle,
-      loginWithFacebook,
-      register,
-      registerUser,
-      logout,
-      addDailyRecord,
-      addDailyTracking,
-      updateDailyTracking,
-      deleteDailyTracking,
-      addQuestion,
-      updateProfile,
-      refreshData
-    }}>
+    <UserContext.Provider
+      value={{
+        user,
+        dailyRecords,
+        dailyTracking,
+        questions,
+        isLoggedIn,
+        loading,
+        login,
+        loginWithGoogle,
+        loginWithFacebook,
+        registerUser,
+        logout,
+        addDailyRecord,
+        addDailyTracking,
+        updateDailyTracking,
+        deleteDailyTracking,
+        addQuestion,
+        updateProfile,
+        refreshData
+      }}
+    >
       {children}
     </UserContext.Provider>
   );
