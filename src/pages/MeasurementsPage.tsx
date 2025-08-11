@@ -17,6 +17,7 @@ const MeasurementsPage: React.FC = () => {
   const { user, dailyRecords, addDailyRecord, isLoggedIn, loading, refreshData } = useUser();
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [localLoading, setLocalLoading] = useState(true);
   
   const { register, handleSubmit, reset, formState: { errors } } = useForm<MeasurementFormData>({
     defaultValues: {
@@ -24,21 +25,21 @@ const MeasurementsPage: React.FC = () => {
     }
   });
 
-  // Force refresh data when component mounts
+  // Load data when component mounts and user is available
   React.useEffect(() => {
-    if (user && isLoggedIn && !loading) {
-      console.log('MeasurementsPage mounted, refreshing data for user:', user.id);
-      refreshData();
+    const loadData = async () => {
+      if (user && isLoggedIn) {
+        console.log('MeasurementsPage: Loading data for user:', user.id);
+        setLocalLoading(true);
+        await refreshData();
+        setLocalLoading(false);
+      }
+    };
+    
+    if (!loading) {
+      loadData();
     }
-  }, [user, isLoggedIn, loading]);
-
-  // Also refresh when user changes
-  React.useEffect(() => {
-    if (user?.id) {
-      console.log('User changed, loading data for:', user.id);
-      refreshData();
-    }
-  }, [user?.id]);
+  }, [user, isLoggedIn, loading, refreshData]);
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
@@ -83,7 +84,7 @@ const MeasurementsPage: React.FC = () => {
   console.log('MeasurementsPage - Daily Records:', dailyRecords);
   console.log('MeasurementsPage - Loading:', loading);
 
-  if (loading) {
+  if (loading || localLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center py-12">
@@ -102,11 +103,16 @@ const MeasurementsPage: React.FC = () => {
           <h4 className="font-medium text-yellow-800">Debug Info:</h4>
           <p className="text-sm text-yellow-700">User ID: {user?.id}</p>
           <p className="text-sm text-yellow-700">Records Count: {dailyRecords.length}</p>
-          <p className="text-sm text-yellow-700">Loading: {loading ? 'Yes' : 'No'}</p>
+          <p className="text-sm text-yellow-700">Global Loading: {loading ? 'Yes' : 'No'}</p>
+          <p className="text-sm text-yellow-700">Local Loading: {localLoading ? 'Yes' : 'No'}</p>
           <p className="text-sm text-yellow-700">Is Logged In: {isLoggedIn ? 'Yes' : 'No'}</p>
-          <p className="text-sm text-yellow-700">Records: {JSON.stringify(dailyRecords.slice(0, 2))}</p>
+          <p className="text-sm text-yellow-700">Sample Records: {JSON.stringify(dailyRecords.slice(0, 1), null, 2)}</p>
           <button 
-            onClick={refreshData}
+            onClick={async () => {
+              setLocalLoading(true);
+              await refreshData();
+              setLocalLoading(false);
+            }}
             className="mt-2 bg-blue-500 text-white px-3 py-1 rounded text-sm"
           >
             Manuel Yenile
@@ -312,7 +318,10 @@ const MeasurementsPage: React.FC = () => {
             <div className="text-center py-12">
               <Scale className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz ölçüm yok</h3>
-              <p className="text-gray-600 mb-4">İlk ölçümünüzü ekleyerek başlayın.</p>
+              <p className="text-gray-600 mb-4">
+                İlk ölçümünüzü ekleyerek başlayın. 
+                {user && ` (User ID: ${user.id})`}
+              </p>
               <button
                 onClick={() => setShowForm(true)}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -323,15 +332,29 @@ const MeasurementsPage: React.FC = () => {
           )}
         </div>
 
-        {/* Firebase Connection Status */}
-        {!user && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
-              <span className="text-red-800">Kullanıcı bilgileri yüklenemedi. Lütfen sayfayı yenileyin.</span>
+        {/* Connection Status */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-blue-800">
+                Bağlantı Durumu: {user ? '✅ Bağlı' : '❌ Bağlantı Yok'}
+              </span>
+              {user && (
+                <span className="text-blue-600 ml-2">
+                  | Kayıt Sayısı: {dailyRecords.length}
+                </span>
+              )}
             </div>
+            {!user && (
+              <button 
+                onClick={() => window.location.reload()}
+                className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
+              >
+                Sayfayı Yenile
+              </button>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </Layout>
   );
