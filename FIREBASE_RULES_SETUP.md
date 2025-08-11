@@ -2,7 +2,7 @@
 
 ## ⚠️ ACİL: İzin Hatası Çözümü
 
-Eğer "Missing or insufficient permissions" hatası alıyorsanız:
+Eğer "Missing or insufficient permissions" veya "The query requires an index" hatası alıyorsanız:
 
 1. [Firebase Console](https://console.firebase.google.com/) → Projenizi seçin
 2. **Firestore Database** → **Rules** sekmesi
@@ -21,6 +21,33 @@ service cloud.firestore {
 ```
 
 **NOT: Bu geçici bir çözümdür. Production'da daha güvenli kurallar kullanılmalıdır.**
+
+## ⚠️ Index Hatası Çözümü
+
+Eğer "The query requires an index" hatası alıyorsanız:
+
+### Seçenek 1: Otomatik Index Oluşturma (Önerilen)
+1. Hata mesajındaki linke tıklayın (örn: https://console.firebase.google.com/v1/r/project/...)
+2. Açılan sayfada **Create Index** butonuna tıklayın
+3. Index oluşturulmasını bekleyin (birkaç dakika sürebilir)
+
+### Seçenek 2: Manuel Index Oluşturma
+Aşağıdaki index'leri manuel olarak oluşturun:
+
+1. **dailyRecords için:**
+   - Collection: `dailyRecords`
+   - Field 1: `userId` (Ascending)
+   - Field 2: `date` (Ascending)
+
+2. **dailyTracking için:**
+   - Collection: `dailyTracking`
+   - Field 1: `userId` (Ascending)
+   - Field 2: `date` (Descending)
+
+3. **questions için:**
+   - Collection: `questions`
+   - Field 1: `userId` (Ascending)
+   - Field 2: `timestamp` (Descending)
 
 ## 1. Firebase Console'a Giriş
 

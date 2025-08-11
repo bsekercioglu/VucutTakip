@@ -129,13 +129,19 @@ export const addDailyTracking = async (tracking: Omit<DailyTracking, 'id' | 'use
 
 export const getUserDailyTracking = async (userId: string): Promise<DailyTracking[]> => {
   try {
+    // Use simple query without ordering to avoid index requirement
     const q = query(
       collection(db, 'dailyTracking'),
-      where('userId', '==', userId),
-      orderBy('date', 'desc')
+      where('userId', '==', userId)
     );
+    
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyTracking));
+    const tracking = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyTracking));
+    
+    // Sort manually by date descending to avoid index requirement
+    tracking.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    return tracking;
   } catch (error) {
     console.error('Error getting daily tracking:', error);
     return [];
@@ -188,36 +194,20 @@ export const getUserDailyRecords = async (userId: string): Promise<DailyRecord[]
   try {
     console.log('Firebase: Getting daily records for user:', userId);
     
-    // Try with ordering first
-    let q = query(
+    // Use simple query without ordering to avoid index requirement
+    const q = query(
       collection(db, 'dailyRecords'),
-      where('userId', '==', userId),
-      orderBy('date', 'asc')
+      where('userId', '==', userId)
     );
     
-    try {
-      const querySnapshot = await getDocs(q);
-      const records = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyRecord));
-      console.log('Firebase: Retrieved daily records with ordering:', records);
-      return records;
-    } catch (orderError) {
-      console.log('Firebase: Ordering failed, trying without orderBy...', orderError);
-      
-      // If ordering fails, try without ordering
-      q = query(
-        collection(db, 'dailyRecords'),
-        where('userId', '==', userId)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const records = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyRecord));
-      
-      // Sort manually by date
-      records.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      
-      console.log('Firebase: Retrieved daily records without ordering:', records);
-      return records;
-    }
+    const querySnapshot = await getDocs(q);
+    const records = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyRecord));
+    
+    // Sort manually by date to avoid index requirement
+    records.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    console.log('Firebase: Retrieved daily records:', records);
+    return records;
   } catch (error) {
     console.error('Error getting daily records:', error);
     return [];
@@ -242,13 +232,19 @@ export const addQuestion = async (question: Omit<Question, 'id'>) => {
 
 export const getUserQuestions = async (userId: string): Promise<Question[]> => {
   try {
+    // Use simple query without ordering to avoid index requirement
     const q = query(
       collection(db, 'questions'),
-      where('userId', '==', userId),
-      orderBy('timestamp', 'desc')
+      where('userId', '==', userId)
     );
+    
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Question));
+    const questions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Question));
+    
+    // Sort manually by timestamp descending to avoid index requirement
+    questions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    
+    return questions;
   } catch (error) {
     console.error('Error getting questions:', error);
     return [];
