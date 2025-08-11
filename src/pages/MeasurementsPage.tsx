@@ -29,17 +29,26 @@ const MeasurementsPage: React.FC = () => {
   React.useEffect(() => {
     const loadData = async () => {
       if (user && isLoggedIn) {
-        console.log('MeasurementsPage: Loading data for user:', user.id);
+        console.log('MeasurementsPage: Loading data for user:', user.id, 'Current records:', dailyRecords.length);
         setLocalLoading(true);
         await refreshData();
+        console.log('MeasurementsPage: Data loaded, records count:', dailyRecords.length);
         setLocalLoading(false);
       }
     };
     
-    if (!loading) {
+    if (!loading && user) {
+      console.log('MeasurementsPage: Effect triggered - User:', user.id, 'Loading:', loading, 'Records:', dailyRecords.length);
       loadData();
+    } else {
+      console.log('MeasurementsPage: Effect skipped - Loading:', loading, 'User:', user?.id);
     }
   }, [user, isLoggedIn, loading, refreshData]);
+
+  // Additional effect to monitor dailyRecords changes
+  React.useEffect(() => {
+    console.log('MeasurementsPage: dailyRecords changed:', dailyRecords.length, dailyRecords);
+  }, [dailyRecords]);
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;

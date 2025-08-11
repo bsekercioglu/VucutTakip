@@ -192,7 +192,7 @@ export const addDailyRecord = async (record: Omit<DailyRecord, 'id'>) => {
 
 export const getUserDailyRecords = async (userId: string): Promise<DailyRecord[]> => {
   try {
-    console.log('Firebase: Getting daily records for user:', userId);
+    console.log('FirebaseService: Getting daily records for user:', userId);
     
     // Use simple query without ordering to avoid index requirement
     const q = query(
@@ -206,10 +206,10 @@ export const getUserDailyRecords = async (userId: string): Promise<DailyRecord[]
     // Sort manually by date to avoid index requirement
     records.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
-    console.log('Firebase: Retrieved daily records:', records);
+    console.log('FirebaseService: Retrieved daily records count:', records.length, 'Records:', records);
     return records;
   } catch (error) {
-    console.error('Error getting daily records:', error);
+    console.error('FirebaseService: Error getting daily records:', error);
     return [];
   }
 };

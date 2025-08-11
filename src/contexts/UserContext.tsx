@@ -58,7 +58,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Kullanıcı verilerini yükleme
   const loadUserData = async (userId: string) => {
-    console.log('Loading user data for userId:', userId);
+    console.log('UserContext: Loading user data for userId:', userId);
     try {
       const [records, tracking, userQuestions] = await Promise.all([
         firebaseService.getUserDailyRecords(userId),
@@ -66,7 +66,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         firebaseService.getUserQuestions(userId)
       ]);
       
-      console.log('Loaded daily records:', records);
+      console.log('UserContext: Loaded daily records:', records.length, records);
       console.log('Loaded daily tracking:', tracking);
       console.log('Loaded questions:', userQuestions);
       
@@ -74,7 +74,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setDailyTracking(tracking);
       setQuestions(userQuestions);
     } catch (error) {
-      console.error('Error loading user data:', error);
+      console.error('UserContext: Error loading user data:', error);
       // Set empty arrays on error to prevent undefined state
       setDailyRecords([]);
       setDailyTracking([]);
@@ -82,13 +82,20 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Debug effect to monitor dailyRecords state changes
+  React.useEffect(() => {
+    console.log('UserContext: dailyRecords state changed:', dailyRecords.length, dailyRecords);
+  }, [dailyRecords]);
+
   // Force refresh data function
   const refreshData = async () => {
     if (user) {
-      console.log('Force refreshing data for user:', user.id);
+      console.log('UserContext: Force refreshing data for user:', user.id);
+      console.log('UserContext: Current dailyRecords before refresh:', dailyRecords.length);
       await loadUserData(user.id);
+      console.log('UserContext: Data refreshed, new dailyRecords count:', dailyRecords.length);
     } else {
-      console.log('No user found, cannot refresh data');
+      console.log('UserContext: No user found, cannot refresh data');
     }
   };
 
