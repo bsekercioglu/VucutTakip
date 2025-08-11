@@ -333,12 +333,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return false;
   };
 
-  const refreshData = async () => {
-    if (user) {
-      await loadUserData(user.id);
-    }
-  };
-
   return (
     <UserContext.Provider
       value={{
