@@ -29,8 +29,8 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
     }
 
     // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Dosya boyutu 5MB\'dan küçük olmalıdır.');
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Dosya boyutu 2MB\'dan küçük olmalıdır.');
       return;
     }
 
@@ -154,7 +154,7 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
 
       {/* Help Text */}
       <p className="text-xs text-gray-500 text-center max-w-xs">
-        JPG, PNG veya GIF formatında, maksimum 5MB boyutunda fotoğraf yükleyebilirsiniz.
+        JPG, PNG veya GIF formatında, maksimum 2MB boyutunda fotoğraf yükleyebilirsiniz.
       </p>
     </div>
   );

@@ -12,8 +12,7 @@ import {
   deleteDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from '../config/firebase';
+import { db } from '../config/firebase';
 
 export interface User {
   id: string;
@@ -133,52 +132,48 @@ export const uploadProfilePhoto = async (userId: string, file: File) => {
   try {
     console.log('Starting profile photo upload for user:', userId);
     
-    // Create a reference to the file location
-    const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    const photoRef = ref(storage, `profile-photos/${userId}/${fileName}`);
+    // Validate file size (max 2MB for base64 storage)
+    if (file.size > 2 * 1024 * 1024) {
+      throw new Error('Dosya boyutu 2MB\'dan küçük olmalıdır.');
+    }
     
-    console.log('Upload path:', `profile-photos/${userId}/${fileName}`);
+    // Convert file to base64
+    console.log('Converting file to base64...');
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
     
-    // Upload the file
-    console.log('Uploading file...');
-    const snapshot = await uploadBytes(photoRef, file);
-    console.log('File uploaded successfully');
+    console.log('File converted to base64, size:', base64.length);
     
-    // Get the download URL
-    console.log('Getting download URL...');
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    console.log('Download URL obtained:', downloadURL);
-    
-    // Update user document with new photo URL
+    // Update user document with base64 photo
     console.log('Updating user document...');
     await updateDoc(doc(db, 'users', userId), {
-      photoURL: downloadURL,
+      photoURL: base64,
       updatedAt: serverTimestamp()
     });
     console.log('User document updated successfully');
     
-    return { success: true, photoURL: downloadURL };
+    return { success: true, photoURL: base64 };
   } catch (error) {
     console.error('Error uploading profile photo:', error);
-    console.error('Error details:', error.code, error.message);
     return { success: false, error };
   }
 };
 
-export const deleteProfilePhoto = async (userId: string, photoURL: string) => {
+export const deleteProfilePhoto = async (userId: string) => {
   try {
-    // Delete from storage if it's a Firebase Storage URL
-    if (photoURL.includes('firebasestorage.googleapis.com')) {
-      const photoRef = ref(storage, photoURL);
-      await deleteObject(photoRef);
-    }
+    console.log('Deleting profile photo for user:', userId);
     
-    // Update user document to remove photo URL
+    // Update user document to remove photo
     await updateDoc(doc(db, 'users', userId), {
-      photoURL: null,
+      photoURL: undefined,
       updatedAt: serverTimestamp()
     });
     
+    console.log('Profile photo deleted successfully');
     return { success: true };
   } catch (error) {
     console.error('Error deleting profile photo:', error);

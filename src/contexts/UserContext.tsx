@@ -386,8 +386,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const deleteProfilePhoto = async () => {
-    if (!user || !user.photoURL) return false;
-    const result = await firebaseService.deleteProfilePhoto(user.id, user.photoURL);
+    if (!user) return false;
+    const result = await firebaseService.deleteProfilePhoto(user.id);
     if (result.success) {
       setUser({ ...user, photoURL: undefined });
       return true;
