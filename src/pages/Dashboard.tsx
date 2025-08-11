@@ -80,7 +80,7 @@ const Dashboard: React.FC = () => {
       bodyFat: bodyFat,
       water: water,
       muscle: muscle,
-      isMetricOnly: !record.bodyFat && !record.waterPercentage && !record.musclePercentage && !!record.measurements
+      isMetricOnly: !record.bodyFat && !record.waterPercentage && !record.musclePercentage && !!record.measurements,
       bmr: user ? calculateBMR(record.weight, user.height, age, user.gender) : 0,
       bfpFinal: bodyFat || (record.measurements?.waist && record.measurements?.neck && user ? 
         calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips) : null),
