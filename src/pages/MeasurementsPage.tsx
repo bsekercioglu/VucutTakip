@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Plus, Scale, Droplets, TrendingDown } from 'lucide-react';
+import { Plus, Scale, Droplets, TrendingDown, TrendingUp } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import Layout from '../components/Layout';
 
