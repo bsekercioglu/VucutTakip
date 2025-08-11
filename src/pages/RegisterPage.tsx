@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { createUserWithEmailAndPassword, updateProfile, signInWithPopup } from 'firebase/auth';
 import { Activity, ArrowLeft } from 'lucide-react';
-import { auth, googleProvider } from '../config/firebase';
+import { auth, googleProvider, facebookProvider } from '../config/firebase';
 import * as firebaseService from '../services/firebaseService';
 
 interface RegisterFormData {
@@ -26,6 +26,7 @@ interface RegisterFormData {
 const RegisterPage: React.FC = () => {
   const [step, setStep] = useState(1);
   const [isGoogleRegistration, setIsGoogleRegistration] = useState(false);
+  const [isFacebookRegistration, setIsFacebookRegistration] = useState(false);
   const navigate = useNavigate();
   
   const { register, handleSubmit, watch, formState: { errors } } = useForm<RegisterFormData>();
@@ -86,6 +87,65 @@ const RegisterPage: React.FC = () => {
         console.error('Registration error details:', error);
         alert(`Kayıt sırasında bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`);
       }
+    }
+  };
+
+  const handleFacebookRegistration = async () => {
+    try {
+      setIsFacebookRegistration(true);
+      const result = await signInWithPopup(auth, facebookProvider);
+      const user = result.user;
+      
+      // Check if user already exists in our database
+      const existingUser = await firebaseService.getUser(user.uid);
+      if (existingUser) {
+        // User already exists, redirect to dashboard
+        navigate('/dashboard');
+        return;
+      }
+      
+      // New user, create profile with Facebook info
+      const names = user.displayName?.split(' ') || ['', ''];
+      const userData = {
+        firstName: names[0] || 'Facebook',
+        lastName: names.slice(1).join(' ') || 'User',
+        email: user.email || '',
+        birthDate: '1990-01-01', // Default, user can update later
+        gender: 'male' as const, // Default, user can update later
+        height: 170, // Default
+        initialWeight: 70, // Default
+        measurements: {
+          chest: 90,
+          waist: 80,
+          hips: 90,
+          arm: 30,
+          thigh: 50
+        },
+        registrationDate: new Date().toISOString().split('T')[0],
+        photoURL: user.photoURL || undefined
+      };
+      
+      const result2 = await firebaseService.createUser(user.uid, userData);
+      if (result2.success) {
+        console.log('Facebook user successfully registered and saved to database');
+        navigate('/dashboard');
+      } else {
+        console.error('Error saving Facebook user data:', result2.error);
+        alert('Facebook ile kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+      }
+    } catch (error: any) {
+      console.error('Facebook registration error:', error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        alert('Facebook kayıt işlemi iptal edildi.');
+      } else if (error.code === 'auth/popup-blocked') {
+        alert('Popup engellendi. Lütfen popup engelleyiciyi devre dışı bırakın.');
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
+        alert('Bu e-posta adresi farklı bir giriş yöntemiyle kayıtlı. Lütfen o yöntemi kullanın.');
+      } else {
+        alert(`Facebook ile kayıt sırasında bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`);
+      }
+    } finally {
+      setIsFacebookRegistration(false);
     }
   };
 
@@ -178,7 +238,7 @@ const RegisterPage: React.FC = () => {
         </div>
 
         {/* Google Registration Button */}
-        <div className="mb-6">
+        <div className="mb-6 space-y-3">
           <button
             type="button"
             onClick={handleGoogleRegistration}
@@ -198,12 +258,28 @@ const RegisterPage: React.FC = () => {
             {isGoogleRegistration ? 'Google ile kayıt oluşturuluyor...' : 'Google ile Hızlı Kayıt'}
           </button>
           
+          <button
+            type="button"
+            onClick={handleFacebookRegistration}
+            disabled={isFacebookRegistration}
+            className="w-full bg-blue-800 text-white py-3 px-4 rounded-lg hover:bg-blue-900 transition-colors font-medium flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isFacebookRegistration ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+            ) : (
+              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+            )}
+            {isFacebookRegistration ? 'Facebook ile kayıt oluşturuluyor...' : 'Facebook ile Hızlı Kayıt'}
+          </button>
+          
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">veya manuel kayıt</span>
+              <span className="px-2 bg-white text-gray-500">veya e-posta ile kayıt</span>
             </div>
           </div>
         </div>

@@ -49,11 +49,23 @@ const LoginPage: React.FC = () => {
 
   const handleFacebookLogin = async () => {
     try {
-      await loginWithFacebook();
-      // Redirect will handle navigation automatically
+      const success = await loginWithFacebook();
+      if (success) {
+        navigate('/dashboard');
+      } else {
+        alert('Facebook ile giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
+      }
     } catch (error) {
       console.error('Facebook login failed:', error);
-      alert('Facebook ile giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
+      if (error.code === 'auth/popup-closed-by-user') {
+        alert('Facebook giriş işlemi iptal edildi.');
+      } else if (error.code === 'auth/popup-blocked') {
+        alert('Popup engellendi. Lütfen popup engelleyiciyi devre dışı bırakın.');
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
+        alert('Bu e-posta adresi farklı bir giriş yöntemiyle kayıtlı. Lütfen o yöntemi kullanın.');
+      } else {
+        alert(`Facebook ile giriş yapılırken bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`);
+      }
     }
   };
 

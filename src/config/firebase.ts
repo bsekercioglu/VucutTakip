@@ -37,7 +37,10 @@ export const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope('email');
 googleProvider.addScope('profile');
 
+// Configure Facebook provider
 export const facebookProvider = new FacebookAuthProvider();
+facebookProvider.addScope('email');
+facebookProvider.addScope('public_profile');
 
 // Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app);
