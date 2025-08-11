@@ -161,9 +161,8 @@ const ConsultantPage: React.FC = () => {
                   AI Danışman (Google Gemini)
                   <Sparkles className={`h-4 w-4 ml-2 text-yellow-500 ${isGeminiConnected ? 'animate-bounce' : ''}`} />
                   {isGeminiConnected && (
-                    <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full animate-pulse flex items-center">
-                      <span className="animate-bounce">😉</span>
-                      <span className="ml-1">Bağlı</span>
+                    <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full animate-pulse">
+                      🤖 Bağlı
                     </span>
                   )}
                 </h3>
@@ -181,28 +180,21 @@ const ConsultantPage: React.FC = () => {
             {chatMessages.length === 0 && (
               <div className="text-center py-8">
                 <div className="relative inline-block mb-4">
-                  <div className="relative">
-                    <Bot className={`h-12 w-12 mx-auto ${isGeminiConnected ? 'text-purple-500' : 'text-gray-400'}`} />
-                    {isGeminiConnected && (
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-pulse">
-                        <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
-                      </div>
-                    )}
-                  </div>
+                  <Bot className={`h-12 w-12 mx-auto ${isGeminiConnected ? 'text-purple-500' : 'text-gray-400'}`} />
                   {isGeminiConnected && (
-                    <div className="absolute top-0 right-0 text-2xl animate-bounce">
-                      😉
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-pulse">
+                      <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
                     </div>
                   )}
                 </div>
                 <h4 className="text-lg font-medium text-gray-900 mb-2">
                   {isGeminiConnected 
-                    ? '😉 Google Gemini AI Danışmanınız Hazır!' 
+                    ? '🤖 Google Gemini AI Danışmanınız Hazır!' 
                     : '⚡ AI Danışmanınız Hazır!'}
                 </h4>
                 <p className="text-gray-600 mb-4">
                   {isGeminiConnected 
-                    ? '🚀 Gerçek AI ile kişiselleştirilmiş beslenme ve fitness önerileri' 
+                    ? 'Gerçek AI ile kişiselleştirilmiş beslenme ve fitness önerileri' 
                     : 'Akıllı pattern-matching ile beslenme ve fitness önerileri'}
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
@@ -270,12 +262,7 @@ const ConsultantPage: React.FC = () => {
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center relative">
                       <Bot className="h-4 w-4 text-white" />
                       {isGeminiConnected && (
-                        <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full animate-pulse">
-                          <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
-                        </div>
-                      )}
-                      {isGeminiConnected && (
-                        <div className="absolute -top-1 -right-1 text-xs animate-bounce">😉</div>
+                        <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                       )}
                     </div>
                   </div>
@@ -305,18 +292,12 @@ const ConsultantPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={!chatInput.trim() || isGeneratingResponse}
-                className={`${isGeminiConnected 
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' 
-                  : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800'
-                } text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center`}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
                 {isGeneratingResponse ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    {isGeminiConnected && <span className="ml-1 animate-bounce">😉</span>}
-                  </>
+                  <Send className="h-4 w-4" />
                 )}
               </button>
             </form>
@@ -397,7 +378,7 @@ const ConsultantPage: React.FC = () => {
                     <div className="flex items-center mb-2">
                       <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                         <span className="text-white text-sm font-medium">D</span>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center relative ${
+                      </div>
                       <div className="ml-3">
                         <span className="font-medium text-blue-900">Danışman</span>
                         <span className="text-sm text-blue-600 ml-2">
@@ -405,12 +386,7 @@ const ConsultantPage: React.FC = () => {
                           {new Date(question.answerTimestamp!).toLocaleTimeString('tr-TR', { 
                             hour: '2-digit', 
                             minute: '2-digit' 
-                          <>
-                            <Bot className="h-4 w-4 text-white" />
-                            {isGeminiConnected && (
-                              <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                            )}
-                          </>
+                          })}
                         </span>
                       </div>
                     </div>
