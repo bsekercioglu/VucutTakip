@@ -188,43 +188,39 @@ export const getUserDailyRecords = async (userId: string): Promise<DailyRecord[]
   try {
     console.log('Firebase: Getting daily records for user:', userId);
     
-    // First check if the collection exists and user has access
-    const testQuery = query(
-      collection(db, 'dailyRecords'),
-      where('userId', '==', userId)
-    );
-    
-    const testSnapshot = await getDocs(testQuery);
-    console.log('Firebase: Test query returned', testSnapshot.size, 'documents');
-    
-    const q = query(
+    // Try with ordering first
+    let q = query(
       collection(db, 'dailyRecords'),
       where('userId', '==', userId),
       orderBy('date', 'asc')
     );
-    const querySnapshot = await getDocs(q);
-    const records = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyRecord));
-    console.log('Firebase: Retrieved daily records:', records);
-    return records;
-  } catch (error) {
-    console.error('Error getting daily records:', error);
-    console.error('Error details:', error.code, error.message);
     
-    // If ordering fails, try without ordering
     try {
-      console.log('Firebase: Trying without orderBy...');
-      const simpleQuery = query(
+      const querySnapshot = await getDocs(q);
+      const records = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyRecord));
+      console.log('Firebase: Retrieved daily records with ordering:', records);
+      return records;
+    } catch (orderError) {
+      console.log('Firebase: Ordering failed, trying without orderBy...', orderError);
+      
+      // If ordering fails, try without ordering
+      q = query(
         collection(db, 'dailyRecords'),
         where('userId', '==', userId)
       );
-      const querySnapshot = await getDocs(simpleQuery);
+      
+      const querySnapshot = await getDocs(q);
       const records = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyRecord));
-      console.log('Firebase: Retrieved daily records (simple query):', records);
+      
+      // Sort manually by date
+      records.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      
+      console.log('Firebase: Retrieved daily records without ordering:', records);
       return records;
-    } catch (simpleError) {
-      console.error('Simple query also failed:', simpleError);
-      return [];
     }
+  } catch (error) {
+    console.error('Error getting daily records:', error);
+    return [];
   }
 };
 

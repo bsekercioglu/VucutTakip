@@ -59,6 +59,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Kullanıcı verilerini yükleme
   const loadUserData = async (userId: string) => {
     console.log('Loading user data for userId:', userId);
+    setLoading(true);
     try {
       const [records, tracking, userQuestions] = await Promise.all([
         firebaseService.getUserDailyRecords(userId),
@@ -79,6 +80,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setDailyRecords([]);
       setDailyTracking([]);
       setQuestions([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -86,6 +89,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const refreshData = async () => {
     if (user) {
       console.log('Force refreshing data for user:', user.id);
+      setLoading(true);
       await loadUserData(user.id);
     } else {
       console.log('No user found, cannot refresh data');

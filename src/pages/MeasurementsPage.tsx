@@ -26,11 +26,19 @@ const MeasurementsPage: React.FC = () => {
 
   // Force refresh data when component mounts
   React.useEffect(() => {
-    if (user && isLoggedIn) {
+    if (user && isLoggedIn && !loading) {
       console.log('MeasurementsPage mounted, refreshing data for user:', user.id);
       refreshData();
     }
-  }, [user, isLoggedIn, refreshData]);
+  }, [user, isLoggedIn, loading]);
+
+  // Also refresh when user changes
+  React.useEffect(() => {
+    if (user?.id) {
+      console.log('User changed, loading data for:', user.id);
+      refreshData();
+    }
+  }, [user?.id]);
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
@@ -90,16 +98,20 @@ const MeasurementsPage: React.FC = () => {
     <Layout>
       <div className="space-y-6">
         {/* Debug Info - Remove in production */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h4 className="font-medium text-yellow-800">Debug Info:</h4>
-            <p className="text-sm text-yellow-700">User ID: {user?.id}</p>
-            <p className="text-sm text-yellow-700">Records Count: {dailyRecords.length}</p>
-            <p className="text-sm text-yellow-700">Loading: {loading ? 'Yes' : 'No'}</p>
-            <p className="text-sm text-yellow-700">Is Logged In: {isLoggedIn ? 'Yes' : 'No'}</p>
-            <p className="text-sm text-yellow-700">Records: {JSON.stringify(dailyRecords.slice(0, 2))}</p>
-          </div>
-        )}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h4 className="font-medium text-yellow-800">Debug Info:</h4>
+          <p className="text-sm text-yellow-700">User ID: {user?.id}</p>
+          <p className="text-sm text-yellow-700">Records Count: {dailyRecords.length}</p>
+          <p className="text-sm text-yellow-700">Loading: {loading ? 'Yes' : 'No'}</p>
+          <p className="text-sm text-yellow-700">Is Logged In: {isLoggedIn ? 'Yes' : 'No'}</p>
+          <p className="text-sm text-yellow-700">Records: {JSON.stringify(dailyRecords.slice(0, 2))}</p>
+          <button 
+            onClick={refreshData}
+            className="mt-2 bg-blue-500 text-white px-3 py-1 rounded text-sm"
+          >
+            Manuel Yenile
+          </button>
+        </div>
 
         {/* Header */}
         <div className="flex justify-between items-center">
