@@ -13,6 +13,8 @@ interface ProfileFormData {
   email: string;
   gender: 'male' | 'female';
   birthDate: string;
+  gender: 'male' | 'female';
+  birthDate: string;
   height: number;
   initialWeight: number;
   chest: number;
@@ -34,6 +36,8 @@ const ProfilePage: React.FC = () => {
       email: user.email,
       gender: user.gender,
       birthDate: user.birthDate,
+      gender: user.gender,
+      birthDate: user.birthDate,
       height: user.height,
       initialWeight: user.initialWeight,
       chest: user.measurements.chest,
@@ -53,6 +57,8 @@ const ProfilePage: React.FC = () => {
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
+      gender: data.gender,
+      birthDate: data.birthDate,
       gender: data.gender,
       birthDate: data.birthDate,
       height: data.height,
@@ -225,6 +231,33 @@ const ProfilePage: React.FC = () => {
                     </div>
                     
                     <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Cinsiyet</label>
+                      <select
+                        {...register('gender', { required: 'Cinsiyet seçimi gerekli' })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Seçiniz</option>
+                        <option value="male">Erkek</option>
+                        <option value="female">Kadın</option>
+                      </select>
+                      {errors.gender && (
+                        <p className="text-red-500 text-sm mt-1">{errors.gender.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Doğum Tarihi</label>
+                      <input
+                        type="date"
+                        {...register('birthDate', { required: 'Doğum tarihi gerekli' })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      {errors.birthDate && (
+                        <p className="text-red-500 text-sm mt-1">{errors.birthDate.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Boy (cm)</label>
                       <input
                         type="number"
@@ -334,6 +367,16 @@ const ProfilePage: React.FC = () => {
                     <div>
                       <label className="block text-sm font-medium text-gray-500">E-posta</label>
                       <p className="text-lg text-gray-900">{user.email}</p>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500">Cinsiyet</label>
+                      <p className="text-lg text-gray-900">{user.gender === 'male' ? 'Erkek' : 'Kadın'}</p>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500">Doğum Tarihi</label>
+                      <p className="text-lg text-gray-900">{new Date(user.birthDate).toLocaleDateString('tr-TR')}</p>
                     </div>
                     
                     <div>
