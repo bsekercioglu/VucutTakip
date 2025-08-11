@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { Scale, TrendingDown, TrendingUp, Target, Calendar, Share2 } from 'lucide-react';
+import { Scale, TrendingDown, TrendingUp, Target, Calendar, Share2, Activity } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import Layout from '../components/Layout';
 import { getBodyCompositionRanges, calculateAge } from '../utils/bodyComposition';
