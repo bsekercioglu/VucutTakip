@@ -1,7 +1,9 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { signInWithPopup } from 'firebase/auth';
 import { Activity, ArrowLeft } from 'lucide-react';
+import { auth, googleProvider } from '../config/firebase';
 import { useUser } from '../contexts/UserContext';
 
 interface LoginFormData {
@@ -26,15 +28,22 @@ const LoginPage: React.FC = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      const success = await loginWithGoogle();
-      if (success) {
+      const result = await signInWithPopup(auth, googleProvider);
+      if (result.user) {
+        console.log('Google login successful:', result.user);
         navigate('/dashboard');
       } else {
         alert('Google ile giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
       }
     } catch (error) {
       console.error('Google login failed:', error);
-      alert('Google ile giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
+      if (error.code === 'auth/popup-closed-by-user') {
+        alert('Google giriş işlemi iptal edildi.');
+      } else if (error.code === 'auth/popup-blocked') {
+        alert('Popup engellendi. Lütfen popup engelleyiciyi devre dışı bırakın.');
+      } else {
+        alert(`Google ile giriş yapılırken bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`);
+      }
     }
   };
 

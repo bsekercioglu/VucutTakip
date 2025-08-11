@@ -3,6 +3,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithRedirect,
+  signInWithPopup,
   getRedirectResult,
   signOut,
   onAuthStateChanged,
