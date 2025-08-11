@@ -161,8 +161,9 @@ const ConsultantPage: React.FC = () => {
                   AI Danışman (Google Gemini)
                   <Sparkles className={`h-4 w-4 ml-2 text-yellow-500 ${isGeminiConnected ? 'animate-bounce' : ''}`} />
                   {isGeminiConnected && (
-                    <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full animate-pulse">
-                      🤖 Bağlı
+                    <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full animate-pulse flex items-center">
+                      <span className="animate-bounce">😉</span>
+                      <span className="ml-1">Bağlı</span>
                     </span>
                   )}
                 </h3>
@@ -180,10 +181,17 @@ const ConsultantPage: React.FC = () => {
             {chatMessages.length === 0 && (
               <div className="text-center py-8">
                 <div className="relative inline-block mb-4">
-                  <Bot className={`h-12 w-12 mx-auto ${isGeminiConnected ? 'text-purple-500' : 'text-gray-400'}`} />
+                  <div className="relative">
+                    <Bot className={`h-12 w-12 mx-auto ${isGeminiConnected ? 'text-purple-500' : 'text-gray-400'}`} />
+                    {isGeminiConnected && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-pulse">
+                        <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
+                      </div>
+                    )}
+                  </div>
                   {isGeminiConnected && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-pulse">
-                      <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
+                    <div className="absolute top-0 right-0 text-2xl animate-bounce">
+                      😉
                     </div>
                   )}
                 </div>
