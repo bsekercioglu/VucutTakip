@@ -94,25 +94,25 @@ const Dashboard: React.FC = () => {
       color: weightChange > 0 ? 'text-red-600' : weightChange < 0 ? 'text-green-600' : 'text-gray-600'
     },
     {
-      title: 'BMI Değişimi',
+      title: 'Mevcut BMI',
       value: `${currentBMI.toFixed(1)}`,
       change: bmiChange !== 0 ? `${bmiChange > 0 ? '+' : ''}${bmiChange.toFixed(1)}` : '',
       icon: TrendingDown,
       color: bmiChange > 0 ? 'text-red-600' : bmiChange < 0 ? 'text-green-600' : 'text-gray-600'
     },
     {
-      title: 'Yağ Oranı',
-      value: latestRecordWithBodyFat?.bodyFat ? `${latestRecordWithBodyFat.bodyFat}%` : 'N/A',
+      title: 'Yağ Oranı (BFP)',
+      value: currentBFP ? `${currentBFP.toFixed(1)}%` : 'N/A',
       change: bodyFatChange !== 0 ? `${bodyFatChange > 0 ? '+' : ''}${bodyFatChange.toFixed(1)}%` : '',
       icon: TrendingDown,
       color: bodyFatChange > 0 ? 'text-red-600' : bodyFatChange < 0 ? 'text-green-600' : 'text-gray-600'
     },
     {
-      title: 'Başlangıç BMI',
-      value: `${initialBMI.toFixed(1)}`,
-      change: `${initialWeight.toFixed(1)} kg`,
+      title: 'Metabolizma (BMR)',
+      value: `${currentBMR.toFixed(0)} kcal`,
+      change: bmrChange !== 0 ? `${bmrChange > 0 ? '+' : ''}${bmrChange.toFixed(0)} kcal` : '',
       icon: TrendingUp,
-      color: 'text-gray-600'
+      color: bmrChange > 0 ? 'text-green-600' : bmrChange < 0 ? 'text-red-600' : 'text-gray-600'
     }
   ];
 
@@ -232,10 +232,18 @@ const Dashboard: React.FC = () => {
 
           {/* Body Fat Chart */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Yağ Oranı Gelişimi</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Yağ Oranı Gelişimi (BFP)</h3>
+              {bfpStatus && (
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${bfpStatus.bgColor} ${bfpStatus.color}`}>
+                  {bfpStatus.label}: {currentBFP?.toFixed(1)}%
+                </div>
+              )}
+            </div>
             <div className="mb-2 text-xs text-gray-500">
               <span className="inline-block w-3 h-1 bg-red-500 mr-2"></span>Dijital ölçüm
-              <span className="inline-block w-3 h-1 bg-red-500 ml-4 mr-2" style={{backgroundImage: 'repeating-linear-gradient(to right, #EF4444 0, #EF4444 3px, transparent 3px, transparent 6px)'}}></span>Metrik ölçüm (son dijital değer)
+              <span className="inline-block w-3 h-1 bg-purple-500 ml-4 mr-2"></span>Hesaplanmış (Navy Method)
+              <span className="inline-block w-3 h-1 bg-red-500 ml-4 mr-2" style={{backgroundImage: 'repeating-linear-gradient(to right, #EF4444 0, #EF4444 3px, transparent 3px, transparent 6px)'}}></span>Tahmini
             </div>
             {ranges && (
               <div className="mb-4 text-sm text-gray-600">
@@ -265,23 +273,37 @@ const Dashboard: React.FC = () => {
                       borderRadius: '8px'
                     }}
                     formatter={(value, name, props) => {
-                      if (props.payload?.isMetricOnly && (name === 'Yağ Oranı (%)' || name === 'Su Oranı (%)' || name === 'Kas Oranı (%)')) {
-                        return [value ? `${value}% (son dijital)` : '-', name];
+                      if (name === 'Yağ Oranı (%)') {
+                        const payload = props.payload;
+                        if (payload?.bodyFat && payload?.bfpCalculated) {
+                          return [`${value}% (dijital)`, name];
+                        } else if (payload?.bfpCalculated && !payload?.bodyFat) {
+                          return [`${value}% (hesaplanmış)`, name];
+                        } else if (payload?.isMetricOnly) {
+                          return [`${value}% (tahmini)`, name];
+                        }
                       }
                       return [value || '-', name];
                     }}
                   />
                   <Line 
                     type="monotone" 
-                    dataKey="bodyFat" 
+                    dataKey="bfpFinal" 
                     stroke="#EF4444" 
                     strokeWidth={2}
                     name="Yağ Oranı (%)"
                     strokeDasharray={(entry) => entry?.isMetricOnly ? "5 5" : "0"}
                     dot={(props) => {
+                      const payload = props.payload;
+                      if (payload?.bfpCalculated && !payload?.bodyFat) {
+                        // Calculated BFP - purple dot
+                        return <circle cx={props.cx} cy={props.cy} r={4} fill="#8B5CF6" stroke="#8B5CF6" strokeWidth={2} />;
+                      }
                       if (props.payload?.isMetricOnly) {
+                        // Estimated - dashed dot
                         return <circle cx={props.cx} cy={props.cy} r={3} fill="#EF4444" stroke="#EF4444" strokeWidth={2} strokeDasharray="2 2" />;
                       }
+                      // Digital - solid dot
                       return <circle cx={props.cx} cy={props.cy} r={4} fill="#EF4444" stroke="#EF4444" strokeWidth={2} />;
                     }}
                   />
@@ -344,6 +366,40 @@ const Dashboard: React.FC = () => {
                       }
                       return <circle cx={props.cx} cy={props.cy} r={4} fill="#06B6D4" stroke="#06B6D4" strokeWidth={2} />;
                     }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* BMR Chart */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Metabolizma Hızı (BMR)</h3>
+            <div className="mb-4 text-sm text-gray-600">
+              <span className="inline-block w-3 h-3 bg-blue-200 mr-2"></span>
+              Mifflin-St Jeor formülü ile hesaplanmıştır
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="date" stroke="#666" />
+                  <YAxis stroke="#666" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #ccc',
+                      borderRadius: '8px'
+                    }}
+                    formatter={(value) => [`${value} kcal/gün`, 'BMR']}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="bmr"
+                    stroke="#3B82F6" 
+                    strokeWidth={2}
+                    name="BMR (kcal/gün)"
+                    dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -414,7 +470,7 @@ const Dashboard: React.FC = () => {
         {/* Share Statistics Summary */}
         <div id="share-stats" className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Gelişim Özeti</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">{dailyRecords.length}</div>
               <div className="text-sm text-gray-600">Gün Takip</div>
@@ -433,9 +489,15 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {latestRecordWithBodyFat?.bodyFat ? `${latestRecordWithBodyFat.bodyFat}%` : '-'}
+                {currentBFP ? `${currentBFP.toFixed(1)}%` : '-'}
               </div>
               <div className="text-sm text-gray-600">Yağ Oranı</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">
+                {bmrChange !== 0 ? `${bmrChange > 0 ? '+' : ''}${bmrChange.toFixed(0)}` : '0'}
+              </div>
+              <div className="text-sm text-gray-600">BMR Değişimi</div>
             </div>
           </div>
           
@@ -471,7 +533,9 @@ const Dashboard: React.FC = () => {
                     </td>
                     <td className="py-3 text-sm text-gray-900">{record.weight} kg</td>
                     <td className="py-3 text-sm text-gray-900">
-                      {record.bodyFat ? `${record.bodyFat}%` : '-'}
+                      {record.bodyFat ? `${record.bodyFat}% (D)` : 
+                       (record.measurements?.waist && record.measurements?.neck && user) ? 
+                       `${calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips).toFixed(1)}% (H)` : '-'}
                     </td>
                     <td className="py-3 text-sm text-gray-900">
                       {record.waterPercentage ? `${record.waterPercentage}%` : '-'}
@@ -493,6 +557,9 @@ const Dashboard: React.FC = () => {
                 </tr>
               </tbody>
             </table>
+            <div className="mt-2 text-xs text-gray-500">
+              (D) = Dijital ölçüm, (H) = Hesaplanmış (Navy Method)
+            </div>
           </div>
         </div>
       </div>

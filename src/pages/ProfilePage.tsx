@@ -9,6 +9,8 @@ interface ProfileFormData {
   firstName: string;
   lastName: string;
   email: string;
+  gender: 'male' | 'female';
+  birthDate: string;
   height: number;
   initialWeight: number;
   chest: number;
@@ -27,6 +29,8 @@ const ProfilePage: React.FC = () => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      gender: user.gender,
+      birthDate: user.birthDate,
       height: user.height,
       initialWeight: user.initialWeight,
       chest: user.measurements.chest,
@@ -46,6 +50,8 @@ const ProfilePage: React.FC = () => {
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
+      gender: data.gender,
+      birthDate: data.birthDate,
       height: data.height,
       initialWeight: data.initialWeight,
       measurements: {
@@ -294,6 +300,11 @@ const ProfilePage: React.FC = () => {
                     <div>
                       <label className="block text-sm font-medium text-gray-500">Cinsiyet</label>
                       <p className="text-lg text-gray-900">{user.gender === 'male' ? 'Erkek' : 'Kadın'}</p>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500">Doğum Tarihi</label>
+                      <p className="text-lg text-gray-900">{new Date(user.birthDate).toLocaleDateString('tr-TR')}</p>
                     </div>
                     
                     <div>
