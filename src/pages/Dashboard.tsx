@@ -8,6 +8,9 @@ import { getBodyCompositionRanges, calculateAge } from '../utils/bodyComposition
 import { FacebookShareButton, TwitterShareButton, WhatsappShareButton } from 'react-share';
 import html2canvas from 'html2canvas';
 
+// calculateAge fonksiyonunu import etmek için utils'den alıyoruz
+// Eğer zaten import edilmişse bu satırı kaldırabilirsiniz
+
 const Dashboard: React.FC = () => {
   const { user, dailyRecords, isLoggedIn } = useUser();
 
@@ -127,6 +130,40 @@ const Dashboard: React.FC = () => {
               <Share2 className="h-4 w-4 mr-2" />
               Paylaş
             </button>
+          </div>
+
+          {/* Profile Summary for Share */}
+          <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-xl p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold mb-2">{user?.firstName} {user?.lastName}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <div className="text-blue-100">Yaş</div>
+                    <div className="font-semibold">{user?.birthDate ? calculateAge(user.birthDate) : '-'}</div>
+                  </div>
+                  <div>
+                    <div className="text-blue-100">Boy</div>
+                    <div className="font-semibold">{user?.height} cm</div>
+                  </div>
+                  <div>
+                    <div className="text-blue-100">Başlangıç</div>
+                    <div className="font-semibold">{user?.initialWeight} kg</div>
+                  </div>
+                  <div>
+                    <div className="text-blue-100">Mevcut</div>
+                    <div className="font-semibold">{latestRecord ? `${latestRecord.weight} kg` : '-'}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-blue-100 text-sm">Toplam Değişim</div>
+                <div className="text-2xl font-bold">
+                  {weightChange !== 0 ? `${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)} kg` : '0 kg'}
+                </div>
+                <div className="text-blue-100 text-sm">{dailyRecords.length} gün takip</div>
+              </div>
+            </div>
           </div>
 
           {/* Weight Chart */}
@@ -284,6 +321,44 @@ const Dashboard: React.FC = () => {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+          </div>
+        </div>
+
+        {/* Share Statistics Summary */}
+        <div id="share-stats" className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Gelişim Özeti</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{dailyRecords.length}</div>
+              <div className="text-sm text-gray-600">Gün Takip</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {weightChange !== 0 ? `${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)}` : '0'}
+              </div>
+              <div className="text-sm text-gray-600">kg Değişim</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">
+                {latestRecord?.bodyFat ? `${latestRecord.bodyFat}%` : '-'}
+              </div>
+              <div className="text-sm text-gray-600">Yağ Oranı</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">
+                {user ? (user.initialWeight / Math.pow(user.height / 100, 2)).toFixed(1) : '-'}
+              </div>
+              <div className="text-sm text-gray-600">BMI</div>
+            </div>
+          </div>
+          
+          {/* VücutTakip Branding */}
+          <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+            <div className="flex items-center justify-center text-blue-600">
+              <Activity className="h-6 w-6 mr-2" />
+              <span className="text-lg font-bold">VücutTakip</span>
+            </div>
+            <p className="text-sm text-gray-500 mt-1">Sağlıklı yaşam yolculuğunuzda yanınızdayız</p>
           </div>
         </div>
 
