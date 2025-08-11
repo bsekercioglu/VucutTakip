@@ -18,12 +18,23 @@ const Dashboard: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Calculate stats
+  // Calculate stats based on profile initial values
   const latestRecord = dailyRecords[dailyRecords.length - 1];
-  const firstRecord = dailyRecords[0];
-  const weightChange = latestRecord && firstRecord ? latestRecord.weight - firstRecord.weight : 0;
-  const bodyFatChange = latestRecord && firstRecord && latestRecord.bodyFat && firstRecord.bodyFat 
-    ? latestRecord.bodyFat - firstRecord.bodyFat : 0;
+  const initialWeight = user?.initialWeight || 0;
+  const currentWeight = latestRecord?.weight || initialWeight;
+  const weightChange = currentWeight - initialWeight;
+  
+  // Calculate BMI changes
+  const height = user?.height || 170;
+  const initialBMI = initialWeight / Math.pow(height / 100, 2);
+  const currentBMI = currentWeight / Math.pow(height / 100, 2);
+  const bmiChange = currentBMI - initialBMI;
+  
+  // Body fat change (if available)
+  const firstRecordWithBodyFat = dailyRecords.find(record => record.bodyFat);
+  const latestRecordWithBodyFat = dailyRecords.slice().reverse().find(record => record.bodyFat);
+  const bodyFatChange = latestRecordWithBodyFat && firstRecordWithBodyFat 
+    ? latestRecordWithBodyFat.bodyFat - firstRecordWithBodyFat.bodyFat : 0;
 
   // Calculate age and get reference ranges
   const age = user?.birthDate ? calculateAge(user.birthDate) : 25;
@@ -77,31 +88,31 @@ const Dashboard: React.FC = () => {
   const statCards = [
     {
       title: 'Mevcut Ağırlık',
-      value: latestRecord ? `${latestRecord.weight} kg` : 'N/A',
+      value: `${currentWeight.toFixed(1)} kg`,
       change: weightChange !== 0 ? `${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)} kg` : '',
       icon: Scale,
       color: weightChange > 0 ? 'text-red-600' : weightChange < 0 ? 'text-green-600' : 'text-gray-600'
     },
     {
+      title: 'BMI Değişimi',
+      value: `${currentBMI.toFixed(1)}`,
+      change: bmiChange !== 0 ? `${bmiChange > 0 ? '+' : ''}${bmiChange.toFixed(1)}` : '',
+      icon: TrendingDown,
+      color: bmiChange > 0 ? 'text-red-600' : bmiChange < 0 ? 'text-green-600' : 'text-gray-600'
+    },
+    {
       title: 'Yağ Oranı',
-      value: latestRecord?.bodyFat ? `${latestRecord.bodyFat}%` : 'N/A',
+      value: latestRecordWithBodyFat?.bodyFat ? `${latestRecordWithBodyFat.bodyFat}%` : 'N/A',
       change: bodyFatChange !== 0 ? `${bodyFatChange > 0 ? '+' : ''}${bodyFatChange.toFixed(1)}%` : '',
       icon: TrendingDown,
       color: bodyFatChange > 0 ? 'text-red-600' : bodyFatChange < 0 ? 'text-green-600' : 'text-gray-600'
     },
     {
-      title: 'Su Oranı',
-      value: latestRecord?.waterPercentage ? `${latestRecord.waterPercentage}%` : 'N/A',
-      change: '',
+      title: 'Başlangıç BMI',
+      value: `${initialBMI.toFixed(1)}`,
+      change: `${initialWeight.toFixed(1)} kg`,
       icon: TrendingUp,
-      color: 'text-blue-600'
-    },
-    {
-      title: 'Takip Süresi',
-      value: `${dailyRecords.length} gün`,
-      change: '',
-      icon: Calendar,
-      color: 'text-purple-600'
+      color: 'text-gray-600'
     }
   ];
 
@@ -170,20 +181,23 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div>
                     <div className="text-blue-100">Başlangıç</div>
-                    <div className="font-semibold">{user?.initialWeight} kg</div>
+                    <div className="font-semibold">{initialWeight.toFixed(1)} kg</div>
                   </div>
                   <div>
                     <div className="text-blue-100">Mevcut</div>
-                    <div className="font-semibold">{latestRecord ? `${latestRecord.weight} kg` : '-'}</div>
+                    <div className="font-semibold">{currentWeight.toFixed(1)} kg</div>
                   </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-blue-100 text-sm">Toplam Değişim</div>
+                <div className="text-blue-100 text-sm">Ağırlık Değişimi</div>
                 <div className="text-2xl font-bold">
                   {weightChange !== 0 ? `${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)} kg` : '0 kg'}
                 </div>
-                <div className="text-blue-100 text-sm">{dailyRecords.length} gün takip</div>
+                <div className="text-blue-100 text-sm">
+                  BMI: {initialBMI.toFixed(1)} → {currentBMI.toFixed(1)} 
+                  ({bmiChange > 0 ? '+' : ''}{bmiChange.toFixed(1)})
+                </div>
               </div>
             </div>
           </div>
@@ -412,16 +426,16 @@ const Dashboard: React.FC = () => {
               <div className="text-sm text-gray-600">kg Değişim</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
-                {latestRecord?.bodyFat ? `${latestRecord.bodyFat}%` : '-'}
+              <div className="text-2xl font-bold text-red-600">
+                {bmiChange !== 0 ? `${bmiChange > 0 ? '+' : ''}${bmiChange.toFixed(1)}` : '0'}
               </div>
-              <div className="text-sm text-gray-600">Yağ Oranı</div>
+              <div className="text-sm text-gray-600">BMI Değişimi</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">
-                {user ? (user.initialWeight / Math.pow(user.height / 100, 2)).toFixed(1) : '-'}
+              <div className="text-2xl font-bold text-purple-600">
+                {latestRecordWithBodyFat?.bodyFat ? `${latestRecordWithBodyFat.bodyFat}%` : '-'}
               </div>
-              <div className="text-sm text-gray-600">BMI</div>
+              <div className="text-sm text-gray-600">Yağ Oranı</div>
             </div>
           </div>
           
@@ -467,6 +481,16 @@ const Dashboard: React.FC = () => {
                     </td>
                   </tr>
                 ))}
+                {/* Show initial profile data as reference */}
+                <tr className="border-b border-gray-100 bg-blue-50">
+                  <td className="py-3 text-sm text-blue-900 font-medium">
+                    Başlangıç (Profil)
+                  </td>
+                  <td className="py-3 text-sm text-blue-900 font-medium">{initialWeight.toFixed(1)} kg</td>
+                  <td className="py-3 text-sm text-blue-900">-</td>
+                  <td className="py-3 text-sm text-blue-900">-</td>
+                  <td className="py-3 text-sm text-blue-900">-</td>
+                </tr>
               </tbody>
             </table>
           </div>
