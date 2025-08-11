@@ -14,7 +14,7 @@ interface MeasurementFormData {
 }
 
 const MeasurementsPage: React.FC = () => {
-  const { user, dailyRecords, addDailyRecord, isLoggedIn, loading } = useUser();
+  const { user, dailyRecords, addDailyRecord, isLoggedIn, loading, refreshData } = useUser();
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -23,6 +23,14 @@ const MeasurementsPage: React.FC = () => {
       date: new Date().toISOString().split('T')[0]
     }
   });
+
+  // Force refresh data when component mounts
+  React.useEffect(() => {
+    if (user && isLoggedIn) {
+      console.log('MeasurementsPage mounted, refreshing data for user:', user.id);
+      refreshData();
+    }
+  }, [user, isLoggedIn, refreshData]);
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
@@ -51,6 +59,7 @@ const MeasurementsPage: React.FC = () => {
         setShowForm(false);
         alert('Ölçüm başarıyla kaydedildi!');
       } else {
+        console.error('Failed to save measurement');
         alert('Ölçüm kaydedilirken hata oluştu. Lütfen tekrar deneyin.');
       }
     } catch (error) {
@@ -87,6 +96,8 @@ const MeasurementsPage: React.FC = () => {
             <p className="text-sm text-yellow-700">User ID: {user?.id}</p>
             <p className="text-sm text-yellow-700">Records Count: {dailyRecords.length}</p>
             <p className="text-sm text-yellow-700">Loading: {loading ? 'Yes' : 'No'}</p>
+            <p className="text-sm text-yellow-700">Is Logged In: {isLoggedIn ? 'Yes' : 'No'}</p>
+            <p className="text-sm text-yellow-700">Records: {JSON.stringify(dailyRecords.slice(0, 2))}</p>
           </div>
         )}
 
@@ -208,6 +219,9 @@ const MeasurementsPage: React.FC = () => {
           
           {dailyRecords.length > 0 ? (
             <div className="overflow-x-auto">
+              <p className="text-sm text-gray-600 mb-4">
+                {dailyRecords.length} kayıt bulundu
+              </p>
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>

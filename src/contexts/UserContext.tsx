@@ -75,14 +75,20 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setQuestions(userQuestions);
     } catch (error) {
       console.error('Error loading user data:', error);
+      // Set empty arrays on error to prevent undefined state
+      setDailyRecords([]);
+      setDailyTracking([]);
+      setQuestions([]);
     }
   };
 
   // Force refresh data function
-  const forceRefreshData = async () => {
+  const refreshData = async () => {
     if (user) {
       console.log('Force refreshing data for user:', user.id);
       await loadUserData(user.id);
+    } else {
+      console.log('No user found, cannot refresh data');
     }
   };
 
@@ -354,7 +360,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         addQuestion,
         updateProfile,
         refreshData,
-        forceRefreshData
       }}
     >
       {children}
