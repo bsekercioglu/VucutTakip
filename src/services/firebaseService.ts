@@ -187,6 +187,16 @@ export const addDailyRecord = async (record: Omit<DailyRecord, 'id'>) => {
 export const getUserDailyRecords = async (userId: string): Promise<DailyRecord[]> => {
   try {
     console.log('Firebase: Getting daily records for user:', userId);
+    
+    // First check if the collection exists and user has access
+    const testQuery = query(
+      collection(db, 'dailyRecords'),
+      where('userId', '==', userId)
+    );
+    
+    const testSnapshot = await getDocs(testQuery);
+    console.log('Firebase: Test query returned', testSnapshot.size, 'documents');
+    
     const q = query(
       collection(db, 'dailyRecords'),
       where('userId', '==', userId),
@@ -198,7 +208,23 @@ export const getUserDailyRecords = async (userId: string): Promise<DailyRecord[]
     return records;
   } catch (error) {
     console.error('Error getting daily records:', error);
-    return [];
+    console.error('Error details:', error.code, error.message);
+    
+    // If ordering fails, try without ordering
+    try {
+      console.log('Firebase: Trying without orderBy...');
+      const simpleQuery = query(
+        collection(db, 'dailyRecords'),
+        where('userId', '==', userId)
+      );
+      const querySnapshot = await getDocs(simpleQuery);
+      const records = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyRecord));
+      console.log('Firebase: Retrieved daily records (simple query):', records);
+      return records;
+    } catch (simpleError) {
+      console.error('Simple query also failed:', simpleError);
+      return [];
+    }
   }
 };
 
