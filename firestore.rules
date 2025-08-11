@@ -27,15 +27,20 @@ service cloud.firestore {
         (request.resource == null || request.resource.data.userId == request.auth.uid);
     }
     
-    // Admin access for consultants (optional - for future use)
+    // Admin collection for future consultant access
+    match /admins/{adminId} {
+      allow read: if request.auth != null && request.auth.uid == adminId;
+    }
+    
+    // Consultant access to questions (read-only for answering)
     match /questions/{questionId} {
       allow read, update: if request.auth != null && 
         exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
     
-    // Temporary rule for debugging - REMOVE IN PRODUCTION
+    // Deny all other access
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }
