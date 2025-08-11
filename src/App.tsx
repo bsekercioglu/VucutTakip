@@ -1,6 +1,7 @@
+// src/App.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { useUser } from './contexts/UserContext';
+import { useUser, UserProvider } from './contexts/UserContext';
 import LandingPage from './pages/LandingPage';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
@@ -15,7 +16,6 @@ const AppContent: React.FC = () => {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    // Redirect to dashboard if user is logged in and on login/register page
     if (isLoggedIn && (window.location.pathname === '/login' || window.location.pathname === '/register')) {
       navigate('/dashboard');
     }
@@ -49,11 +49,13 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <AppContent />
-      </div>
-    </Router>
+    <UserProvider>
+      <Router>
+        <div className="min-h-screen bg-gray-50">
+          <AppContent />
+        </div>
+      </Router>
+    </UserProvider>
   );
 }
 
