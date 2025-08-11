@@ -7,6 +7,7 @@ import Layout from '../components/Layout';
 import { getBodyCompositionRanges, calculateAge } from '../utils/bodyComposition';
 import { FacebookShareButton, TwitterShareButton, WhatsappShareButton } from 'react-share';
 import html2canvas from 'html2canvas';
+import { calculateBMR, calculateBFP, getBFPStatus } from '../utils/bodyComposition';
 
 // calculateAge fonksiyonunu import etmek için utils'den alıyoruz
 // Eğer zaten import edilmişse bu satırı kaldırabilirsiniz
@@ -39,6 +40,18 @@ const Dashboard: React.FC = () => {
   // Calculate age and get reference ranges
   const age = user?.birthDate ? calculateAge(user.birthDate) : 25;
   const ranges = user ? getBodyCompositionRanges(age, user.gender) : null;
+  
+  // Calculate current BFP and BMR
+  const currentBFP = latestRecord?.bodyFat || 
+    (latestRecord?.measurements?.waist && latestRecord?.measurements?.neck && user ? 
+      calculateBFP(user.gender, user.height, latestRecord.measurements.waist, latestRecord.measurements.neck, latestRecord.measurements.hips) : null);
+  
+  const currentBMR = user ? calculateBMR(currentWeight, user.height, age, user.gender) : 0;
+  const initialBMR = user ? calculateBMR(initialWeight, user.height, age, user.gender) : 0;
+  const bmrChange = currentBMR - initialBMR;
+  
+  // Get BFP status
+  const bfpStatus = currentBFP && user ? getBFPStatus(currentBFP, age, user.gender) : null;
 
   // Prepare chart data
   const chartData = dailyRecords.map((record, index) => {
@@ -68,6 +81,11 @@ const Dashboard: React.FC = () => {
       water: water,
       muscle: muscle,
       isMetricOnly: !record.bodyFat && !record.waterPercentage && !record.musclePercentage && !!record.measurements
+      bmr: user ? calculateBMR(record.weight, user.height, age, user.gender) : 0,
+      bfpFinal: bodyFat || (record.measurements?.waist && record.measurements?.neck && user ? 
+        calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips) : null),
+      bfpCalculated: !bodyFat && record.measurements?.waist && record.measurements?.neck && user ? 
+        calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips) : null
     };
   });
 
