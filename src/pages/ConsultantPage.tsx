@@ -137,10 +137,10 @@ const ConsultantPage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  AI Danışman
+                  AI Danışman (Google Gemini)
                   <Sparkles className="h-4 w-4 ml-2 text-yellow-500" />
                 </h3>
-                <p className="text-sm text-gray-600">Anında yanıt alın</p>
+                <p className="text-sm text-gray-600">Gerçek AI ile anında kişisel öneriler</p>
               </div>
             </div>
           </div>
@@ -150,9 +150,9 @@ const ConsultantPage: React.FC = () => {
             {chatMessages.length === 0 && (
               <div className="text-center py-8">
                 <Bot className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h4 className="text-lg font-medium text-gray-900 mb-2">AI Danışmanınız Hazır!</h4>
+                <h4 className="text-lg font-medium text-gray-900 mb-2">Google Gemini AI Danışmanınız Hazır!</h4>
                 <p className="text-gray-600 mb-4">
-                  Beslenme, egzersiz, kilo verme/alma hakkında sorularınızı sorun
+                  Kişiselleştirilmiş beslenme ve fitness önerileri için sorularınızı sorun
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   <button

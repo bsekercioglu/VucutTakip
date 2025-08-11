@@ -1,29 +1,107 @@
-// AI Service for generating consultant responses
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// AI Service for generating consultant responses using Google Gemini
 export interface AIResponse {
   success: boolean;
   response?: string;
   error?: string;
 }
 
+// Initialize Gemini AI (will be initialized when API key is available)
+let genAI: GoogleGenerativeAI | null = null;
+let model: any = null;
+
+const initializeGemini = () => {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (apiKey && !genAI) {
+    genAI = new GoogleGenerativeAI(apiKey);
+    model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    console.log('Gemini AI initialized successfully');
+  }
+  return !!model;
+};
+
 export const generateConsultantResponse = async (question: string, userProfile?: any): Promise<AIResponse> => {
   try {
-    // Simulate AI response generation
-    // In a real implementation, you would call an AI API like OpenAI, Gemini, etc.
+    // Try to use Gemini AI first
+    if (initializeGemini()) {
+      return await generateGeminiResponse(question, userProfile);
+    }
     
-    const responses = await generateContextualResponse(question, userProfile);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Fallback to pattern-based responses
+    console.log('Using fallback pattern-based responses');
+    const response = await generateContextualResponse(question, userProfile);
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     return {
       success: true,
-      response: responses
+      response: response
     };
   } catch (error) {
     console.error('AI Service Error:', error);
     return {
       success: false,
-      error: 'AI yanıtı oluşturulurken hata oluştu.'
+      error: 'AI yanıtı oluşturulurken hata oluştu. Lütfen tekrar deneyin.'
+    };
+  }
+};
+
+const generateGeminiResponse = async (question: string, userProfile?: any): Promise<AIResponse> => {
+  try {
+    console.log('Generating Gemini AI response for:', question);
+    
+    // Create context from user profile
+    const userContext = userProfile ? `
+Kullanıcı Profili:
+- Ad: ${userProfile.firstName} ${userProfile.lastName}
+- Yaş: ${userProfile.birthDate ? calculateAge(userProfile.birthDate) : 'Bilinmiyor'}
+- Cinsiyet: ${userProfile.gender === 'male' ? 'Erkek' : 'Kadın'}
+- Boy: ${userProfile.height} cm
+- Başlangıç Ağırlığı: ${userProfile.initialWeight} kg
+- BMI: ${calculateBMI(userProfile)}
+- Vücut Ölçümleri: Göğüs ${userProfile.measurements?.chest}cm, Bel ${userProfile.measurements?.waist}cm, Kalça ${userProfile.measurements?.hips}cm
+` : 'Kullanıcı profil bilgileri mevcut değil.';
+
+    const prompt = `Sen VücutTakip uygulamasının uzman beslenme ve fitness danışmanısın. Türkçe yanıt ver.
+
+${userContext}
+
+Kullanıcı Sorusu: ${question}
+
+Lütfen:
+1. Kişiselleştirilmiş, bilimsel temelli öneriler ver
+2. Pratik ve uygulanabilir tavsiyeler sun
+3. Gerekirse hesaplamalar yap (BMI, BMR, kalori ihtiyacı)
+4. Emoji kullanarak daha samimi ol
+5. Güvenlik uyarıları ekle (doktor onayı gerektiğinde)
+6. Maksimum 500 kelime ile sınırla
+
+Yanıtını yapılandır:
+- Ana öneriler
+- Sayısal hedefler (varsa)
+- Pratik ipuçları
+- Güvenlik notları`;
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+    
+    console.log('Gemini AI response generated successfully');
+    
+    return {
+      success: true,
+      response: text
+    };
+  } catch (error) {
+    console.error('Gemini AI Error:', error);
+    
+    // Fallback to pattern-based response
+    console.log('Falling back to pattern-based response');
+    const fallbackResponse = await generateContextualResponse(question, userProfile);
+    
+    return {
+      success: true,
+      response: fallbackResponse + '\n\n⚠️ Not: AI servisi geçici olarak kullanılamıyor, önceden hazırlanmış yanıt gösteriliyor.'
     };
   }
 };
