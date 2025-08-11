@@ -280,11 +280,10 @@ const MeasurementsPage: React.FC = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarih</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ağırlık</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Yağ Oranı</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Su Oranı</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kas Oranı</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Değişim</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ağırlık (kg)</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Yağ Oranı (%)</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Su Oranı (%)</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kas Oranı (%)</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                   </tr>
                 </thead>
@@ -293,42 +292,77 @@ const MeasurementsPage: React.FC = () => {
                     console.log('Rendering record:', record.id, record.date, record.weight);
                     
                     const prevRecord = index < recordsCount - 1 ? dailyRecords[recordsCount - 2 - index] : null;
+                    
+                    // Calculate changes for all parameters
                     const currentWeight = parseFloat(record.weight?.toString() || '0');
-                    const prevWeight = prevRecord ? parseFloat(prevRecord.weight?.toString() || '0') : 0;
-                    const weightChange = prevRecord ? currentWeight - prevWeight : 0;
+                    const currentBodyFat = record.bodyFat ? parseFloat(record.bodyFat.toString()) : null;
+                    const currentWater = record.waterPercentage ? parseFloat(record.waterPercentage.toString()) : null;
+                    const currentMuscle = record.musclePercentage ? parseFloat(record.musclePercentage.toString()) : null;
+                    
+                    const prevWeight = prevRecord ? parseFloat(prevRecord.weight?.toString() || '0') : null;
+                    const prevBodyFat = prevRecord?.bodyFat ? parseFloat(prevRecord.bodyFat.toString()) : null;
+                    const prevWater = prevRecord?.waterPercentage ? parseFloat(prevRecord.waterPercentage.toString()) : null;
+                    const prevMuscle = prevRecord?.musclePercentage ? parseFloat(prevRecord.musclePercentage.toString()) : null;
+                    
+                    const weightChange = prevWeight ? currentWeight - prevWeight : null;
+                    const bodyFatChange = prevBodyFat && currentBodyFat ? currentBodyFat - prevBodyFat : null;
+                    const waterChange = prevWater && currentWater ? currentWater - prevWater : null;
+                    const muscleChange = prevMuscle && currentMuscle ? currentMuscle - prevMuscle : null;
+                    
+                    // Helper function to render change indicator
+                    const renderChange = (change: number | null, unit: string = '', isPercentage: boolean = false) => {
+                      if (change === null || Math.abs(change) < 0.1) return null;
+                      
+                      const isPositive = change > 0;
+                      const colorClass = isPositive 
+                        ? (unit === 'kg' || unit === '%' && !isPercentage ? 'text-red-600' : 'text-green-600')
+                        : (unit === 'kg' || unit === '%' && !isPercentage ? 'text-green-600' : 'text-red-600');
+                      
+                      // For body fat, positive change is bad (red), negative is good (green)
+                      const bodyFatColorClass = isPercentage && unit === '%' 
+                        ? (isPositive ? 'text-red-600' : 'text-green-600')
+                        : colorClass;
+                      
+                      return (
+                        <div className={`text-xs ${unit === '%' && isPercentage ? bodyFatColorClass : colorClass} flex items-center mt-1`}>
+                          {isPositive ? (
+                            <TrendingUp className="h-3 w-3 mr-1" />
+                          ) : (
+                            <TrendingDown className="h-3 w-3 mr-1" />
+                          )}
+                          {isPositive ? '+' : ''}{change.toFixed(1)}{unit}
+                        </div>
+                      );
+                    };
                     
                     return (
                       <tr key={record.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {new Date(record.date).toLocaleDateString('tr-TR')}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {currentWeight.toFixed(1)} kg
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.bodyFat ? `${parseFloat(record.bodyFat.toString()).toFixed(1)}%` : '-'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.waterPercentage ? `${parseFloat(record.waterPercentage.toString()).toFixed(1)}%` : '-'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.musclePercentage ? `${parseFloat(record.musclePercentage.toString()).toFixed(1)}%` : '-'}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="text-gray-900 font-medium">
+                            {currentWeight.toFixed(1)} kg
+                          </div>
+                          {renderChange(weightChange, 'kg')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {weightChange !== 0 && (
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              weightChange > 0 
-                                ? 'bg-red-100 text-red-800' 
-                                : 'bg-green-100 text-green-800'
-                            }`}>
-                              {weightChange > 0 ? (
-                                <TrendingUp className="h-3 w-3 mr-1" />
-                              ) : (
-                                <TrendingDown className="h-3 w-3 mr-1" />
-                              )}
-                              {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} kg
-                            </span>
-                          )}
+                          <div className="text-gray-900 font-medium">
+                            {currentBodyFat ? `${currentBodyFat.toFixed(1)}%` : '-'}
+                          </div>
+                          {currentBodyFat && renderChange(bodyFatChange, '%', true)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="text-gray-900 font-medium">
+                            {currentWater ? `${currentWater.toFixed(1)}%` : '-'}
+                          </div>
+                          {currentWater && renderChange(waterChange, '%')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="text-gray-900 font-medium">
+                            {currentMuscle ? `${currentMuscle.toFixed(1)}%` : '-'}
+                          </div>
+                          {currentMuscle && renderChange(muscleChange, '%')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <div className="flex space-x-2">
