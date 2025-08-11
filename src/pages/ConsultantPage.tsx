@@ -26,6 +26,7 @@ const ConsultantPage: React.FC = () => {
   const { user, isLoggedIn, questions, addQuestion } = useUser();
   const [newQuestion, setNewQuestion] = useState('');
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
+  const [isGeminiConnected, setIsGeminiConnected] = useState(false);
   const [chatMessages, setChatMessages] = useState<Array<{
     id: string;
     text: string;
@@ -38,6 +39,16 @@ const ConsultantPage: React.FC = () => {
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
+
+  // Check Gemini connection on component mount
+  React.useEffect(() => {
+    const checkGeminiConnection = () => {
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      setIsGeminiConnected(!!apiKey);
+    };
+    
+    checkGeminiConnection();
+  }, []);
 
   const handleSubmitQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +87,11 @@ const ConsultantPage: React.FC = () => {
       const aiResponse = await generateConsultantResponse(chatInput, user);
       
       if (aiResponse.success && aiResponse.response) {
+        // If response doesn't contain fallback warning, Gemini is working
+        if (!aiResponse.response.includes('AI servisi geçici olarak kullanılamıyor')) {
+          setIsGeminiConnected(true);
+        }
+        
         const botMessage = {
           id: (Date.now() + 1).toString(),
           text: aiResponse.response,
@@ -132,15 +148,29 @@ const ConsultantPage: React.FC = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center">
-              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mr-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mr-3 relative">
                 <Bot className="h-6 w-6 text-white" />
+                {isGeminiConnected && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse">
+                    <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
+                  </div>
+                )}
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   AI Danışman (Google Gemini)
-                  <Sparkles className="h-4 w-4 ml-2 text-yellow-500" />
+                  <Sparkles className={`h-4 w-4 ml-2 text-yellow-500 ${isGeminiConnected ? 'animate-bounce' : ''}`} />
+                  {isGeminiConnected && (
+                    <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full animate-pulse">
+                      🤖 Bağlı
+                    </span>
+                  )}
                 </h3>
-                <p className="text-sm text-gray-600">Gerçek AI ile anında kişisel öneriler</p>
+                <p className="text-sm text-gray-600">
+                  {isGeminiConnected 
+                    ? '🚀 Gerçek AI ile anında kişisel öneriler' 
+                    : '⚡ Pattern-based akıllı yanıtlar'}
+                </p>
               </div>
             </div>
           </div>
@@ -149,10 +179,23 @@ const ConsultantPage: React.FC = () => {
           <div className="h-96 overflow-y-auto p-6 space-y-4">
             {chatMessages.length === 0 && (
               <div className="text-center py-8">
-                <Bot className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h4 className="text-lg font-medium text-gray-900 mb-2">Google Gemini AI Danışmanınız Hazır!</h4>
+                <div className="relative inline-block mb-4">
+                  <Bot className={`h-12 w-12 mx-auto ${isGeminiConnected ? 'text-purple-500' : 'text-gray-400'}`} />
+                  {isGeminiConnected && (
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-pulse">
+                      <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
+                    </div>
+                  )}
+                </div>
+                <h4 className="text-lg font-medium text-gray-900 mb-2">
+                  {isGeminiConnected 
+                    ? '🤖 Google Gemini AI Danışmanınız Hazır!' 
+                    : '⚡ AI Danışmanınız Hazır!'}
+                </h4>
                 <p className="text-gray-600 mb-4">
-                  Kişiselleştirilmiş beslenme ve fitness önerileri için sorularınızı sorun
+                  {isGeminiConnected 
+                    ? 'Gerçek AI ile kişiselleştirilmiş beslenme ve fitness önerileri' 
+                    : 'Akıllı pattern-matching ile beslenme ve fitness önerileri'}
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   <button
@@ -216,8 +259,11 @@ const ConsultantPage: React.FC = () => {
               <div className="flex justify-start">
                 <div className="flex">
                   <div className="flex-shrink-0 mr-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center relative">
                       <Bot className="h-4 w-4 text-white" />
+                      {isGeminiConnected && (
+                        <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      )}
                     </div>
                   </div>
                   <div className="bg-gray-100 px-4 py-2 rounded-lg">
@@ -332,7 +378,7 @@ const ConsultantPage: React.FC = () => {
                     <div className="flex items-center mb-2">
                       <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                         <span className="text-white text-sm font-medium">D</span>
-                      </div>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center relative ${
                       <div className="ml-3">
                         <span className="font-medium text-blue-900">Danışman</span>
                         <span className="text-sm text-blue-600 ml-2">
@@ -340,7 +386,12 @@ const ConsultantPage: React.FC = () => {
                           {new Date(question.answerTimestamp!).toLocaleTimeString('tr-TR', { 
                             hour: '2-digit', 
                             minute: '2-digit' 
-                          })}
+                          <>
+                            <Bot className="h-4 w-4 text-white" />
+                            {isGeminiConnected && (
+                              <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            )}
+                          </>
                         </span>
                       </div>
                     </div>
