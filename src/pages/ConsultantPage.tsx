@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Send, MessageCircle, Clock, CheckCircle } from 'lucide-react';
+import { Send, MessageCircle, Clock, CheckCircle, Bot, User, Sparkles } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
+import { generateConsultantResponse } from '../services/aiService';
 import Layout from '../components/Layout';
 
 interface Message {
@@ -22,8 +23,17 @@ interface Question {
 }
 
 const ConsultantPage: React.FC = () => {
-  const { isLoggedIn, questions, addQuestion } = useUser();
+  const { user, isLoggedIn, questions, addQuestion } = useUser();
   const [newQuestion, setNewQuestion] = useState('');
+  const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Array<{
+    id: string;
+    text: string;
+    isUser: boolean;
+    timestamp: string;
+    isAI?: boolean;
+  }>>([]);
+  const [chatInput, setChatInput] = useState('');
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
@@ -46,6 +56,59 @@ const ConsultantPage: React.FC = () => {
     }
   };
 
+  const handleChatSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || isGeneratingResponse) return;
+
+    const userMessage = {
+      id: Date.now().toString(),
+      text: chatInput,
+      isUser: true,
+      timestamp: new Date().toISOString(),
+      isAI: false
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setChatInput('');
+    setIsGeneratingResponse(true);
+
+    try {
+      const aiResponse = await generateConsultantResponse(chatInput, user);
+      
+      if (aiResponse.success && aiResponse.response) {
+        const botMessage = {
+          id: (Date.now() + 1).toString(),
+          text: aiResponse.response,
+          isUser: false,
+          timestamp: new Date().toISOString(),
+          isAI: true
+        };
+        setChatMessages(prev => [...prev, botMessage]);
+      } else {
+        const errorMessage = {
+          id: (Date.now() + 1).toString(),
+          text: 'Üzgünüm, şu anda yanıt veremiyorum. Lütfen daha sonra tekrar deneyin.',
+          isUser: false,
+          timestamp: new Date().toISOString(),
+          isAI: true
+        };
+        setChatMessages(prev => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      const errorMessage = {
+        id: (Date.now() + 1).toString(),
+        text: 'Bir hata oluştu. Lütfen tekrar deneyin.',
+        isUser: false,
+        timestamp: new Date().toISOString(),
+        isAI: true
+      };
+      setChatMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsGeneratingResponse(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -65,9 +128,142 @@ const ConsultantPage: React.FC = () => {
           </p>
         </div>
 
+        {/* AI Chat Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center">
+              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mr-3">
+                <Bot className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  AI Danışman
+                  <Sparkles className="h-4 w-4 ml-2 text-yellow-500" />
+                </h3>
+                <p className="text-sm text-gray-600">Anında yanıt alın</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Chat Messages */}
+          <div className="h-96 overflow-y-auto p-6 space-y-4">
+            {chatMessages.length === 0 && (
+              <div className="text-center py-8">
+                <Bot className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h4 className="text-lg font-medium text-gray-900 mb-2">AI Danışmanınız Hazır!</h4>
+                <p className="text-gray-600 mb-4">
+                  Beslenme, egzersiz, kilo verme/alma hakkında sorularınızı sorun
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <button
+                    onClick={() => setChatInput('Kilo vermek için ne yapmalıyım?')}
+                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors"
+                  >
+                    Kilo verme
+                  </button>
+                  <button
+                    onClick={() => setChatInput('Kas yapmak için beslenme önerisi')}
+                    className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm hover:bg-green-200 transition-colors"
+                  >
+                    Kas yapma
+                  </button>
+                  <button
+                    onClick={() => setChatInput('Egzersiz programı önerisi')}
+                    className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm hover:bg-purple-200 transition-colors"
+                  >
+                    Egzersiz
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {chatMessages.map((message) => (
+              <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
+                <div className={`flex max-w-xs lg:max-w-md ${message.isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <div className={`flex-shrink-0 ${message.isUser ? 'ml-3' : 'mr-3'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      message.isUser 
+                        ? 'bg-blue-600' 
+                        : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                    }`}>
+                      {message.isUser ? (
+                        <User className="h-4 w-4 text-white" />
+                      ) : (
+                        <Bot className="h-4 w-4 text-white" />
+                      )}
+                    </div>
+                  </div>
+                  <div className={`px-4 py-2 rounded-lg ${
+                    message.isUser 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-100 text-gray-900'
+                  }`}>
+                    <div className="whitespace-pre-wrap text-sm">{message.text}</div>
+                    <div className={`text-xs mt-1 ${
+                      message.isUser ? 'text-blue-100' : 'text-gray-500'
+                    }`}>
+                      {new Date(message.timestamp).toLocaleTimeString('tr-TR', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {isGeneratingResponse && (
+              <div className="flex justify-start">
+                <div className="flex">
+                  <div className="flex-shrink-0 mr-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                      <Bot className="h-4 w-4 text-white" />
+                    </div>
+                  </div>
+                  <div className="bg-gray-100 px-4 py-2 rounded-lg">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Chat Input */}
+          <div className="p-6 border-t border-gray-200">
+            <form onSubmit={handleChatSubmit} className="flex space-x-4">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Sorunuzu yazın... (örn: Kilo vermek için ne yapmalıyım?)"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                disabled={isGeneratingResponse}
+              />
+              <button
+                type="submit"
+                disabled={!chatInput.trim() || isGeneratingResponse}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              >
+                {isGeneratingResponse ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+
         {/* Ask Question Form */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Yeni Soru Sor</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Uzman Danışmana Soru Sor
+            <span className="text-sm font-normal text-gray-600 ml-2">(İnsan danışman yanıtı)</span>
+          </h3>
           <form onSubmit={handleSubmitQuestion} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -76,7 +272,7 @@ const ConsultantPage: React.FC = () => {
               <textarea
                 value={newQuestion}
                 onChange={(e) => setNewQuestion(e.target.value)}
-                placeholder="Beslenme, egzersiz veya vücut gelişimi hakkında merak ettiğiniz her şeyi sorabilirsiniz..."
+                placeholder="Detaylı analiz gerektiren sorularınızı uzman danışmanımıza sorabilirsiniz..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 h-32 resize-none"
                 required
               />
@@ -86,7 +282,7 @@ const ConsultantPage: React.FC = () => {
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
             >
               <Send className="h-4 w-4 mr-2" />
-              Soru Gönder
+              Uzman Danışmana Gönder
             </button>
           </form>
         </div>
@@ -166,12 +362,15 @@ const ConsultantPage: React.FC = () => {
 
         {/* Consultant Info */}
         <div className="bg-green-50 border border-green-200 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-green-900 mb-3">📞 Acil Durumlarda</h3>
+          <h3 className="text-lg font-semibold text-green-900 mb-3">ℹ️ Danışman Hizmetleri</h3>
           <p className="text-green-800 mb-2">
-            Sağlık konularında acil durumlar için lütfen doktorunuza başvurun.
+            <strong>🤖 AI Danışman:</strong> Anında yanıt, genel öneriler, hızlı sorular
           </p>
           <p className="text-green-700 text-sm">
-            Danışmanlarımız genellikle 24 saat içinde yanıt verir.
+            <strong>👨‍⚕️ Uzman Danışman:</strong> Detaylı analiz, kişisel program, 24 saat içinde yanıt
+          </p>
+          <p className="text-green-600 text-xs mt-2">
+            Acil sağlık durumları için lütfen doktorunuza başvurun.
           </p>
         </div>
       </div>
