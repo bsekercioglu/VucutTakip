@@ -13,12 +13,20 @@ interface MeasurementFormData {
   bodyFat?: number;
   waterPercentage?: number;
   musclePercentage?: number;
+  // Body measurements
+  chest?: number;
+  waist?: number;
+  hips?: number;
+  arm?: number;
+  thigh?: number;
+  neck?: number;
 }
 
 const MeasurementsPage: React.FC = () => {
   const { user, dailyRecords, addDailyRecord, updateDailyRecord, deleteDailyRecord, isLoggedIn, loading } = useUser();
   const { success, error } = useToast();
   const [showForm, setShowForm] = useState(false);
+  const [measurementType, setMeasurementType] = useState<'digital' | 'manual'>('digital');
   const [editingRecord, setEditingRecord] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -67,6 +75,20 @@ const MeasurementsPage: React.FC = () => {
   const onSubmit = async (data: MeasurementFormData) => {
     setIsSubmitting(true);
     try {
+      const measurements = measurementType === 'manual' ? {
+        chest: data.chest,
+        waist: data.waist,
+        hips: data.hips,
+        arm: data.arm,
+        thigh: data.thigh,
+        neck: data.neck
+      } : undefined;
+      
+      // Remove undefined values from measurements
+      const cleanMeasurements = measurements ? Object.fromEntries(
+        Object.entries(measurements).filter(([_, value]) => value !== undefined && value !== null && value !== '')
+      ) : undefined;
+      
       let success;
       if (editingRecord) {
         success = await updateDailyRecord(editingRecord, {
@@ -74,7 +96,8 @@ const MeasurementsPage: React.FC = () => {
           weight: data.weight,
           bodyFat: data.bodyFat,
           waterPercentage: data.waterPercentage,
-          musclePercentage: data.musclePercentage
+          musclePercentage: data.musclePercentage,
+          measurements: Object.keys(cleanMeasurements || {}).length > 0 ? cleanMeasurements : undefined
         });
       } else {
         success = await addDailyRecord({
@@ -82,7 +105,8 @@ const MeasurementsPage: React.FC = () => {
           weight: data.weight,
           bodyFat: data.bodyFat,
           waterPercentage: data.waterPercentage,
-          musclePercentage: data.musclePercentage
+          musclePercentage: data.musclePercentage,
+          measurements: Object.keys(cleanMeasurements || {}).length > 0 ? cleanMeasurements : undefined
         });
       }
       
@@ -92,7 +116,13 @@ const MeasurementsPage: React.FC = () => {
           weight: undefined,
           bodyFat: undefined,
           waterPercentage: undefined,
-          musclePercentage: undefined
+          musclePercentage: undefined,
+          chest: undefined,
+          waist: undefined,
+          hips: undefined,
+          arm: undefined,
+          thigh: undefined,
+          neck: undefined
         });
         setShowForm(false);
         setEditingRecord(null);
@@ -119,6 +149,20 @@ const MeasurementsPage: React.FC = () => {
     setValue('bodyFat', record.bodyFat || undefined);
     setValue('waterPercentage', record.waterPercentage || undefined);
     setValue('musclePercentage', record.musclePercentage || undefined);
+    
+    // Set measurement type based on available data
+    if (record.measurements && Object.keys(record.measurements).length > 0) {
+      setMeasurementType('manual');
+      setValue('chest', record.measurements.chest || undefined);
+      setValue('waist', record.measurements.waist || undefined);
+      setValue('hips', record.measurements.hips || undefined);
+      setValue('arm', record.measurements.arm || undefined);
+      setValue('thigh', record.measurements.thigh || undefined);
+      setValue('neck', record.measurements.neck || undefined);
+    } else {
+      setMeasurementType('digital');
+    }
+    
     setShowForm(true);
     console.log('Form values set, showForm:', true);
   };
@@ -148,12 +192,19 @@ const MeasurementsPage: React.FC = () => {
   const handleCancelEdit = () => {
     setEditingRecord(null);
     setShowForm(false);
+    setMeasurementType('digital');
     reset({
       date: new Date().toISOString().split('T')[0],
       weight: undefined,
       bodyFat: undefined,
       waterPercentage: undefined,
-      musclePercentage: undefined
+      musclePercentage: undefined,
+      chest: undefined,
+      waist: undefined,
+      hips: undefined,
+      arm: undefined,
+      thigh: undefined,
+      neck: undefined
     });
   };
   return (
@@ -164,6 +215,7 @@ const MeasurementsPage: React.FC = () => {
           <button
             onClick={() => {
               setEditingRecord(null);
+              setMeasurementType('digital');
               setShowForm(true);
             }}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
@@ -178,6 +230,34 @@ const MeasurementsPage: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               {editingRecord ? 'Ölçümü Düzenle' : 'Yeni Ölçüm Ekle'}
             </h3>
+            
+            {/* Measurement Type Selection */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">Ölçüm Türü</label>
+              <div className="flex space-x-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="digital"
+                    checked={measurementType === 'digital'}
+                    onChange={(e) => setMeasurementType(e.target.value as 'digital' | 'manual')}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">📱 Dijital Terazi (Yağ/Su/Kas Oranı)</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="manual"
+                    checked={measurementType === 'manual'}
+                    onChange={(e) => setMeasurementType(e.target.value as 'digital' | 'manual')}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">📏 Manuel Ölçüm (Mezura ile)</span>
+                </label>
+              </div>
+            </div>
+            
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Tarih</label>
@@ -204,37 +284,122 @@ const MeasurementsPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Yağ Oranı (%)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    {...register('bodyFat', { min: 5, max: 50 })}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+              {measurementType === 'digital' ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Yağ Oranı (%)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      {...register('bodyFat', { min: 5, max: 50 })}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Su Oranı (%)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    {...register('waterPercentage', { min: 30, max: 80 })}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Su Oranı (%)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      {...register('waterPercentage', { min: 30, max: 80 })}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Kas Oranı (%)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    {...register('musclePercentage', { min: 20, max: 60 })}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Kas Oranı (%)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      {...register('musclePercentage', { min: 20, max: 60 })}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-4">📏 Vücut Ölçümleri (cm)</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Göğüs</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        {...register('chest', { min: 50, max: 200 })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="90"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Bel</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        {...register('waist', { min: 50, max: 200 })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="80"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Kalça</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        {...register('hips', { min: 50, max: 200 })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="95"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Kol</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        {...register('arm', { min: 20, max: 60 })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="30"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Uyluk</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        {...register('thigh', { min: 30, max: 100 })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="55"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Boyun</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        {...register('neck', { min: 25, max: 50 })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="35"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <h5 className="text-sm font-medium text-blue-900 mb-2">📋 Ölçüm İpuçları:</h5>
+                    <ul className="text-xs text-blue-800 space-y-1">
+                      <li>• <strong>Göğüs:</strong> Nefes verirken, göğsün en geniş yerinden</li>
+                      <li>• <strong>Bel:</strong> Göbek deliğinin 2-3 cm üstünden</li>
+                      <li>• <strong>Kalça:</strong> Kalçanın en geniş yerinden</li>
+                      <li>• <strong>Kol:</strong> Pazının en kalın yerinden (gergin değil)</li>
+                      <li>• <strong>Uyluk:</strong> Uyluğun en kalın yerinden</li>
+                      <li>• <strong>Boyun:</strong> Boyunun en ince yerinden</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
 
               <div className="flex space-x-4">
                 <button
@@ -280,10 +445,12 @@ const MeasurementsPage: React.FC = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarih</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tür</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ağırlık (kg)</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Yağ Oranı (%)</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Su Oranı (%)</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kas Oranı (%)</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ölçümler</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                   </tr>
                 </thead>
@@ -341,6 +508,17 @@ const MeasurementsPage: React.FC = () => {
                           {new Date(record.date).toLocaleDateString('tr-TR')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {record.measurements && Object.keys(record.measurements).length > 0 ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              📏 Manuel
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              📱 Dijital
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <div className="text-gray-900 font-medium">
                             {currentWeight.toFixed(1)} kg
                           </div>
@@ -363,6 +541,32 @@ const MeasurementsPage: React.FC = () => {
                             {currentMuscle ? `${currentMuscle.toFixed(1)}%` : '-'}
                           </div>
                           {currentMuscle && renderChange(muscleChange, '%')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {record.measurements && Object.keys(record.measurements).length > 0 ? (
+                            <div className="space-y-1">
+                              {record.measurements.chest && (
+                                <div className="text-xs text-gray-600">Göğüs: {record.measurements.chest}cm</div>
+                              )}
+                              {record.measurements.waist && (
+                                <div className="text-xs text-gray-600">Bel: {record.measurements.waist}cm</div>
+                              )}
+                              {record.measurements.hips && (
+                                <div className="text-xs text-gray-600">Kalça: {record.measurements.hips}cm</div>
+                              )}
+                              {record.measurements.arm && (
+                                <div className="text-xs text-gray-600">Kol: {record.measurements.arm}cm</div>
+                              )}
+                              {record.measurements.thigh && (
+                                <div className="text-xs text-gray-600">Uyluk: {record.measurements.thigh}cm</div>
+                              )}
+                              {record.measurements.neck && (
+                                <div className="text-xs text-gray-600">Boyun: {record.measurements.neck}cm</div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-xs">-</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <div className="flex space-x-2">

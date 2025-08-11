@@ -42,6 +42,14 @@ export interface DailyRecord {
   bodyFat?: number;
   waterPercentage?: number;
   musclePercentage?: number;
+  measurements?: {
+    chest?: number;
+    waist?: number;
+    hips?: number;
+    arm?: number;
+    thigh?: number;
+    neck?: number;
+  };
 }
 
 export interface DailyTracking {
@@ -52,6 +60,14 @@ export interface DailyTracking {
   bodyFat?: number;
   waterPercentage?: number;
   musclePercentage?: number;
+  measurements?: {
+    chest?: number;
+    waist?: number;
+    hips?: number;
+    arm?: number;
+    thigh?: number;
+    neck?: number;
+  };
   notes?: string;
   createdAt?: any;
   updatedAt?: any;
@@ -183,7 +199,15 @@ export const addDailyRecord = async (record: Omit<DailyRecord, 'id'>) => {
       weight: typeof record.weight === 'string' ? parseFloat(record.weight) : record.weight,
       bodyFat: record.bodyFat && typeof record.bodyFat === 'string' ? parseFloat(record.bodyFat) : record.bodyFat,
       waterPercentage: record.waterPercentage && typeof record.waterPercentage === 'string' ? parseFloat(record.waterPercentage) : record.waterPercentage,
-      musclePercentage: record.musclePercentage && typeof record.musclePercentage === 'string' ? parseFloat(record.musclePercentage) : record.musclePercentage
+      musclePercentage: record.musclePercentage && typeof record.musclePercentage === 'string' ? parseFloat(record.musclePercentage) : record.musclePercentage,
+      measurements: record.measurements ? {
+        chest: record.measurements.chest && typeof record.measurements.chest === 'string' ? parseFloat(record.measurements.chest) : record.measurements.chest,
+        waist: record.measurements.waist && typeof record.measurements.waist === 'string' ? parseFloat(record.measurements.waist) : record.measurements.waist,
+        hips: record.measurements.hips && typeof record.measurements.hips === 'string' ? parseFloat(record.measurements.hips) : record.measurements.hips,
+        arm: record.measurements.arm && typeof record.measurements.arm === 'string' ? parseFloat(record.measurements.arm) : record.measurements.arm,
+        thigh: record.measurements.thigh && typeof record.measurements.thigh === 'string' ? parseFloat(record.measurements.thigh) : record.measurements.thigh,
+        neck: record.measurements.neck && typeof record.measurements.neck === 'string' ? parseFloat(record.measurements.neck) : record.measurements.neck
+      } : undefined
     };
     
     const recordWithTimestamp = {
@@ -234,7 +258,15 @@ export const updateDailyRecord = async (recordId: string, recordData: Partial<Da
       weight: recordData.weight && typeof recordData.weight === 'string' ? parseFloat(recordData.weight) : recordData.weight,
       bodyFat: recordData.bodyFat && typeof recordData.bodyFat === 'string' ? parseFloat(recordData.bodyFat) : recordData.bodyFat,
       waterPercentage: recordData.waterPercentage && typeof recordData.waterPercentage === 'string' ? parseFloat(recordData.waterPercentage) : recordData.waterPercentage,
-      musclePercentage: recordData.musclePercentage && typeof recordData.musclePercentage === 'string' ? parseFloat(recordData.musclePercentage) : recordData.musclePercentage
+      musclePercentage: recordData.musclePercentage && typeof recordData.musclePercentage === 'string' ? parseFloat(recordData.musclePercentage) : recordData.musclePercentage,
+      measurements: recordData.measurements ? {
+        chest: recordData.measurements.chest && typeof recordData.measurements.chest === 'string' ? parseFloat(recordData.measurements.chest) : recordData.measurements.chest,
+        waist: recordData.measurements.waist && typeof recordData.measurements.waist === 'string' ? parseFloat(recordData.measurements.waist) : recordData.measurements.waist,
+        hips: recordData.measurements.hips && typeof recordData.measurements.hips === 'string' ? parseFloat(recordData.measurements.hips) : recordData.measurements.hips,
+        arm: recordData.measurements.arm && typeof recordData.measurements.arm === 'string' ? parseFloat(recordData.measurements.arm) : recordData.measurements.arm,
+        thigh: recordData.measurements.thigh && typeof recordData.measurements.thigh === 'string' ? parseFloat(recordData.measurements.thigh) : recordData.measurements.thigh,
+        neck: recordData.measurements.neck && typeof recordData.measurements.neck === 'string' ? parseFloat(recordData.measurements.neck) : recordData.measurements.neck
+      } : undefined
     };
     
     const updateData = {
