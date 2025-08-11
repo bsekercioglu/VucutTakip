@@ -25,32 +25,18 @@ const MeasurementsPage: React.FC = () => {
     }
   });
 
-  // Load data when component mounts and user is available
+   // Düzeltilmiş veri yükleme useEffect'i
   React.useEffect(() => {
     const loadData = async () => {
-      if (user && isLoggedIn) {
-        console.log('MeasurementsPage: Loading data for user:', user.id, 'Current records:', dailyRecords.length);
-        if (dailyRecords.length === 0) {
-          setLocalLoading(true);
-          await refreshData();
-          setLocalLoading(false);
-        }
-        console.log('MeasurementsPage: Data loaded, records count:', dailyRecords.length);
-      }
+      setLocalLoading(true);
+      await refreshData();
+      setLocalLoading(false);
     };
     
     if (!loading && user && isLoggedIn) {
-      console.log('MeasurementsPage: Effect triggered - User:', user.id, 'Loading:', loading, 'Records:', dailyRecords.length);
       loadData();
-    } else {
-      console.log('MeasurementsPage: Effect skipped - Loading:', loading, 'User:', user?.id);
     }
-  }, [user, isLoggedIn, loading, refreshData, dailyRecords.length]);
-
-  // Additional effect to monitor dailyRecords changes
-  React.useEffect(() => {
-    console.log('MeasurementsPage: dailyRecords changed:', dailyRecords.length, dailyRecords);
-  }, [dailyRecords]);
+  }, [user, isLoggedIn, loading, refreshData]);
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
