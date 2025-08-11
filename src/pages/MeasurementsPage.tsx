@@ -93,6 +93,8 @@ const MeasurementsPage: React.FC = () => {
   // Debug logging
   console.log('MeasurementsPage - User:', user?.id);
   console.log('MeasurementsPage - Daily Records:', dailyRecords);
+  console.log('MeasurementsPage - Daily Records detailed:', JSON.stringify(dailyRecords, null, 2));
+  console.log('MeasurementsPage - First record structure:', dailyRecords[0]);
   console.log('MeasurementsPage - Loading:', loading);
 
   if (loading || localLoading) {
@@ -253,6 +255,8 @@ const MeasurementsPage: React.FC = () => {
               <div className="p-4">
                 <p className="text-sm text-gray-600 mb-4">
                 {dailyRecords.length} kayıt bulundu
+                <br />
+                İlk kayıt: {JSON.stringify(dailyRecords[0], null, 2)}
                 </p>
               </div>
               <table className="w-full">
@@ -296,14 +300,15 @@ const MeasurementsPage: React.FC = () => {
                     const weightChange = prevRecord ? record.weight - prevRecord.weight : 0;
                     
                     console.log('Rendering record:', record);
+                    console.log('Record ID:', record.id, 'Date:', record.date, 'Weight:', record.weight);
                     
                     return (
                       <tr key={record.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {new Date(record.date).toLocaleDateString('tr-TR')}
+                          {record.date ? new Date(record.date).toLocaleDateString('tr-TR') : 'Tarih yok'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.weight} kg
+                          {record.weight ? `${record.weight} kg` : 'Ağırlık yok'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {record.bodyFat ? `${record.bodyFat}%` : '-'}
@@ -341,7 +346,7 @@ const MeasurementsPage: React.FC = () => {
                 <br />
                 Debug: dailyRecords.length = {dailyRecords.length}
                 <br />
-                Records: {JSON.stringify(dailyRecords.slice(0, 1))}
+                Records: {JSON.stringify(dailyRecords, null, 2)}
               </p>
               <button
                 onClick={() => setShowForm(true)}
