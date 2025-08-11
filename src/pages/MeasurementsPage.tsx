@@ -31,13 +31,12 @@ const MeasurementsPage: React.FC = () => {
     recordDate: ''
   });
   
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<MeasurementFormData>({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<MeasurementFormData>({
     defaultValues: {
       date: new Date().toISOString().split('T')[0]
     }
   });
 
-  const { register: registerEdit, handleSubmit: handleSubmitEdit, reset: resetEdit, setValue, formState: { errors: editErrors } } = useForm<MeasurementFormData>();
   console.log('MeasurementsPage - User:', user?.id);
   console.log('MeasurementsPage - Daily Records:', dailyRecords);
   console.log('MeasurementsPage - Loading:', loading);
@@ -113,13 +112,15 @@ const MeasurementsPage: React.FC = () => {
   };
 
   const handleEdit = (record: any) => {
+    console.log('Editing record:', record);
     setEditingRecord(record.id);
     setValue('date', record.date);
     setValue('weight', record.weight);
-    setValue('bodyFat', record.bodyFat || '');
-    setValue('waterPercentage', record.waterPercentage || '');
-    setValue('musclePercentage', record.musclePercentage || '');
+    setValue('bodyFat', record.bodyFat || undefined);
+    setValue('waterPercentage', record.waterPercentage || undefined);
+    setValue('musclePercentage', record.musclePercentage || undefined);
     setShowForm(true);
+    console.log('Form values set, showForm:', true);
   };
 
   const handleDeleteClick = (recordId: string, recordDate: string) => {
