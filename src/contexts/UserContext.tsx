@@ -58,6 +58,36 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Kullanıcı verilerini yükleme
   const loadUserData = async (userId: string) => {
+    console.log('Loading user data for userId:', userId);
+    try {
+      const [records, tracking, userQuestions] = await Promise.all([
+        firebaseService.getUserDailyRecords(userId),
+        firebaseService.getUserDailyTracking(userId),
+        firebaseService.getUserQuestions(userId)
+      ]);
+      
+      console.log('Loaded daily records:', records);
+      console.log('Loaded daily tracking:', tracking);
+      console.log('Loaded questions:', userQuestions);
+      
+      setDailyRecords(records);
+      setDailyTracking(tracking);
+      setQuestions(userQuestions);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
+  // Force refresh data function
+  const forceRefreshData = async () => {
+    if (user) {
+      console.log('Force refreshing data for user:', user.id);
+      await loadUserData(user.id);
+    }
+  };
+
+  // Kullanıcı verilerini yükleme (old version - keeping for reference)
+  const loadUserDataOld = async (userId: string) => {
     const [records, tracking, userQuestions] = await Promise.all([
       firebaseService.getUserDailyRecords(userId),
       firebaseService.getUserDailyTracking(userId),
@@ -84,8 +114,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     handleRedirectResult();
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      console.log('Auth state changed:', firebaseUser?.uid);
       if (firebaseUser) {
         const userData = await firebaseService.getUser(firebaseUser.uid);
+        console.log('User data from Firestore:', userData);
         if (userData) {
           setUser(userData);
           setIsLoggedIn(true);
@@ -225,7 +257,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // CRUD işlemleri
   const addDailyRecord = async (record: Omit<DailyRecord, 'id' | 'userId'>) => {
     if (!user) return false;
+    console.log('Adding daily record:', record, 'for user:', user.id);
     const result = await firebaseService.addDailyRecord({ ...record, userId: user.id });
+    console.log('Add daily record result:', result);
     if (result.success) {
       await loadUserData(user.id);
       return true;
@@ -319,7 +353,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         deleteDailyTracking,
         addQuestion,
         updateProfile,
-        refreshData
+        refreshData,
+        forceRefreshData
       }}
     >
       {children}

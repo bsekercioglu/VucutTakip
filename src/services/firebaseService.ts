@@ -169,12 +169,14 @@ export const deleteDailyTracking = async (trackingId: string) => {
 // Daily records operations
 export const addDailyRecord = async (record: Omit<DailyRecord, 'id'>) => {
   try {
+    console.log('Firebase: Adding daily record:', record);
     const recordWithTimestamp = {
       ...record,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
     const docRef = await addDoc(collection(db, 'dailyRecords'), recordWithTimestamp);
+    console.log('Firebase: Daily record added with ID:', docRef.id);
     return { success: true, id: docRef.id };
   } catch (error) {
     console.error('Error adding daily record:', error);
@@ -184,13 +186,16 @@ export const addDailyRecord = async (record: Omit<DailyRecord, 'id'>) => {
 
 export const getUserDailyRecords = async (userId: string): Promise<DailyRecord[]> => {
   try {
+    console.log('Firebase: Getting daily records for user:', userId);
     const q = query(
       collection(db, 'dailyRecords'),
       where('userId', '==', userId),
       orderBy('date', 'asc')
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyRecord));
+    const records = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyRecord));
+    console.log('Firebase: Retrieved daily records:', records);
+    return records;
   } catch (error) {
     console.error('Error getting daily records:', error);
     return [];
