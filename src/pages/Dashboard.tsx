@@ -42,12 +42,12 @@ const Dashboard: React.FC = () => {
   const ranges = user ? getBodyCompositionRanges(age, user.gender) : null;
   
   // Calculate current BFP and BMR
-  const currentBFP = latestRecord?.bodyFat || 
+  const currentBFP = (latestRecord?.bodyFat ? parseFloat(latestRecord.bodyFat.toString()) : null) || 
     (latestRecord?.measurements?.waist && latestRecord?.measurements?.neck && user ? 
       calculateBFP(user.gender, user.height, latestRecord.measurements.waist, latestRecord.measurements.neck, latestRecord.measurements.hips) : null);
   
-  const currentBMR = user ? calculateBMR(currentWeight, user.height, age, user.gender) : 0;
-  const initialBMR = user ? calculateBMR(initialWeight, user.height, age, user.gender) : 0;
+  const currentBMR = user ? parseFloat(calculateBMR(currentWeight, user.height, age, user.gender).toString()) : 0;
+  const initialBMR = user ? parseFloat(calculateBMR(initialWeight, user.height, age, user.gender).toString()) : 0;
   const bmrChange = currentBMR - initialBMR;
   
   // Get BFP status
@@ -85,7 +85,7 @@ const Dashboard: React.FC = () => {
       bfpFinal: bodyFat || (record.measurements?.waist && record.measurements?.neck && user ? 
         calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips) : null),
       bfpCalculated: !bodyFat && record.measurements?.waist && record.measurements?.neck && user ? 
-        calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips) : null
+        parseFloat(calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips).toString()) : null
     };
   });
 
@@ -553,7 +553,7 @@ const Dashboard: React.FC = () => {
                     <td className="py-3 text-sm text-gray-900">
                       {record.bodyFat ? `${record.bodyFat}% (D)` : 
                        (record.measurements?.waist && record.measurements?.neck && user) ? 
-                       `${calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips).toFixed(1)}% (H)` : '-'}
+                       `${parseFloat(calculateBFP(user.gender, user.height, record.measurements.waist, record.measurements.neck, record.measurements.hips).toString()).toFixed(1)}% (H)` : '-'}
                     </td>
                     <td className="py-3 text-sm text-gray-900">
                       {record.waterPercentage ? `${record.waterPercentage}%` : '-'}
