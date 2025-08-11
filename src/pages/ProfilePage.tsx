@@ -10,6 +10,7 @@ interface ProfileFormData {
   lastName: string;
   email: string;
   height: number;
+  initialWeight: number;
   chest: number;
   waist: number;
   hips: number;
@@ -27,6 +28,7 @@ const ProfilePage: React.FC = () => {
       lastName: user.lastName,
       email: user.email,
       height: user.height,
+      initialWeight: user.initialWeight,
       chest: user.measurements.chest,
       waist: user.measurements.waist,
       hips: user.measurements.hips,
@@ -45,6 +47,7 @@ const ProfilePage: React.FC = () => {
       lastName: data.lastName,
       email: data.email,
       height: data.height,
+      initialWeight: data.initialWeight,
       measurements: {
         chest: data.chest,
         waist: data.waist,
@@ -185,6 +188,19 @@ const ProfilePage: React.FC = () => {
                       />
                       {errors.height && (
                         <p className="text-red-500 text-sm mt-1">{errors.height.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Başlangıç Ağırlığı (kg)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        {...register('initialWeight', { required: 'Başlangıç ağırlığı gerekli', min: 30, max: 200 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      {errors.initialWeight && (
+                        <p className="text-red-500 text-sm mt-1">{errors.initialWeight.message}</p>
                       )}
                     </div>
                   </div>
