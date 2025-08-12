@@ -166,6 +166,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       console.log('🔐 Auth state changed:', firebaseUser?.uid);
       if (firebaseUser) {
+        console.log('👤 Firebase user found, UID:', firebaseUser.uid);
         const userData = await firebaseService.getUser(firebaseUser.uid);
         console.log('👤 User data from Firestore:', userData);
         if (userData) {
@@ -175,8 +176,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           await loadUserData(firebaseUser.uid);
           
           // Check admin status
+          console.log('🔍 Checking admin status for UID:', firebaseUser.uid);
           const admin = await getAdminUser(firebaseUser.uid);
-          console.log('👑 Admin status:', admin ? `${admin.role} with permissions: ${admin.permissions.join(', ')}` : 'Not admin');
+          console.log('👑 Admin check result:', admin);
+          if (admin) {
+            console.log('✅ User is admin/sponsor:', admin.role, 'Permissions:', admin.permissions);
+          } else {
+            console.log('❌ User is not admin/sponsor');
+          }
           
           setLoading(false);
         } else {

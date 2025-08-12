@@ -35,7 +35,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Add admin menu item if user is admin/sponsor
   if (adminUser) {
-    console.log('🎯 Adding admin menu for:', adminUser.role, 'with permissions:', adminUser.permissions);
+    console.log('🎯 Adding admin menu for role:', adminUser.role);
+    console.log('🎯 Admin permissions:', adminUser.permissions);
     menuItems.push({
       path: '/admin',
       icon: User,
@@ -44,6 +45,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     
     // Add admin management for super admins
     if (adminUser.role === 'admin') {
+      console.log('🎯 Adding admin management menu');
       menuItems.push({
         path: '/admin-management',
         icon: User,
@@ -51,7 +53,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       });
     }
   } else {
-    console.log('❌ No admin user found, admin menu not added');
+    console.log('❌ No admin user found in Layout, admin menu not added');
   }
   return (
     <div className="min-h-screen bg-gray-50">

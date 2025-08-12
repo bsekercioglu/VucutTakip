@@ -34,13 +34,20 @@ export const createAdminUser = async (userId: string, adminData: Omit<AdminUser,
 
 export const getAdminUser = async (userId: string): Promise<AdminUser | null> => {
   try {
+    console.log('🔍 Checking admin status for userId:', userId);
     const adminDoc = await getDoc(doc(db, 'admins', userId));
+    console.log('📄 Admin document exists:', adminDoc.exists());
     if (adminDoc.exists()) {
-      return { id: adminDoc.id, ...adminDoc.data() } as AdminUser;
+      const adminData = { id: adminDoc.id, ...adminDoc.data() } as AdminUser;
+      console.log('👑 Admin data found:', adminData);
+      return adminData;
+    } else {
+      console.log('❌ No admin document found for userId:', userId);
     }
     return null;
   } catch (error) {
-    console.error('Error getting admin user:', error);
+    console.error('❌ Error getting admin user:', error);
+    console.error('Error details:', error.code, error.message);
     return null;
   }
 };
