@@ -27,12 +27,37 @@ service cloud.firestore {
         (request.resource == null || request.resource.data.userId == request.auth.uid);
     }
     
-    // Admin collection for future consultant access
+    // Admin collection
     match /admins/{adminId} {
       allow read: if request.auth != null && request.auth.uid == adminId;
+      allow write: if request.auth != null && request.auth.uid == adminId;
     }
     
-    // Consultant access to questions (read and update only)
+    // Sponsor teams
+    match /sponsorTeams/{teamId} {
+      allow read, write: if request.auth != null && 
+        (resource == null || resource.data.sponsorId == request.auth.uid || resource.data.memberId == request.auth.uid);
+    }
+    
+    // Orders
+    match /orders/{orderId} {
+      allow read, write: if request.auth != null && 
+        (resource == null || resource.data.userId == request.auth.uid || resource.data.sponsorId == request.auth.uid);
+    }
+    
+    // Product recommendations
+    match /productRecommendations/{recId} {
+      allow read, write: if request.auth != null && 
+        (resource == null || resource.data.userId == request.auth.uid || resource.data.sponsorId == request.auth.uid);
+    }
+    
+    // Sponsor messages
+    match /sponsorMessages/{messageId} {
+      allow read, write: if request.auth != null && 
+        (resource == null || resource.data.userId == request.auth.uid || resource.data.sponsorId == request.auth.uid);
+    }
+    
+    // Enhanced consultant access to questions
     match /questions/{questionId} {
       allow read, update: if request.auth != null && 
         exists(/databases/$(database)/documents/admins/$(request.auth.uid));

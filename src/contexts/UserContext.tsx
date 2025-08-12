@@ -12,12 +12,17 @@ import {
 import { auth, googleProvider, facebookProvider } from '../config/firebase';
 import * as firebaseService from '../services/firebaseService';
 import { User, DailyRecord, Question, DailyTracking } from '../services/firebaseService';
+import { getAdminUser, getUserSponsorMessages, getUserRecommendations } from '../services/adminService';
+import { AdminUser, SponsorMessage, ProductRecommendation } from '../types/admin';
 
 interface UserContextType {
   user: User | null;
   dailyRecords: DailyRecord[];
   dailyTracking: DailyTracking[];
   questions: Question[];
+  adminUser: AdminUser | null;
+  sponsorMessages: SponsorMessage[];
+  recommendations: ProductRecommendation[];
   isLoggedIn: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
@@ -57,6 +62,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [dailyRecords, setDailyRecords] = useState<DailyRecord[]>([]);
   const [dailyTracking, setDailyTracking] = useState<DailyTracking[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
+  const [sponsorMessages, setSponsorMessages] = useState<SponsorMessage[]>([]);
+  const [recommendations, setRecommendations] = useState<ProductRecommendation[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -64,25 +72,35 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const loadUserData = async (userId: string) => {
     console.log('UserContext: Loading user data for userId:', userId);
     try {
-      const [records, tracking, userQuestions] = await Promise.all([
+      const [records, tracking, userQuestions, admin, messages, recs] = await Promise.all([
         firebaseService.getUserDailyRecords(userId),
         firebaseService.getUserDailyTracking(userId),
-        firebaseService.getUserQuestions(userId)
+        firebaseService.getUserQuestions(userId),
+        getAdminUser(userId),
+        getUserSponsorMessages(userId),
+        getUserRecommendations(userId)
       ]);
       
       console.log('UserContext: Loaded daily records:', records.length, records);
       console.log('Loaded daily tracking:', tracking);
       console.log('Loaded questions:', userQuestions);
+      console.log('Loaded admin user:', admin);
       
       setDailyRecords(records);
       setDailyTracking(tracking);
       setQuestions(userQuestions);
+      setAdminUser(admin);
+      setSponsorMessages(messages);
+      setRecommendations(recs);
     } catch (error) {
       console.error('UserContext: Error loading user data:', error);
       // Set empty arrays on error to prevent undefined state
       setDailyRecords([]);
       setDailyTracking([]);
       setQuestions([]);
+      setAdminUser(null);
+      setSponsorMessages([]);
+      setRecommendations([]);
     }
   };
 
@@ -436,6 +454,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         dailyRecords,
         dailyTracking,
         questions,
+        adminUser,
+        sponsorMessages,
+        recommendations,
         isLoggedIn,
         loading,
         login,

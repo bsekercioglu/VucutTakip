@@ -5,6 +5,7 @@ import { createUserWithEmailAndPassword, updateProfile, signInWithPopup } from '
 import { Activity, ArrowLeft } from 'lucide-react';
 import { auth, googleProvider, facebookProvider } from '../config/firebase';
 import * as firebaseService from '../services/firebaseService';
+import { addTeamMember, getAdminUser } from '../services/adminService';
 
 interface RegisterFormData {
   firstName: string;
@@ -21,15 +22,26 @@ interface RegisterFormData {
   hips: number;
   arm: number;
   thigh: number;
+  sponsorCode?: string;
 }
 
 const RegisterPage: React.FC = () => {
   const [step, setStep] = useState(1);
   const [isGoogleRegistration, setIsGoogleRegistration] = useState(false);
   const [isFacebookRegistration, setIsFacebookRegistration] = useState(false);
+  const [sponsorCode, setSponsorCode] = useState('');
   const navigate = useNavigate();
   
   const { register, handleSubmit, watch, formState: { errors } } = useForm<RegisterFormData>();
+
+  // Get sponsor code from URL params
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('sponsor');
+    if (code) {
+      setSponsorCode(code);
+    }
+  }, []);
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
@@ -62,6 +74,14 @@ const RegisterPage: React.FC = () => {
       
       const result = await firebaseService.createUser(userCredential.user.uid, userData);
       if (result.success) {
+        // If sponsor code provided, add user to sponsor's team
+        if (data.sponsorCode || sponsorCode) {
+          const code = data.sponsorCode || sponsorCode;
+          // Find sponsor by code and add team member
+          // This would require a query to find sponsor by code
+          console.log('Adding user to sponsor team with code:', code);
+        }
+        
         console.log('User successfully registered and saved to database');
         navigate('/dashboard');
       } else {
@@ -283,6 +303,27 @@ const RegisterPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Sponsor Code */}
+        {(sponsorCode || step === 1) && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <h3 className="text-sm font-medium text-green-900 mb-2">
+              {sponsorCode ? '🎉 Sponsor Kodu Algılandı!' : '💡 Sponsor Kodunuz Var mı?'}
+            </h3>
+            {sponsorCode ? (
+              <p className="text-green-800 text-sm">
+                Sponsor Kodu: <strong>{sponsorCode}</strong> - Bu kodla kayıt oluyorsunuz.
+              </p>
+            ) : (
+              <input
+                type="text"
+                {...register('sponsorCode')}
+                placeholder="Sponsor kodunuzu girin (isteğe bağlı)"
+                className="w-full px-3 py-2 border border-green-300 rounded-md focus:ring-green-500 focus:border-green-500 text-sm"
+              />
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {step === 1 && (

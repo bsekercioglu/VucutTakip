@@ -12,6 +12,8 @@ import MeasurementsPage from './pages/MeasurementsPage';
 import ConsultantPage from './pages/ConsultantPage';
 import ProductsPage from './pages/ProductsPage';
 import ProfilePage from './pages/ProfilePage';
+import AdminDashboard from './pages/AdminDashboard';
+import OrderPage from './pages/OrderPage';
 
 const AppContent: React.FC = () => {
   const { loading, isLoggedIn } = useUser();
@@ -46,6 +48,8 @@ const AppContent: React.FC = () => {
         <Route path="/consultant" element={<ConsultantPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/order" element={<OrderPage selectedProducts={[]} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ToastContainer toasts={toasts} onClose={removeToast} />

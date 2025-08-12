@@ -33,6 +33,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/profile', icon: User, label: 'Profil' },
   ];
 
+  // Add admin menu item if user is admin/sponsor
+  if (adminUser) {
+    menuItems.push({
+      path: '/admin',
+      icon: User,
+      label: adminUser.role === 'admin' ? 'Admin Panel' : 'Sponsor Panel'
+    });
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
