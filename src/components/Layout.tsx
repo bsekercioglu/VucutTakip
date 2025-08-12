@@ -35,6 +35,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Add admin menu item if user is admin/sponsor
   if (adminUser) {
+    console.log('🎯 Adding admin menu for:', adminUser.role, 'with permissions:', adminUser.permissions);
     menuItems.push({
       path: '/admin',
       icon: User,
@@ -49,6 +50,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         label: 'Yetki Yönetimi'
       });
     }
+  } else {
+    console.log('❌ No admin user found, admin menu not added');
   }
   return (
     <div className="min-h-screen bg-gray-50">

@@ -164,15 +164,20 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     handleRedirectResult();
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-      console.log('Auth state changed:', firebaseUser?.uid);
+      console.log('🔐 Auth state changed:', firebaseUser?.uid);
       if (firebaseUser) {
         const userData = await firebaseService.getUser(firebaseUser.uid);
-        console.log('User data from Firestore:', userData);
+        console.log('👤 User data from Firestore:', userData);
         if (userData) {
           setUser(userData);
           setIsLoggedIn(true);
           setLoading(true);
           await loadUserData(firebaseUser.uid);
+          
+          // Check admin status
+          const admin = await getAdminUser(firebaseUser.uid);
+          console.log('👑 Admin status:', admin ? `${admin.role} with permissions: ${admin.permissions.join(', ')}` : 'Not admin');
+          
           setLoading(false);
         } else {
           const newUser: Omit<User, 'id'> = {

@@ -531,17 +531,19 @@ const AdminManagement: React.FC = () => {
           <h3 className="text-lg font-semibold text-blue-900 mb-3">🔧 Manuel Admin Ekleme (Firebase Console)</h3>
           <div className="space-y-2 text-blue-800 text-sm">
             <p><strong>1.</strong> Firebase Console → Firestore Database</p>
-            <p><strong>2.</strong> "admins" koleksiyonuna git</p>
-            <p><strong>3.</strong> Yeni doküman ekle (Document ID = User ID)</p>
+            <p><strong>2.</strong> Authentication → Users → UID'yi kopyala</p>
+            <p><strong>3.</strong> "admins" koleksiyonu oluştur (Document ID = UID)</p>
             <p><strong>4.</strong> Aşağıdaki alanları ekle:</p>
             <div className="bg-blue-100 p-3 rounded mt-2 font-mono text-xs">
               <p>userId: "kullanıcı_id_buraya"</p>
               <p>role: "admin" veya "sponsor"</p>
-              <p>permissions: ["manage_users", "view_all_data"]</p>
+              <p>permissions: ["manage_users", "view_all_data", "manage_orders"]</p>
               <p>sponsorCode: "SPONSOR123" (sadece sponsor için)</p>
               <p>createdAt: "2024-01-01T00:00:00.000Z"</p>
               <p>updatedAt: "2024-01-01T00:00:00.000Z"</p>
             </div>
+            <p className="mt-2"><strong>5.</strong> Uygulamada logout/login yapın</p>
+            <p><strong>6.</strong> Sol menüde "Admin Panel" görünecek</p>
           </div>
         </div>
       </div>
