@@ -16,7 +16,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, logout } = useUser();
+  const { user, logout, adminUser } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
 

@@ -188,6 +188,13 @@ export const sendSponsorMessage = async (messageData: Omit<SponsorMessage, 'id'>
 
 export const getUserSponsorMessages = async (userId: string) => {
   try {
+    // First check if user is admin/sponsor
+    const adminUser = await getAdminUser(userId);
+    if (!adminUser) {
+      console.log('User is not admin/sponsor, returning empty messages');
+      return [];
+    }
+    
     const q = query(
       collection(db, 'sponsorMessages'),
       where('userId', '==', userId),
@@ -203,6 +210,13 @@ export const getUserSponsorMessages = async (userId: string) => {
 
 export const respondToSponsorMessage = async (messageId: string, response: string) => {
   try {
+    // First check if user is admin/sponsor
+    const adminUser = await getAdminUser(userId);
+    if (!adminUser) {
+      console.log('User is not admin/sponsor, returning empty recommendations');
+      return [];
+    }
+    
     await updateDoc(doc(db, 'sponsorMessages', messageId), {
       response,
       responseTimestamp: new Date().toISOString()

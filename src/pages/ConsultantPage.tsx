@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { Send, MessageCircle, Clock, CheckCircle, Bot, User, Sparkles } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { generateConsultantResponse } from '../services/aiService';
+import { forwardQuestionToSponsor } from '../services/adminService';
 import Layout from '../components/Layout';
 
 interface Message {
@@ -54,13 +55,25 @@ const ConsultantPage: React.FC = () => {
     e.preventDefault();
     if (!newQuestion.trim()) return;
 
-    const success = await addQuestion({
+    const questionSuccess = await addQuestion({
       title: newQuestion.slice(0, 50) + (newQuestion.length > 50 ? '...' : ''),
       message: newQuestion
     });
 
-    if (success) {
+    if (questionSuccess) {
       console.log('Question successfully saved to database');
+      
+      // Try to forward question to sponsor if available
+      try {
+        const lastQuestion = questions[0]; // Get the most recent question
+        if (lastQuestion) {
+          await forwardQuestionToSponsor(lastQuestion.id, user!.id);
+          console.log('Question forwarded to sponsor');
+        }
+      } catch (error) {
+        console.error('Error forwarding question to sponsor:', error);
+      }
+      
       setNewQuestion('');
     } else {
       alert('Soru gönderilirken hata oluştu. Lütfen tekrar deneyin.');

@@ -72,13 +72,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const loadUserData = async (userId: string) => {
     console.log('UserContext: Loading user data for userId:', userId);
     try {
-      const [records, tracking, userQuestions, admin, messages, recs] = await Promise.all([
+      const [records, tracking, userQuestions, admin] = await Promise.all([
         firebaseService.getUserDailyRecords(userId),
         firebaseService.getUserDailyTracking(userId),
         firebaseService.getUserQuestions(userId),
-        getAdminUser(userId),
-        getUserSponsorMessages(userId),
-        getUserRecommendations(userId)
+        getAdminUser(userId)
       ]);
       
       console.log('UserContext: Loaded daily records:', records.length, records);
@@ -90,8 +88,25 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setDailyTracking(tracking);
       setQuestions(userQuestions);
       setAdminUser(admin);
-      setSponsorMessages(messages);
-      setRecommendations(recs);
+      
+      // Load sponsor-specific data only if user is admin/sponsor
+      if (admin) {
+        try {
+          const [messages, recs] = await Promise.all([
+            getUserSponsorMessages(userId),
+            getUserRecommendations(userId)
+          ]);
+          setSponsorMessages(messages);
+          setRecommendations(recs);
+        } catch (error) {
+          console.error('Error loading sponsor data:', error);
+          setSponsorMessages([]);
+          setRecommendations([]);
+        }
+      } else {
+        setSponsorMessages([]);
+        setRecommendations([]);
+      }
     } catch (error) {
       console.error('UserContext: Error loading user data:', error);
       // Set empty arrays on error to prevent undefined state
