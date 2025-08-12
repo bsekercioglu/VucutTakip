@@ -45,6 +45,54 @@ export const getAdminUser = async (userId: string): Promise<AdminUser | null> =>
   }
 };
 
+// Get all admin users (only for super admins)
+export const getAllAdminUsers = async (): Promise<AdminUser[]> => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'admins'));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AdminUser));
+  } catch (error) {
+    console.error('Error getting all admin users:', error);
+    return [];
+  }
+};
+
+// Get all users (only for admins)
+export const getAllUsers = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'users'));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error('Error getting all users:', error);
+    return [];
+  }
+};
+
+// Update admin user
+export const updateAdminUser = async (adminId: string, adminData: Partial<AdminUser>) => {
+  try {
+    const updateData = {
+      ...adminData,
+      updatedAt: new Date().toISOString()
+    };
+    await updateDoc(doc(db, 'admins', adminId), updateData);
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating admin user:', error);
+    return { success: false, error };
+  }
+};
+
+// Delete admin user
+export const deleteAdminUser = async (adminId: string) => {
+  try {
+    await deleteDoc(doc(db, 'admins', adminId));
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting admin user:', error);
+    return { success: false, error };
+  }
+};
+
 export const generateSponsorCode = (): string => {
   return Math.random().toString(36).substr(2, 8).toUpperCase();
 };

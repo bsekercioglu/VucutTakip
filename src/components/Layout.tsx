@@ -40,6 +40,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       icon: User,
       label: adminUser.role === 'admin' ? 'Admin Panel' : 'Sponsor Panel'
     });
+    
+    // Add admin management for super admins
+    if (adminUser.role === 'admin') {
+      menuItems.push({
+        path: '/admin-management',
+        icon: User,
+        label: 'Yetki Yönetimi'
+      });
+    }
   }
   return (
     <div className="min-h-screen bg-gray-50">
