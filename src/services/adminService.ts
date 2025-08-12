@@ -15,6 +15,93 @@ import {
 import { db } from '../config/firebase';
 import { AdminUser, SponsorTeam, Order, ProductRecommendation, SponsorMessage } from '../types/admin';
 
+// Auto-create admin collection and first admin user
+export const initializeAdminSystem = async (userId: string) => {
+  try {
+    console.log('🚀 Initializing admin system for userId:', userId);
+    
+    // Check if admins collection exists by trying to get any document
+    const adminsRef = collection(db, 'admins');
+    const snapshot = await getDocs(adminsRef);
+    
+    if (snapshot.empty) {
+      console.log('📝 Admins collection is empty, creating first admin...');
+      
+      // Create first admin user
+      const firstAdminData = {
+        userId,
+        role: 'admin' as const,
+        permissions: [
+          'manage_users',
+          'view_all_data',
+          'manage_orders',
+          'send_recommendations',
+          'answer_questions'
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      await setDoc(doc(db, 'admins', userId), firstAdminData);
+      console.log('✅ First admin created successfully!');
+      
+      return { success: true, created: true, adminData: firstAdminData };
+    } else {
+      console.log('📋 Admins collection already exists');
+      return { success: true, created: false };
+    }
+  } catch (error) {
+    console.error('❌ Error initializing admin system:', error);
+    return { success: false, error };
+  }
+};
+
+// Enhanced getAdminUser with auto-initialization
+export const getAdminUserWithInit = async (userId: string): Promise<AdminUser | null> => {
+  try {
+    console.log('🔍 Checking admin status for userId:', userId);
+    
+    // First try to get existing admin
+    const adminDoc = await getDoc(doc(db, 'admins', userId));
+    console.log('📄 Admin document exists:', adminDoc.exists());
+    
+    if (adminDoc.exists()) {
+      const adminData = { id: adminDoc.id, ...adminDoc.data() } as AdminUser;
+      console.log('👑 Admin data found:', adminData);
+      return adminData;
+    } else {
+      console.log('❌ No admin document found, checking if should auto-create...');
+      
+      // Check if this is the first user in the system (auto-create first admin)
+      const initResult = await initializeAdminSystem(userId);
+      
+      if (initResult.success && initResult.created) {
+        console.log('🎉 Auto-created first admin, returning admin data');
+        return {
+          id: userId,
+          userId,
+          role: 'admin',
+          permissions: [
+            'manage_users',
+            'view_all_data',
+            'manage_orders',
+            'send_recommendations',
+            'answer_questions'
+          ],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        } as AdminUser;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('❌ Error getting admin user:', error);
+    console.error('Error details:', error.code, error.message);
+    return null;
+  }
+};
+
 // Admin User Management
 export const createAdminUser = async (userId: string, adminData: Omit<AdminUser, 'id' | 'userId'>) => {
   try {

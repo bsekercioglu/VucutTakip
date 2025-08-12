@@ -12,7 +12,7 @@ import {
 import { auth, googleProvider, facebookProvider } from '../config/firebase';
 import * as firebaseService from '../services/firebaseService';
 import { User, DailyRecord, Question, DailyTracking } from '../services/firebaseService';
-import { getAdminUser, getUserSponsorMessages, getUserRecommendations } from '../services/adminService';
+import { getAdminUser, getAdminUserWithInit, getUserSponsorMessages, getUserRecommendations } from '../services/adminService';
 import { AdminUser, SponsorMessage, ProductRecommendation } from '../types/admin';
 
 interface UserContextType {
@@ -76,7 +76,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         firebaseService.getUserDailyRecords(userId),
         firebaseService.getUserDailyTracking(userId),
         firebaseService.getUserQuestions(userId),
-        getAdminUser(userId)
+        getAdminUserWithInit(userId)
       ]);
       
       console.log('UserContext: Loaded daily records:', records.length, records);
@@ -177,7 +177,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           
           // Check admin status
           console.log('🔍 Checking admin status for UID:', firebaseUser.uid);
-          const admin = await getAdminUser(firebaseUser.uid);
+          const admin = await getAdminUserWithInit(firebaseUser.uid);
           console.log('👑 Admin check result:', admin);
           if (admin) {
             console.log('✅ User is admin/sponsor:', admin.role, 'Permissions:', admin.permissions);

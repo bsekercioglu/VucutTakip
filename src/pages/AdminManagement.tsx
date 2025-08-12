@@ -4,7 +4,8 @@ import { Shield, Users, Plus, Edit3, Trash2, Key, UserCheck } from 'lucide-react
 import { useUser } from '../contexts/UserContext';
 import { useToast } from '../hooks/useToast';
 import { 
-  getAllAdminUsers, 
+  getAllAdminUsers,
+  getAdminUserWithInit,
   createAdminUser, 
   updateAdminUser, 
   deleteAdminUser,
