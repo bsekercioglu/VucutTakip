@@ -68,6 +68,15 @@ Aşağıdaki kuralları kopyalayıp Firebase Console'daki rules editörüne yap�
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Allow authenticated users to create admin collection if it doesn't exist
+    match /admins/{adminId} {
+      allow read, write: if request.auth != null && request.auth.uid == adminId;
+      // Allow creation of first admin if collection is empty
+      allow create: if request.auth != null && 
+        request.auth.uid == adminId &&
+        !exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
     // Users collection - users can only read/write their own data
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;

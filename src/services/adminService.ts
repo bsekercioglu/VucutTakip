@@ -8,6 +8,7 @@ import {
   query, 
   where, 
   orderBy,
+  limit,
   updateDoc,
   deleteDoc,
   serverTimestamp
@@ -20,9 +21,17 @@ export const initializeAdminSystem = async (userId: string) => {
   try {
     console.log('🚀 Initializing admin system for userId:', userId);
     
-    // Check if admins collection exists by trying to get any document
+    // First check if this user already has admin rights
+    const existingAdmin = await getDoc(doc(db, 'admins', userId));
+    if (existingAdmin.exists()) {
+      console.log('👑 User already has admin rights');
+      return { success: true, created: false, adminData: existingAdmin.data() };
+    }
+    
+    // Check if any admin exists by trying to get a few documents
     const adminsRef = collection(db, 'admins');
-    const snapshot = await getDocs(adminsRef);
+    const limitedQuery = query(adminsRef, limit(1));
+    const snapshot = await getDocs(limitedQuery);
     
     if (snapshot.empty) {
       console.log('📝 Admins collection is empty, creating first admin...');
@@ -52,6 +61,8 @@ export const initializeAdminSystem = async (userId: string) => {
     }
   } catch (error) {
     console.error('❌ Error initializing admin system:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
     return { success: false, error };
   }
 };
