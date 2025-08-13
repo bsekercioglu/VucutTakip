@@ -12,6 +12,8 @@ service cloud.firestore {
       allow create: if request.auth != null && 
         request.auth.uid == adminId &&
         !exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      // DEBUG: Allow collection-level queries for authenticated users to check if collection is empty
+      allow list: if request.auth != null;
     }
     
     // Users collection - users can only read/write their own data
