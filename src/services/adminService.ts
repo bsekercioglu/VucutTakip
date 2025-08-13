@@ -212,10 +212,29 @@ export const getAdminUser = async (userId: string): Promise<AdminUser | null> =>
 // Get all admin users (only for super admins)
 export const getAllAdminUsers = async (): Promise<AdminUser[]> => {
   try {
+   console.log('🔍 Getting all admin users...');
+   console.log('🔍 Current user:', auth.currentUser?.uid);
+   
+   // First check if current user is admin
+   if (!auth.currentUser) {
+     console.log('❌ No authenticated user');
+     return [];
+   }
+   
+   const currentUserAdmin = await getDoc(doc(db, 'admins', auth.currentUser.uid));
+   if (!currentUserAdmin.exists()) {
+     console.log('❌ Current user is not admin');
+     return [];
+   }
+   
+   console.log('✅ Current user is admin, fetching all admins...');
     const querySnapshot = await getDocs(collection(db, 'admins'));
+   console.log('✅ Successfully fetched', querySnapshot.docs.length, 'admin users');
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AdminUser));
   } catch (error) {
-    console.error('Error getting all admin users:', error);
+   console.error('❌ Error getting all admin users:', error);
+   console.error('🔍 Error code:', error.code);
+   console.error('🔍 Error message:', error.message);
     return [];
   }
 };

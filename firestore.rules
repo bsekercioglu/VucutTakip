@@ -14,6 +14,9 @@ service cloud.firestore {
         !exists(/databases/$(database)/documents/admins/$(request.auth.uid));
       // DEBUG: Allow reading any admin document to check if collection exists
       allow read: if request.auth != null;
+     // DEBUG: Allow admin users to list all admins for management
+     allow list: if request.auth != null && 
+       exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
     
     // Users collection - users can only read/write their own data

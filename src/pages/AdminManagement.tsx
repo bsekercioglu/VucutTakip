@@ -49,10 +49,20 @@ const AdminManagement: React.FC = () => {
 
   const loadData = async () => {
     try {
+     console.log('🔍 AdminManagement: Loading data...');
+     console.log('🔍 AdminManagement: Current admin user:', adminUser);
+     
+     if (!adminUser || adminUser.role !== 'admin') {
+       console.log('❌ AdminManagement: User is not admin, skipping data load');
+       setLoading(false);
+       return;
+     }
+     
       const [admins, users] = await Promise.all([
         getAllAdminUsers(),
         getAllUsers()
       ]);
+     console.log('✅ AdminManagement: Loaded', admins.length, 'admins and', users.length, 'users');
       setAdminUsers(admins);
       setAllUsers(users);
     } catch (err) {
