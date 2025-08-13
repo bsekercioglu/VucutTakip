@@ -14,27 +14,53 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { auth } from '../config/firebase';
 import { AdminUser, SponsorTeam, Order, ProductRecommendation, SponsorMessage } from '../types/admin';
 
 // Auto-create admin collection and first admin user
 export const initializeAdminSystem = async (userId: string) => {
   try {
     console.log('🚀 Initializing admin system for userId:', userId);
+    console.log('🔍 Step 1: Checking if user already has admin rights...');
     
     // First check if this user already has admin rights
+    try {
+      const existingAdmin = await getDoc(doc(db, 'admins', userId));
+      console.log('✅ Step 1 SUCCESS: Admin document read permission OK');
+    } catch (readError) {
+      console.error('❌ Step 1 FAILED: Cannot read admin document');
+      console.error('🔍 Firebase Rule Error (READ):', readError.code, readError.message);
+      console.error('🔍 Rule that failed: match /admins/{adminId} { allow read: ... }');
+      throw readError;
+    }
+    
     const existingAdmin = await getDoc(doc(db, 'admins', userId));
     if (existingAdmin.exists()) {
       console.log('👑 User already has admin rights');
       return { success: true, created: false, adminData: existingAdmin.data() };
     }
     
+    console.log('🔍 Step 2: Checking if any admin exists in collection...');
     // Check if any admin exists by trying to get a few documents
+    try {
+      const adminsRef = collection(db, 'admins');
+      const limitedQuery = query(adminsRef, limit(1));
+      const snapshot = await getDocs(limitedQuery);
+      console.log('✅ Step 2 SUCCESS: Collection query permission OK');
+    } catch (queryError) {
+      console.error('❌ Step 2 FAILED: Cannot query admins collection');
+      console.error('🔍 Firebase Rule Error (QUERY):', queryError.code, queryError.message);
+      console.error('🔍 Rule that failed: Collection-level read permissions');
+      throw queryError;
+    }
+    
     const adminsRef = collection(db, 'admins');
     const limitedQuery = query(adminsRef, limit(1));
     const snapshot = await getDocs(limitedQuery);
     
     if (snapshot.empty) {
       console.log('📝 Admins collection is empty, creating first admin...');
+      console.log('🔍 Step 3: Attempting to create first admin document...');
       
       // Create first admin user
       const firstAdminData = {
@@ -51,7 +77,17 @@ export const initializeAdminSystem = async (userId: string) => {
         updatedAt: new Date().toISOString()
       };
       
-      await setDoc(doc(db, 'admins', userId), firstAdminData);
+      try {
+        await setDoc(doc(db, 'admins', userId), firstAdminData);
+        console.log('✅ Step 3 SUCCESS: Admin document created successfully');
+      } catch (createError) {
+        console.error('❌ Step 3 FAILED: Cannot create admin document');
+        console.error('🔍 Firebase Rule Error (CREATE):', createError.code, createError.message);
+        console.error('🔍 Rule that failed: match /admins/{adminId} { allow create: ... }');
+        console.error('🔍 Check if this condition is met: !exists(/databases/$(database)/documents/admins/$(request.auth.uid))');
+        throw createError;
+      }
+      
       console.log('✅ First admin created successfully!');
       
       return { success: true, created: true, adminData: firstAdminData };
@@ -61,8 +97,12 @@ export const initializeAdminSystem = async (userId: string) => {
     }
   } catch (error) {
     console.error('❌ Error initializing admin system:', error);
-    console.error('Error code:', error.code);
-    console.error('Error message:', error.message);
+    console.error('🔍 Full Error Details:');
+    console.error('  - Error code:', error.code);
+    console.error('  - Error message:', error.message);
+    console.error('  - User ID:', userId);
+    console.error('  - Auth status:', auth.currentUser ? 'Authenticated' : 'Not authenticated');
+    console.error('  - Auth UID:', auth.currentUser?.uid);
     return { success: false, error };
   }
 };
@@ -71,9 +111,22 @@ export const initializeAdminSystem = async (userId: string) => {
 export const getAdminUserWithInit = async (userId: string): Promise<AdminUser | null> => {
   try {
     console.log('🔍 Checking admin status for userId:', userId);
+    console.log('🔍 Auth status:', auth.currentUser ? 'Authenticated' : 'Not authenticated');
+    console.log('🔍 Auth UID:', auth.currentUser?.uid);
     
     // First try to get existing admin
-    const adminDoc = await getDoc(doc(db, 'admins', userId));
+    let adminDoc;
+    try {
+      adminDoc = await getDoc(doc(db, 'admins', userId));
+      console.log('✅ Admin document read successful');
+    } catch (readError) {
+      console.error('❌ Failed to read admin document');
+      console.error('🔍 Firebase Rule Error (READ):', readError.code, readError.message);
+      console.error('🔍 Rule that failed: match /admins/{adminId} { allow read: if request.auth != null && request.auth.uid == adminId; }');
+      console.error('🔍 Check: request.auth.uid (' + auth.currentUser?.uid + ') == adminId (' + userId + ')');
+      throw readError;
+    }
+    
     console.log('📄 Admin document exists:', adminDoc.exists());
     
     if (adminDoc.exists()) {

@@ -1,5 +1,22 @@
 # Firebase Firestore Security Rules Kurulum Rehberi
 
+## 🚨 **Debug Sistemi Aktif!**
+
+Artık Firebase kurallarında hangi kural hata veriyorsa Console'da detaylı bilgi göreceksiniz:
+
+### 🔍 **Debug Mesajları:**
+- `✅ Step X SUCCESS:` - Kural başarılı
+- `❌ Step X FAILED:` - Kural başarısız
+- `🔍 Firebase Rule Error:` - Hangi kural hata verdi
+- `🔍 Rule that failed:` - Tam kural kodu
+- `🔍 Check:` - Kontrol edilmesi gereken koşul
+
+### 📋 **Test Adımları:**
+1. F12 → Console açın
+2. Logout/Login yapın
+3. Debug mesajlarını takip edin
+4. Hangi kural hata veriyorsa o kurala odaklanın
+
 ## ⚠️ ACİL: İzin Hatası Çözümü
 
 Eğer "Missing or insufficient permissions" veya "The query requires an index" hatası alıyorsanız:

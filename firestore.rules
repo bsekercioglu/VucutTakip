@@ -1,9 +1,13 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // DEBUG: Allow authenticated users to create admin collection if it doesn't exist
+    // This rule allows the first admin to be created automatically
     // Allow authenticated users to create admin collection if it doesn't exist
     match /admins/{adminId} {
+      // DEBUG: Basic read/write for admin users
       allow read, write: if request.auth != null && request.auth.uid == adminId;
+      // DEBUG: Allow creation of first admin if collection is empty
       // Allow creation of first admin if collection is empty
       allow create: if request.auth != null && 
         request.auth.uid == adminId &&
