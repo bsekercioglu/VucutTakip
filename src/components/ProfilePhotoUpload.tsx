@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Camera, Upload, Trash2, User } from 'lucide-react';
+import { debugLog } from '../config/appConfig';
 
 interface ProfilePhotoUploadProps {
   currentPhotoURL?: string;
@@ -34,19 +35,19 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
       return;
     }
 
-    console.log('File selected:', file.name, file.size, file.type);
+    debugLog.log('File selected:', file.name, file.size, file.type);
     
     setIsUploading(true);
     try {
       const success = await onUpload(file);
       if (success) {
-        console.log('Photo upload successful');
+        debugLog.log('Photo upload successful');
       } else {
-        console.error('Photo upload failed');
+        debugLog.error('Photo upload failed');
         alert('Fotoğraf yüklenirken hata oluştu.');
       }
     } catch (error) {
-      console.error('Upload error:', error);
+      debugLog.error('Upload error:', error);
       alert('Fotoğraf yüklenirken hata oluştu.');
     } finally {
       setIsUploading(false);

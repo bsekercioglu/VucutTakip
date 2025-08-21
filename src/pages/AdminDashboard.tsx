@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Users, Package, MessageSquare, TrendingUp, Settings, UserPlus } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
-import { getAdminUser, getSponsorTeamMembers, getSponsorOrders, getUserSponsorMessages } from '../services/adminService';
+import { getAdminUser, getSponsorTeamMembersFromAdmins, getSponsorOrders, getUserSponsorMessages } from '../services/adminService';
 import { AdminUser, SponsorTeam, Order, SponsorMessage } from '../types/admin';
 import Layout from '../components/Layout';
 
@@ -29,7 +29,7 @@ const AdminDashboard: React.FC = () => {
 
         if (admin.role === 'sponsor') {
           const [members, sponsorOrders, sponsorMessages] = await Promise.all([
-            getSponsorTeamMembers(user.id),
+            getSponsorTeamMembersFromAdmins(user.id),
             getSponsorOrders(user.id),
             getUserSponsorMessages(user.id)
           ]);

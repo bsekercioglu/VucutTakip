@@ -5,6 +5,7 @@ import { User, Edit3, Save, X } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { useToast } from '../hooks/useToast';
 import ProfilePhotoUpload from '../components/ProfilePhotoUpload';
+import { debugLog } from '../config/appConfig';
 import Layout from '../components/Layout';
 
 interface ProfileFormData {
@@ -36,8 +37,6 @@ const ProfilePage: React.FC = () => {
       email: user.email,
       gender: user.gender,
       birthDate: user.birthDate,
-      gender: user.gender,
-      birthDate: user.birthDate,
       height: user.height,
       initialWeight: user.initialWeight,
       chest: user.measurements.chest,
@@ -57,8 +56,6 @@ const ProfilePage: React.FC = () => {
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
-      gender: data.gender,
-      birthDate: data.birthDate,
       gender: data.gender,
       birthDate: data.birthDate,
       height: data.height,
@@ -86,14 +83,14 @@ const ProfilePage: React.FC = () => {
   };
 
   const handlePhotoUpload = async (file: File) => {
-    console.log('ProfilePage: Starting photo upload');
+    debugLog.log('ProfilePage: Starting photo upload');
     const uploadSuccess = await uploadProfilePhoto(file);
     if (uploadSuccess) {
-      console.log('ProfilePage: Photo upload successful');
+              debugLog.log('ProfilePage: Photo upload successful');
       success('Başarılı!', 'Profil fotoğrafı güncellendi');
       return true;
     } else {
-      console.log('ProfilePage: Photo upload failed');
+              debugLog.error('ProfilePage: Photo upload failed');
       error('Hata!', 'Fotoğraf yüklenirken hata oluştu');
       return false;
     }

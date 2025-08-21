@@ -14,6 +14,7 @@ import * as firebaseService from '../services/firebaseService';
 import { User, DailyRecord, Question, DailyTracking } from '../services/firebaseService';
 import { getAdminUser, getAdminUserWithInit, getUserSponsorMessages, getUserRecommendations } from '../services/adminService';
 import { AdminUser, SponsorMessage, ProductRecommendation } from '../types/admin';
+import { debugLog } from '../config/appConfig';
 
 interface UserContextType {
   user: User | null;
@@ -70,7 +71,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Kullanıcı verilerini yükleme
   const loadUserData = async (userId: string) => {
-    console.log('UserContext: Loading user data for userId:', userId);
+    debugLog.log('UserContext: Loading user data for userId:', userId);
     try {
       const [records, tracking, userQuestions, admin] = await Promise.all([
         firebaseService.getUserDailyRecords(userId),
@@ -79,10 +80,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         getAdminUserWithInit(userId)
       ]);
       
-      console.log('UserContext: Loaded daily records:', records.length, records);
-      console.log('Loaded daily tracking:', tracking);
-      console.log('Loaded questions:', userQuestions);
-      console.log('Loaded admin user:', admin);
+      debugLog.log('UserContext: Loaded daily records:', records.length, records);
+      debugLog.log('Loaded daily tracking:', tracking);
+      debugLog.log('Loaded questions:', userQuestions);
+      debugLog.log('Loaded admin user:', admin);
       
       setDailyRecords(records);
       setDailyTracking(tracking);
@@ -99,7 +100,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setSponsorMessages(messages);
           setRecommendations(recs);
         } catch (error) {
-          console.error('Error loading sponsor data:', error);
+          debugLog.error('Error loading sponsor data:', error);
           setSponsorMessages([]);
           setRecommendations([]);
         }
@@ -108,7 +109,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setRecommendations([]);
       }
     } catch (error) {
-      console.error('UserContext: Error loading user data:', error);
+      debugLog.error('UserContext: Error loading user data:', error);
       // Set empty arrays on error to prevent undefined state
       setDailyRecords([]);
       setDailyTracking([]);
@@ -121,18 +122,18 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Debug effect to monitor dailyRecords state changes
   React.useEffect(() => {
-    console.log('UserContext: dailyRecords state changed:', dailyRecords.length, dailyRecords);
+    debugLog.log('UserContext: dailyRecords state changed:', dailyRecords.length, dailyRecords);
   }, [dailyRecords]);
 
   // Force refresh data function
   const refreshData = async () => {
     if (user) {
-      console.log('UserContext: Force refreshing data for user:', user.id);
-      console.log('UserContext: Current dailyRecords before refresh:', dailyRecords.length);
+      debugLog.log('UserContext: Force refreshing data for user:', user.id);
+      debugLog.log('UserContext: Current dailyRecords before refresh:', dailyRecords.length);
       await loadUserData(user.id);
-      console.log('UserContext: Data refreshed, new dailyRecords count:', dailyRecords.length);
+      debugLog.log('UserContext: Data refreshed, new dailyRecords count:', dailyRecords.length);
     } else {
-      console.log('UserContext: No user found, cannot refresh data');
+      debugLog.log('UserContext: No user found, cannot refresh data');
     }
   };
 
@@ -154,21 +155,21 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         const result = await getRedirectResult(auth);
         if (result?.user) {
-          console.log('Google/Facebook redirect result:', result.user);
+          debugLog.log('Google/Facebook redirect result:', result.user);
         }
       } catch (error) {
-        console.error('Redirect result error:', error);
+        debugLog.error('Redirect result error:', error);
       }
     };
 
     handleRedirectResult();
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-      console.log('🔐 Auth state changed:', firebaseUser?.uid);
+      debugLog.log('🔐 Auth state changed:', firebaseUser?.uid);
       if (firebaseUser) {
-        console.log('👤 Firebase user found, UID:', firebaseUser.uid);
+        debugLog.log('👤 Firebase user found, UID:', firebaseUser.uid);
         const userData = await firebaseService.getUser(firebaseUser.uid);
-        console.log('👤 User data from Firestore:', userData);
+        debugLog.log('👤 User data from Firestore:', userData);
         if (userData) {
           setUser(userData);
           setIsLoggedIn(true);
@@ -176,13 +177,13 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           await loadUserData(firebaseUser.uid);
           
           // Check admin status
-          console.log('🔍 Checking admin status for UID:', firebaseUser.uid);
+          debugLog.log('🔍 Checking admin status for UID:', firebaseUser.uid);
           const admin = await getAdminUserWithInit(firebaseUser.uid);
-          console.log('👑 Admin check result:', admin);
+          debugLog.log('👑 Admin check result:', admin);
           if (admin) {
-            console.log('✅ User is admin/sponsor:', admin.role, 'Permissions:', admin.permissions);
+            debugLog.log('✅ User is admin/sponsor:', admin.role, 'Permissions:', admin.permissions);
           } else {
-            console.log('❌ User is not admin/sponsor');
+            debugLog.log('❌ User is not admin/sponsor');
           }
           
           setLoading(false);
@@ -213,7 +214,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setLoading(true);
             await loadUserData(firebaseUser.uid);
             setLoading(false);
-            console.log('New Google/Facebook user profile created');
+            debugLog.log('New Google/Facebook user profile created');
           }
         }
       } else {
@@ -235,7 +236,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await signInWithEmailAndPassword(auth, email, password);
       return true;
     } catch (error) {
-      console.error('Login error:', error);
+      debugLog.error('Login error:', error);
       return false;
     }
   };
@@ -279,7 +280,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       return true;
     } catch (error) {
-      console.error('Google login error:', error);
+      debugLog.error('Google login error:', error);
       return false;
     }
   };
@@ -323,7 +324,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       return true;
     } catch (error) {
-      console.error('Facebook login error:', error);
+      debugLog.error('Facebook login error:', error);
       return false;
     }
   };
@@ -342,7 +343,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await firebaseService.createUser(userCredential.user.uid, newUser);
       return true;
     } catch (error) {
-      console.error('Registration error:', error);
+      debugLog.error('Registration error:', error);
       return false;
     }
   };
@@ -351,18 +352,18 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await signOut(auth);
     } catch (error) {
-      console.error('Logout error:', error);
+      debugLog.error('Logout error:', error);
     }
   };
 
   // CRUD işlemleri
   const addDailyRecord = async (record: Omit<DailyRecord, 'id' | 'userId'>) => {
     if (!user) return false;
-    console.log('Adding daily record:', record, 'for user:', user.id);
+    debugLog.log('Adding daily record:', record, 'for user:', user.id);
     const result = await firebaseService.addDailyRecord({ ...record, userId: user.id });
-    console.log('Add daily record result:', result);
+    debugLog.log('Add daily record result:', result);
     if (result.success) {
-      console.log('Daily record added successfully, refreshing data...');
+      debugLog.log('Daily record added successfully, refreshing data...');
       await loadUserData(user.id);
       return true;
     }
@@ -371,11 +372,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const updateDailyRecord = async (recordId: string, record: Partial<DailyRecord>) => {
     if (!user) return false;
-    console.log('Updating daily record:', recordId, record);
+    debugLog.log('Updating daily record:', recordId, record);
     const result = await firebaseService.updateDailyRecord(recordId, record);
-    console.log('Update daily record result:', result);
+    debugLog.log('Update daily record result:', result);
     if (result.success) {
-      console.log('Daily record updated successfully, refreshing data...');
+      debugLog.log('Daily record updated successfully, refreshing data...');
       await loadUserData(user.id);
       return true;
     }
@@ -384,11 +385,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const deleteDailyRecord = async (recordId: string) => {
     if (!user) return false;
-    console.log('Deleting daily record:', recordId);
+    debugLog.log('Deleting daily record:', recordId);
     const result = await firebaseService.deleteDailyRecord(recordId);
-    console.log('Delete daily record result:', result);
+    debugLog.log('Delete daily record result:', result);
     if (result.success) {
-      console.log('Daily record deleted successfully, refreshing data...');
+      debugLog.log('Daily record deleted successfully, refreshing data...');
       await loadUserData(user.id);
       return true;
     }
@@ -414,7 +415,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       return false;
     } catch (error) {
-      console.error('updateDailyTracking error:', error);
+      debugLog.error('updateDailyTracking error:', error);
       return false;
     }
   };

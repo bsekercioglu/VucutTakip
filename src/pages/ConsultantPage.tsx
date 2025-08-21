@@ -5,6 +5,7 @@ import { useUser } from '../contexts/UserContext';
 import { generateConsultantResponse } from '../services/aiService';
 import { forwardQuestionToSponsor } from '../services/adminService';
 import Layout from '../components/Layout';
+import { debugLog } from '../config/appConfig';
 
 interface Message {
   id: string;
@@ -61,18 +62,18 @@ const ConsultantPage: React.FC = () => {
     });
 
     if (questionSuccess) {
-      console.log('Question successfully saved to database');
+      debugLog.log('Question successfully saved to database');
       
       // Try to forward question to sponsor if available
       try {
         const lastQuestion = questions[0]; // Get the most recent question
         if (lastQuestion) {
           await forwardQuestionToSponsor(lastQuestion.id, user!.id);
-          console.log('Question forwarded to sponsor');
+          debugLog.log('Question forwarded to sponsor');
         }
-      } catch (error) {
-        console.error('Error forwarding question to sponsor:', error);
-      }
+              } catch (error) {
+          debugLog.error('Error forwarding question to sponsor:', error);
+        }
       
       setNewQuestion('');
     } else {
@@ -124,7 +125,7 @@ const ConsultantPage: React.FC = () => {
         setChatMessages(prev => [...prev, errorMessage]);
       }
     } catch (error) {
-      console.error('Chat error:', error);
+      debugLog.error('Chat error:', error);
       const errorMessage = {
         id: (Date.now() + 1).toString(),
         text: 'Bir hata oluştu. Lütfen tekrar deneyin.',

@@ -1,14 +1,19 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Home, 
-  Scale, 
-  MessageCircle, 
-  ShoppingBag, 
-  User, 
+import {
+  Home,
+  Scale,
+  MessageCircle,
+  ShoppingBag,
+  User,
   LogOut,
-  Activity
+  Activity,
+  Shield,
+  Users,
+  Settings,
+  Crown
 } from 'lucide-react';
+import { debugLog } from '../config/appConfig';
 import { useUser } from '../contexts/UserContext';
 
 interface LayoutProps {
@@ -35,8 +40,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Add admin menu item if user is admin/sponsor
   if (adminUser) {
-    console.log('🎯 Layout: Adding admin menu for role:', adminUser.role);
-    console.log('🎯 Layout: Admin permissions:', adminUser.permissions);
+          debugLog.log('🎯 Layout: Adding admin menu for role:', adminUser.role);
+      debugLog.log('🎯 Layout: Admin permissions:', adminUser.permissions);
     menuItems.push({
       path: '/admin',
       icon: User,
@@ -45,16 +50,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     
     // Add admin management for super admins
     if (adminUser.role === 'admin') {
-      console.log('🎯 Layout: Adding admin management menu');
+      debugLog.log('🎯 Layout: Adding admin management menu');
       menuItems.push({
         path: '/admin-management',
-        icon: User,
+        icon: Shield,
         label: 'Yetki Yönetimi'
       });
+          menuItems.push({
+      path: '/sponsor-assignment',
+      icon: Users,
+      label: 'Sponsor Yönetimi'
+    });
+    menuItems.push({
+      path: '/team-management',
+      icon: Crown,
+      label: 'Ekip Yönetimi'
+    });
+    menuItems.push({
+      path: '/role-management',
+      icon: Settings,
+      label: 'Rol Yönetimi'
+    });
     }
-  } else {
-    console.log('❌ Layout: No admin user found, admin menu not added');
-  }
+      } else {
+      debugLog.log('❌ Layout: No admin user found, admin menu not added');
+    }
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}

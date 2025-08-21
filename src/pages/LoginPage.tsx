@@ -5,6 +5,7 @@ import { signInWithPopup } from 'firebase/auth';
 import { Activity, ArrowLeft } from 'lucide-react';
 import { auth, googleProvider } from '../config/firebase';
 import { useUser } from '../contexts/UserContext';
+import { debugLog } from '../config/appConfig';
 
 interface LoginFormData {
   email: string;
@@ -30,13 +31,13 @@ const LoginPage: React.FC = () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       if (result.user) {
-        console.log('Google login successful:', result.user);
+        debugLog.log('Google login successful:', result.user);
         navigate('/dashboard');
       } else {
         alert('Google ile giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
       }
     } catch (error) {
-      console.error('Google login failed:', error);
+      debugLog.error('Google login failed:', error);
       if (error.code === 'auth/popup-closed-by-user') {
         alert('Google giriş işlemi iptal edildi.');
       } else if (error.code === 'auth/popup-blocked') {

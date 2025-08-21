@@ -20,7 +20,7 @@ const Dashboard: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
-  const safeParse = (val: any, fallback = 0): number => {
+  const safeParse = (val: unknown, fallback = 0): number => {
     if (val === null || val === undefined || val === '') return fallback;
     const num = typeof val === 'number' ? val : parseFloat(String(val).replace(',', '.'));
     return isNaN(num) ? fallback : num;
@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
   };
 
   // Helper to format numbers safely
-  const fmt = (n: any, digits = 1, fallback = 'N/A') => {
+  const fmt = (n: unknown, digits = 1, fallback = 'N/A') => {
     if (n === null || n === undefined || n === '' || n === 'N/A') return fallback;
     const num = typeof n === 'string' ? parseFloat(n) : Number(n);
     if (isNaN(num) || !isFinite(num)) return fallback;
@@ -376,14 +376,14 @@ const Dashboard: React.FC = () => {
                       const payload = props.payload;
                       if (payload?.bfpCalculated && !payload?.bodyFat) {
                         // Calculated BFP - purple dot
-                        return <circle cx={props.cx} cy={props.cy} r={4} fill="#8B5CF6" stroke="#8B5CF6" strokeWidth={2} />;
+                        return <circle key={`bfp-calc-${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={4} fill="#8B5CF6" stroke="#8B5CF6" strokeWidth={2} />;
                       }
                       if (props.payload?.isMetricOnly) {
                         // Estimated - dashed dot
-                        return <circle cx={props.cx} cy={props.cy} r={3} fill="#EF4444" stroke="#EF4444" strokeWidth={2} strokeDasharray="2 2" />;
+                        return <circle key={`bfp-est-${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={3} fill="#EF4444" stroke="#EF4444" strokeWidth={2} strokeDasharray="2 2" />;
                       }
                       // Digital - solid dot
-                      return <circle cx={props.cx} cy={props.cy} r={4} fill="#EF4444" stroke="#EF4444" strokeWidth={2} />;
+                      return <circle key={`bfp-digital-${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={4} fill="#EF4444" stroke="#EF4444" strokeWidth={2} />;
                     }}
                   />
                 </LineChart>
@@ -441,9 +441,9 @@ const Dashboard: React.FC = () => {
                     strokeDasharray={(entry) => entry?.isMetricOnly ? "5 5" : "0"}
                     dot={(props) => {
                       if (props.payload?.isMetricOnly) {
-                        return <circle cx={props.cx} cy={props.cy} r={3} fill="#06B6D4" stroke="#06B6D4" strokeWidth={2} strokeDasharray="2 2" />;
+                        return <circle key={`water-est-${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={3} fill="#06B6D4" stroke="#06B6D4" strokeWidth={2} strokeDasharray="2 2" />;
                       }
-                      return <circle cx={props.cx} cy={props.cy} r={4} fill="#06B6D4" stroke="#06B6D4" strokeWidth={2} />;
+                      return <circle key={`water-digital-${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={4} fill="#06B6D4" stroke="#06B6D4" strokeWidth={2} />;
                     }}
                   />
                 </LineChart>
@@ -535,9 +535,9 @@ const Dashboard: React.FC = () => {
                     strokeDasharray={(entry) => entry?.isMetricOnly ? "5 5" : "0"}
                     dot={(props) => {
                       if (props.payload?.isMetricOnly) {
-                        return <circle cx={props.cx} cy={props.cy} r={3} fill="#8B5CF6" stroke="#8B5CF6" strokeWidth={2} strokeDasharray="2 2" />;
+                        return <circle key={`muscle-est-${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={3} fill="#8B5CF6" stroke="#8B5CF6" strokeWidth={2} strokeDasharray="2 2" />;
                       }
-                      return <circle cx={props.cx} cy={props.cy} r={4} fill="#8B5CF6" stroke="#8B5CF6" strokeWidth={2} />;
+                      return <circle key={`muscle-digital-${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={4} fill="#8B5CF6" stroke="#8B5CF6" strokeWidth={2} />;
                     }}
                   />
                 </LineChart>

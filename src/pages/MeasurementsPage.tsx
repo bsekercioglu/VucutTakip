@@ -5,6 +5,7 @@ import { Plus, Scale, Droplets, TrendingDown, TrendingUp, Edit3, Trash2, Save, X
 import { useUser } from '../contexts/UserContext';
 import { useToast } from '../hooks/useToast';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { debugLog } from '../config/appConfig';
 import Layout from '../components/Layout';
 
 interface MeasurementFormData {
@@ -45,10 +46,10 @@ const MeasurementsPage: React.FC = () => {
     }
   });
 
-  console.log('MeasurementsPage - User:', user?.id);
-  console.log('MeasurementsPage - Daily Records:', dailyRecords);
-  console.log('MeasurementsPage - Loading:', loading);
-  console.log('MeasurementsPage - isLoggedIn:', isLoggedIn);
+  debugLog.log('MeasurementsPage - User:', user?.id);
+  debugLog.log('MeasurementsPage - Daily Records:', dailyRecords);
+  debugLog.log('MeasurementsPage - Loading:', loading);
+  debugLog.log('MeasurementsPage - isLoggedIn:', isLoggedIn);
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
@@ -69,8 +70,8 @@ const MeasurementsPage: React.FC = () => {
   const recordsCount = dailyRecords?.length || 0;
   const hasRecords = recordsCount > 0;
 
-  console.log('MeasurementsPage - Records count:', recordsCount);
-  console.log('MeasurementsPage - Has records:', hasRecords);
+  debugLog.log('MeasurementsPage - Records count:', recordsCount);
+  debugLog.log('MeasurementsPage - Has records:', hasRecords);
 
   const onSubmit = async (data: MeasurementFormData) => {
     setIsSubmitting(true);
@@ -141,8 +142,8 @@ const MeasurementsPage: React.FC = () => {
     }
   };
 
-  const handleEdit = (record: any) => {
-    console.log('Editing record:', record);
+  const handleEdit = (record: DailyRecord) => {
+    debugLog.log('Editing record:', record);
     setEditingRecord(record.id);
     setValue('date', record.date);
     setValue('weight', record.weight);
@@ -164,7 +165,7 @@ const MeasurementsPage: React.FC = () => {
     }
     
     setShowForm(true);
-    console.log('Form values set, showForm:', true);
+    debugLog.log('Form values set, showForm:', true);
   };
 
   const handleDeleteClick = (recordId: string, recordDate: string) => {
@@ -456,7 +457,7 @@ const MeasurementsPage: React.FC = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {dailyRecords.slice().reverse().map((record, index) => {
-                    console.log('Rendering record:', record.id, record.date, record.weight);
+                    debugLog.log('Rendering record:', record.id, record.date, record.weight);
                     
                     const prevRecord = index < recordsCount - 1 ? dailyRecords[recordsCount - 2 - index] : null;
                     
@@ -607,15 +608,17 @@ const MeasurementsPage: React.FC = () => {
           )}
         </div>
 
-        {/* Debug bilgileri - geliştirme için */}
-        <div className="bg-gray-100 p-4 rounded-lg text-sm">
-          <h4 className="font-semibold mb-2">Debug Bilgileri:</h4>
-          <p>User ID: {user?.id}</p>
-          <p>Loading: {loading.toString()}</p>
-          <p>Records Count: {recordsCount}</p>
-          <p>Has Records: {hasRecords.toString()}</p>
-          <p>Daily Records Array: {Array.isArray(dailyRecords) ? 'Yes' : 'No'}</p>
-        </div>
+        {/* Debug bilgileri - sadece development'ta göster */}
+        {debugLog && (
+          <div className="bg-gray-100 p-4 rounded-lg text-sm">
+            <h4 className="font-semibold mb-2">Debug Bilgileri:</h4>
+            <p>User ID: {user?.id}</p>
+            <p>Loading: {loading.toString()}</p>
+            <p>Records Count: {recordsCount}</p>
+            <p>Has Records: {hasRecords.toString()}</p>
+            <p>Daily Records Array: {Array.isArray(dailyRecords) ? 'Yes' : 'No'}</p>
+          </div>
+        )}
       </div>
     </Layout>
   );

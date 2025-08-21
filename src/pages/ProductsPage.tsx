@@ -4,6 +4,7 @@ import { Star, ShoppingCart, Filter, Search, Plus, Minus } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { useToast } from '../hooks/useToast';
 import Layout from '../components/Layout';
+import { debugLog } from '../config/appConfig';
 
 interface Product {
   id: string;
@@ -334,7 +335,7 @@ const ProductsPage: React.FC = () => {
                   <button
                     onClick={() => {
                       // Navigate to order page with cart items
-                      console.log('Proceeding to checkout with:', cartItems);
+                      debugLog.log('Proceeding to checkout with:', cartItems);
                     }}
                     className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors"
                   >

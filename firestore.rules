@@ -1,27 +1,44 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // DEBUG: Allow authenticated users to create admin collection if it doesn't exist
-    // This rule allows the first admin to be created automatically
-    // Allow authenticated users to create admin collection if it doesn't exist
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    // Helper function to check if user is the owner of the document
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Admin collection - strict access control
     match /admins/{adminId} {
-      // DEBUG: Basic read/write for admin users
-      allow read, write: if request.auth != null && request.auth.uid == adminId;
-      // DEBUG: Allow creation of first admin if collection is empty
-      // Allow creation of first admin if collection is empty
-      allow create: if request.auth != null && 
-        request.auth.uid == adminId &&
-        !exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-      // DEBUG: Allow reading any admin document to check if collection exists
-      allow read: if request.auth != null;
-     // DEBUG: Allow admin users to list all admins for management
-     allow list: if request.auth != null && 
-       exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      // Allow reading own admin document or if user is admin
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == adminId);
+      
+      // Allow listing all admin documents if user is admin
+      allow list: if isAdmin();
+      
+      // Allow creation if user is authenticated (for first admin) or if user is admin
+      allow create: if request.auth != null;
+      
+      // Only admins can update admin documents
+      allow update: if isAdmin();
+      
+      // Only admins can delete admin documents
+      allow delete: if isAdmin();
     }
     
     // Users collection - users can only read/write their own data
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
+      
+      // Admins can read all users for management
+      allow read: if isAdmin();
+      
+      // Allow admins to list all users for management purposes
+      allow list: if isAdmin();
     }
     
     // Daily records - users can only access their own records
@@ -29,6 +46,9 @@ service cloud.firestore {
       allow read, write: if request.auth != null && 
         (resource == null || resource.data.userId == request.auth.uid) &&
         (request.resource == null || request.resource.data.userId == request.auth.uid);
+      
+      // Allow listing own records
+      allow list: if request.auth != null;
     }
     
     // Daily tracking - users can only access their own tracking data
@@ -36,6 +56,9 @@ service cloud.firestore {
       allow read, write: if request.auth != null && 
         (resource == null || resource.data.userId == request.auth.uid) &&
         (request.resource == null || request.resource.data.userId == request.auth.uid);
+      
+      // Allow listing own tracking data
+      allow list: if request.auth != null;
     }
     
     // Questions - users can only access their own questions
@@ -43,13 +66,9 @@ service cloud.firestore {
       allow read, write: if request.auth != null && 
         (resource == null || resource.data.userId == request.auth.uid) &&
         (request.resource == null || request.resource.data.userId == request.auth.uid);
-    }
-    
-    // Admin collection
-    // Allow admins to read all users for management
-    match /users/{userId} {
-      allow read: if request.auth != null && 
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      
+      // Admins can read and update all questions for consultation
+      allow read, update: if isAdmin();
     }
     
     // Sponsor teams
@@ -58,7 +77,7 @@ service cloud.firestore {
         (resource == null || 
          resource.data.sponsorId == request.auth.uid || 
          resource.data.memberId == request.auth.uid ||
-         exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+         isAdmin());
     }
     
     // Orders
@@ -67,7 +86,7 @@ service cloud.firestore {
         (resource == null || 
          resource.data.userId == request.auth.uid || 
          resource.data.sponsorId == request.auth.uid ||
-         exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+         isAdmin());
     }
     
     // Product recommendations
@@ -76,7 +95,7 @@ service cloud.firestore {
         (resource == null || 
          resource.data.userId == request.auth.uid || 
          resource.data.sponsorId == request.auth.uid ||
-         exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+         isAdmin());
     }
     
     // Sponsor messages
@@ -85,13 +104,28 @@ service cloud.firestore {
         (resource == null || 
          resource.data.userId == request.auth.uid || 
          resource.data.sponsorId == request.auth.uid ||
-         exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+         isAdmin());
     }
-    
-    // Enhanced consultant access to questions
-    match /questions/{questionId} {
-      allow read, update: if request.auth != null && 
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+
+    // Invitations collection
+    match /invitations/{invitationId} {
+      // Only admins and sponsors can create invitations
+      allow create: if isAdmin() || (request.auth != null && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['admin', 'sponsor']);
+      
+      // Anyone can read invitations (for registration)
+      allow read: if true;
+      
+      // Only admins and the creator can update/delete invitations
+      allow update, delete: if isAdmin() || (request.auth != null && 
+        resource.data.invitedBy == request.auth.uid);
+    }
+
+    // User Roles collection
+    match /userRoles/{roleId} {
+      // Only admins can manage roles
+      allow read, write: if isAdmin();
     }
     
     // Deny all other access

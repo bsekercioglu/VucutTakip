@@ -15,6 +15,9 @@ import ProfilePage from './pages/ProfilePage';
 import AdminDashboard from './pages/AdminDashboard';
 import OrderPage from './pages/OrderPage';
 import AdminManagement from './pages/AdminManagement';
+import SponsorAssignment from './pages/SponsorAssignment';
+import RoleManagement from './pages/RoleManagement';
+import TeamManagement from './pages/TeamManagement';
 
 const AppContent: React.FC = () => {
   const { loading, isLoggedIn } = useUser();
@@ -52,6 +55,9 @@ const AppContent: React.FC = () => {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/order" element={<OrderPage selectedProducts={[]} />} />
         <Route path="/admin-management" element={<AdminManagement />} />
+        <Route path="/sponsor-assignment" element={<SponsorAssignment />} />
+        <Route path="/role-management" element={<RoleManagement />} />
+        <Route path="/team-management" element={<TeamManagement />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ToastContainer toasts={toasts} onClose={removeToast} />

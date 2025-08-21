@@ -94,17 +94,16 @@ const RegisterPage: React.FC = () => {
       if (error instanceof Error) {
         debugLog.error('Error code:', (error as any).code);
         debugLog.error('Error message:', error.message);
-      }
       
-      if ((error as any).code === 'auth/email-already-in-use') {
+      if (error.code === 'auth/email-already-in-use') {
         alert('Bu e-posta adresi zaten kullanımda.');
-      } else if ((error as any).code === 'auth/operation-not-allowed') {
+      } else if (error.code === 'auth/operation-not-allowed') {
         alert('E-posta/şifre ile kayıt şu anda devre dışı. Lütfen sistem yöneticisi ile iletişime geçin.');
-      } else if ((error as any).code === 'auth/project-not-found') {
+      } else if (error.code === 'auth/project-not-found') {
         alert('Firebase projesi bulunamadı. Lütfen sistem yöneticisi ile iletişime geçin.');
-      } else if ((error as any).code === 'auth/weak-password') {
+      } else if (error.code === 'auth/weak-password') {
         alert('Şifre çok zayıf. En az 6 karakter olmalı.');
-      } else if ((error as any).code === 'auth/invalid-email') {
+      } else if (error.code === 'auth/invalid-email') {
         alert('Geçersiz e-posta adresi.');
       } else {
         debugLog.error('Registration error details:', error);

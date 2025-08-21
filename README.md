@@ -33,12 +33,17 @@ cd vucuttakip
 npm install
 ```
 
-3. Firebase yapılandırmasını ayarlayın:
+3. Environment değişkenlerini ayarlayın:
+   - `env.example` dosyasını `.env` olarak kopyalayın
+   - Firebase yapılandırma bilgilerini güncelleyin
+   - Debug modu için `VITE_DEBUG_LOG=true` ayarlayın (development için)
+
+4. Firebase yapılandırmasını ayarlayın:
    - Firebase Console'da yeni bir proje oluşturun
    - Authentication, Firestore ve Storage servislerini etkinleştirin
-   - `src/config/firebase.ts` dosyasındaki yapılandırma bilgilerini güncelleyin
+   - Firestore güvenlik kurallarını `firestore.rules` dosyasından deploy edin
 
-4. Geliştirme sunucusunu başlatın:
+5. Geliştirme sunucusunu başlatın:
 ```bash
 npm run dev
 ```
@@ -54,9 +59,18 @@ Aşağıdaki koleksiyonlar oluşturulmalı:
 - `users`: Kullanıcı profil bilgileri
 - `dailyRecords`: Günlük ölçüm kayıtları
 - `questions`: Danışman soruları
+- `admins`: Admin kullanıcıları
+- `sponsorTeams`: Sponsor takımları
+- `orders`: Siparişler
+- `productRecommendations`: Ürün önerileri
+- `sponsorMessages`: Sponsor mesajları
 
 ### Storage
 - Profil fotoğrafları için kullanılır
+
+### Güvenlik Kuralları
+- `firestore.rules` dosyasındaki güvenlik kuralları deploy edilmelidir
+- Admin yetkisi kontrolü otomatik olarak yapılır
 
 ## Kullanım
 
@@ -76,7 +90,22 @@ src/
 ├── services/           # Firebase servisleri
 ├── utils/              # Yardımcı fonksiyonlar
 ├── config/             # Yapılandırma dosyaları
+│   ├── firebase.ts     # Firebase yapılandırması
+│   └── appConfig.ts    # Uygulama ayarları ve debug modu
+├── hooks/              # Custom React hooks
 └── types/              # TypeScript tip tanımları
+```
+
+## Debug Modu
+
+Proje debug modu ile çalışır. Debug logları sadece development ortamında ve `VITE_DEBUG_LOG=true` ayarlandığında görünür:
+
+```bash
+# Development için debug modunu etkinleştir
+VITE_DEBUG_LOG=true
+
+# Production için debug modunu devre dışı bırak
+VITE_DEBUG_LOG=false
 ```
 
 ## Katkıda Bulunma

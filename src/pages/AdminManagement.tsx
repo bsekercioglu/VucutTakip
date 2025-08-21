@@ -5,17 +5,21 @@ import { useUser } from '../contexts/UserContext';
 import { useToast } from '../hooks/useToast';
 import { 
   getAllAdminUsers,
-  getAdminUserWithInit,
   createAdminUser, 
   updateAdminUser, 
   deleteAdminUser,
   generateSponsorCode,
-  getAllUsers 
+  getAllUsers,
+  createUserInvitation,
+  applyRoleToUser,
+  getRolePermissions,
+  updateUserRoleWithTeamTransfer
 } from '../services/adminService';
 import { AdminUser } from '../types/admin';
 import { User } from '../services/firebaseService';
 import Layout from '../components/Layout';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { debugLog } from '../config/appConfig';
 
 const AdminManagement: React.FC = () => {
   const { user, adminUser, isLoggedIn } = useUser();
@@ -24,6 +28,7 @@ const AdminManagement: React.FC = () => {
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showNewUserForm, setShowNewUserForm] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<AdminUser | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -37,10 +42,30 @@ const AdminManagement: React.FC = () => {
 
   const [formData, setFormData] = useState({
     userId: '',
-    role: 'sponsor' as 'admin' | 'sponsor',
+    role: 'sponsor' as 'admin' | 'sponsor' | 'user',
     permissions: [] as string[],
     sponsorCode: '',
+    parentSponsorId: '',
+    selectedRoleName: '', // Rol tablosundan seçilen rol adı
+    selectedAdminId: '' // Sponsor → User geçişinde seçilen admin ID
+  });
+
+  const [newUserFormData, setNewUserFormData] = useState({
+    email: '',
+    firstName: '',
+    lastName: '',
+    role: 'sponsor' as 'admin' | 'sponsor',
+    permissions: ['send_recommendations', 'answer_questions'] as string[],
+    sponsorCode: '',
     parentSponsorId: ''
+  });
+
+  const [invitationResult, setInvitationResult] = useState<{
+    link: string;
+    show: boolean;
+  }>({
+    link: '',
+    show: false
   });
 
   useEffect(() => {
@@ -49,11 +74,11 @@ const AdminManagement: React.FC = () => {
 
   const loadData = async () => {
     try {
-     console.log('🔍 AdminManagement: Loading data...');
-     console.log('🔍 AdminManagement: Current admin user:', adminUser);
+     debugLog.log('🔍 AdminManagement: Loading data...');
+     debugLog.log('🔍 AdminManagement: Current admin user:', adminUser);
      
      if (!adminUser || adminUser.role !== 'admin') {
-       console.log('❌ AdminManagement: User is not admin, skipping data load');
+       debugLog.log('❌ AdminManagement: User is not admin, skipping data load');
        setLoading(false);
        return;
      }
@@ -62,11 +87,11 @@ const AdminManagement: React.FC = () => {
         getAllAdminUsers(),
         getAllUsers()
       ]);
-     console.log('✅ AdminManagement: Loaded', admins.length, 'admins and', users.length, 'users');
+     debugLog.log('✅ AdminManagement: Loaded', admins.length, 'admins and', users.length, 'users');
       setAdminUsers(admins);
       setAllUsers(users);
     } catch (err) {
-      console.error('Error loading data:', err);
+      debugLog.error('Error loading data:', err);
       error('Hata!', 'Veriler yüklenirken hata oluştu');
     } finally {
       setLoading(false);
@@ -75,6 +100,11 @@ const AdminManagement: React.FC = () => {
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Check if user is admin using adminUser from context
+  if (!user || !adminUser || adminUser.role !== 'admin') {
+    return <Navigate to="/" replace />;
   }
 
   if (!adminUser || adminUser.role !== 'admin') {
@@ -108,18 +138,77 @@ const AdminManagement: React.FC = () => {
       return;
     }
 
-    const adminData = {
-      role: formData.role,
-      permissions: formData.permissions,
-      sponsorCode: formData.role === 'sponsor' ? (formData.sponsorCode || generateSponsorCode()) : undefined,
-      parentSponsorId: formData.parentSponsorId || undefined
-    };
+    // Check if user is already an admin (for new admin creation)
+    if (!editingAdmin) {
+      const existingAdmin = adminUsers.find(admin => admin.userId === formData.userId);
+      if (existingAdmin) {
+        error('Hata!', 'Bu kullanıcı zaten yetkilendirilmiş');
+        return;
+      }
+    }
 
     try {
       let result;
       if (editingAdmin) {
-        result = await updateAdminUser(editingAdmin.id, adminData);
+        // Debug log ekle
+        console.log('🔍 Debug - Current admin role:', editingAdmin.role);
+        console.log('🔍 Debug - New form role:', formData.role);
+        console.log('🔍 Debug - Selected role name:', formData.selectedRoleName);
+        
+        // Eğer rol değişikliği varsa team transfer ile güncelle
+        if (editingAdmin.role !== formData.role) {
+          console.log('🔄 Role change detected, using team transfer update');
+          debugLog.log('🔄 Role change detected, using team transfer update');
+          
+          // Sponsor'dan user'a geçişte seçilen admin'i kullan
+          let customAdminId: string | undefined;
+          if (editingAdmin.role === 'sponsor' && formData.role === 'user' && formData.selectedAdminId) {
+            customAdminId = formData.selectedAdminId;
+            console.log('🎯 Using selected admin for team transfer:', customAdminId);
+          }
+          
+          result = await updateUserRoleWithTeamTransfer(
+            editingAdmin.id,
+            formData.role,
+            formData.permissions,
+            formData.role === 'sponsor' ? (formData.sponsorCode || generateSponsorCode()) : undefined,
+            customAdminId // Yeni parametre
+          );
+          
+          if (result.success && result.transferredCount) {
+            success('Başarılı!', `Yetki güncellendi ve ${result.transferredCount} ekip üyesi transfer edildi`);
+          } else if (result.success) {
+            success('Başarılı!', 'Yetki güncellendi');
+          } else {
+            error('Hata!', result.error || 'Yetki güncellenirken hata oluştu');
+            return;
+          }
+        } else {
+          // Sadece izinler güncelleniyorsa normal güncelleme
+          const adminData: Omit<AdminUser, 'id' | 'userId'> = {
+            role: formData.role,
+            permissions: formData.permissions,
+            sponsorCode: formData.role === 'sponsor' ? (formData.sponsorCode || generateSponsorCode()) : undefined,
+            parentSponsorId: formData.parentSponsorId || null,
+            teamLevel: formData.role === 'admin' ? 0 : (formData.parentSponsorId ? 2 : 1),
+            teamPath: formData.role === 'admin' ? [] : (formData.parentSponsorId ? [adminUser?.userId || '', formData.parentSponsorId] : [adminUser?.userId || '']),
+            createdAt: editingAdmin.createdAt,
+            updatedAt: new Date().toISOString()
+          };
+          result = await updateAdminUser(editingAdmin.id, adminData);
+        }
       } else {
+        // Yeni admin oluşturma
+        const adminData: Omit<AdminUser, 'id' | 'userId'> = {
+          role: formData.role,
+          permissions: formData.permissions,
+          sponsorCode: formData.role === 'sponsor' ? (formData.sponsorCode || generateSponsorCode()) : undefined,
+          parentSponsorId: formData.parentSponsorId || null,
+          teamLevel: formData.role === 'admin' ? 0 : (formData.parentSponsorId ? 2 : 1),
+          teamPath: formData.role === 'admin' ? [] : (formData.parentSponsorId ? [adminUser?.userId || '', formData.parentSponsorId] : [adminUser?.userId || '']),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
         result = await createAdminUser(formData.userId, adminData);
       }
 
@@ -130,22 +219,34 @@ const AdminManagement: React.FC = () => {
         resetForm();
         await loadData();
       } else {
-        error('Hata!', 'İşlem sırasında hata oluştu');
+        const errorMessage = typeof result.error === 'string' ? result.error : 'İşlem sırasında hata oluştu';
+        error('Hata!', errorMessage);
       }
     } catch (err) {
       console.error('Error saving admin:', err);
-      error('Hata!', 'Beklenmeyen bir hata oluştu');
+      const errorMessage = err instanceof Error ? err.message : 'Beklenmeyen bir hata oluştu';
+      error('Hata!', errorMessage);
     }
   };
 
   const handleEdit = (admin: AdminUser) => {
     setEditingAdmin(admin);
+    
+    // Rol adını doğru şekilde ayarla
+    const roleNameMapping: Record<string, string> = {
+      'admin': 'Admin',
+      'sponsor': 'Sponsor',
+      'user': 'Kullanıcı'
+    };
+    
     setFormData({
       userId: admin.userId,
-      role: admin.role,
+      role: admin.role === 'user' ? 'sponsor' : admin.role, // 'user' role'ü 'sponsor' olarak işle
       permissions: admin.permissions,
       sponsorCode: admin.sponsorCode || '',
-      parentSponsorId: admin.parentSponsorId || ''
+      parentSponsorId: admin.parentSponsorId || '',
+      selectedRoleName: roleNameMapping[admin.role] || 'Sponsor', // Rol adını doğru şekilde ayarla
+      selectedAdminId: '' // Admin seçimi için boş bırak
     });
     setShowAddForm(true);
   };
@@ -179,7 +280,9 @@ const AdminManagement: React.FC = () => {
       role: 'sponsor',
       permissions: [],
       sponsorCode: '',
-      parentSponsorId: ''
+      parentSponsorId: '',
+      selectedRoleName: '',
+      selectedAdminId: ''
     });
   };
 
@@ -187,6 +290,89 @@ const AdminManagement: React.FC = () => {
     setShowAddForm(false);
     setEditingAdmin(null);
     resetForm();
+  };
+
+  const handleNewUserSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    console.log('🔍 Form submitted with data:', newUserFormData);
+
+    // Basic validation
+    if (!newUserFormData.email || !newUserFormData.firstName || !newUserFormData.lastName) {
+      error('Hata!', 'Lütfen tüm zorunlu alanları doldurun');
+      return;
+    }
+
+    if (newUserFormData.permissions.length === 0) {
+      error('Hata!', 'En az bir izin seçmelisiniz');
+      return;
+    }
+
+    try {
+      console.log('🔍 Calling createUserInvitation...');
+      console.log('🔍 User data being sent:', {
+        email: newUserFormData.email,
+        firstName: newUserFormData.firstName,
+        lastName: newUserFormData.lastName,
+        role: newUserFormData.role,
+        permissions: newUserFormData.permissions,
+        sponsorCode: newUserFormData.role === 'sponsor' ? (newUserFormData.sponsorCode || generateSponsorCode()) : undefined,
+        parentSponsorId: newUserFormData.parentSponsorId || null
+      });
+
+      const result = await createUserInvitation({
+        email: newUserFormData.email,
+        firstName: newUserFormData.firstName,
+        lastName: newUserFormData.lastName,
+        role: newUserFormData.role,
+        permissions: newUserFormData.permissions,
+        sponsorCode: newUserFormData.role === 'sponsor' ? (newUserFormData.sponsorCode || generateSponsorCode()) : undefined,
+        parentSponsorId: newUserFormData.parentSponsorId || null
+      });
+
+      console.log('🔍 createUserInvitation result:', result);
+      console.log('🔍 Result success:', result.success);
+      console.log('🔍 Result error:', result.error);
+
+      if (result.success) {
+        console.log('✅ Success! Setting invitation result...');
+        success('Başarılı!', 'Davet linki oluşturuldu');
+        setInvitationResult({
+          link: result.invitationLink || '',
+          show: true
+        });
+        console.log('✅ Invitation result set:', {
+          link: result.invitationLink || '',
+          show: true
+        });
+        resetNewUserForm();
+      } else {
+        console.log('❌ Error in result:', result.error);
+        const errorMessage = typeof result.error === 'string' ? result.error : 'İşlem sırasında hata oluştu';
+        error('Hata!', errorMessage);
+      }
+    } catch (err) {
+      console.error('❌ Exception in handleNewUserSubmit:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Beklenmeyen bir hata oluştu';
+      error('Hata!', errorMessage);
+    }
+  };
+
+  const resetNewUserForm = () => {
+    setNewUserFormData({
+      email: '',
+      firstName: '',
+      lastName: '',
+      role: 'sponsor',
+      permissions: ['send_recommendations', 'answer_questions'],
+      sponsorCode: '',
+      parentSponsorId: ''
+    });
+  };
+
+  const handleNewUserCancel = () => {
+    setShowNewUserForm(false);
+    resetNewUserForm();
   };
 
   const availablePermissions = [
@@ -198,7 +384,7 @@ const AdminManagement: React.FC = () => {
   ];
 
   const getPermissionLabel = (permission: string) => {
-    const labels = {
+    const labels: Record<string, string> = {
       'manage_users': 'Kullanıcı Yönetimi',
       'view_all_data': 'Tüm Verileri Görme',
       'manage_orders': 'Sipariş Yönetimi',
@@ -236,13 +422,22 @@ const AdminManagement: React.FC = () => {
               Sistem yöneticileri ve sponsorları yönetin
             </p>
           </div>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Yeni Yetki Ekle
-          </button>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => setShowNewUserForm(true)}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Davet Linki Oluştur
+            </button>
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+            >
+              <UserCheck className="h-4 w-4 mr-2" />
+              Mevcut Kullanıcıya Yetki Ver
+            </button>
+          </div>
         </div>
 
         {/* Add/Edit Form */}
@@ -275,18 +470,84 @@ const AdminManagement: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Rol
+                  Rol Tablosundan Seç
                 </label>
                 <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'sponsor' })}
+                  value={formData.selectedRoleName}
+                  onChange={async (e) => {
+                    const selectedRole = e.target.value;
+                    console.log('🔍 Role selection changed to:', selectedRole);
+                    setFormData({ ...formData, selectedRoleName: selectedRole });
+                    
+                    if (selectedRole) {
+                      // Seçilen rolün izinlerini al
+                      const permissions = await getRolePermissions(selectedRole);
+                      const roleMapping: Record<string, 'admin' | 'sponsor' | 'user'> = {
+                        'Admin': 'admin',
+                        'Sponsor': 'sponsor',
+                        'Kullanıcı': 'user'
+                      };
+                      
+                      const newRole = roleMapping[selectedRole] || 'sponsor';
+                      console.log('🔍 Mapped role:', newRole, 'Permissions:', permissions);
+                      
+                      setFormData(prev => ({
+                        ...prev,
+                        role: newRole,
+                        permissions: permissions
+                      }));
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   required
                 >
-                  <option value="sponsor">Sponsor</option>
-                  <option value="admin">Admin</option>
+                  <option value="">Rol seçin</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Sponsor">Sponsor</option>
+                  <option value="Kullanıcı">Kullanıcı</option>
                 </select>
               </div>
+
+              {/* Team Transfer Uyarısı */}
+              {editingAdmin && editingAdmin.role === 'sponsor' && formData.selectedRoleName === 'Kullanıcı' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-yellow-900 mb-2">⚠️ Önemli Uyarı:</h4>
+                  <p className="text-sm text-yellow-800">
+                    Bu kullanıcı sponsor'dan kullanıcı'ya düşürülecek. Tüm ekip üyeleri üst sponsor'a aktarılacaktır.
+                  </p>
+                  
+                  {/* Admin Seçimi */}
+                  {(() => {
+                    const availableAdmins = adminUsers.filter((admin: AdminUser) => admin.role === 'admin' && admin.teamLevel === 0);
+                    if (availableAdmins.length > 1) {
+                      return (
+                        <div className="mt-4">
+                          <label className="block text-sm font-medium text-yellow-900 mb-2">
+                            🎯 Ekip Üyelerini Hangi Admin'e Aktaralım?
+                          </label>
+                          <select
+                            value={formData.selectedAdminId}
+                            onChange={(e) => setFormData({ ...formData, selectedAdminId: e.target.value })}
+                            className="w-full px-3 py-2 border border-yellow-300 rounded-md focus:ring-yellow-500 focus:border-yellow-500 bg-white"
+                            required
+                          >
+                            <option value="">Admin seçin</option>
+                            {availableAdmins.map((admin: AdminUser) => (
+                              <option key={admin.id} value={admin.id}>
+                                {allUsers.find((u: any) => u.id === admin.userId)?.firstName || 'Bilinmeyen'} {allUsers.find((u: any) => u.id === admin.userId)?.lastName || 'Kullanıcı'}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="text-xs text-yellow-700 mt-1">
+                            Birden fazla admin olduğu için ekip üyelerinin hangi admin'e aktarılacağını seçmelisiniz.
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
+              )}
 
               {formData.role === 'sponsor' && (
                 <>
@@ -383,6 +644,234 @@ const AdminManagement: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        )}
+
+        {/* New User Creation Form */}
+        {showNewUserForm && (
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Yeni Üye Oluştur
+            </h3>
+            
+            <form onSubmit={handleNewUserSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ad *
+                  </label>
+                  <input
+                    type="text"
+                    value={newUserFormData.firstName}
+                    onChange={(e) => setNewUserFormData({ ...newUserFormData, firstName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Soyad *
+                  </label>
+                  <input
+                    type="text"
+                    value={newUserFormData.lastName}
+                    onChange={(e) => setNewUserFormData({ ...newUserFormData, lastName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  E-posta *
+                </label>
+                <input
+                  type="email"
+                  value={newUserFormData.email}
+                  onChange={(e) => setNewUserFormData({ ...newUserFormData, email: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  required
+                  placeholder="ornek@email.com"
+                />
+              </div>
+
+
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Rol *
+                </label>
+                <select
+                  value={newUserFormData.role}
+                  onChange={(e) => setNewUserFormData({ ...newUserFormData, role: e.target.value as 'admin' | 'sponsor' })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="sponsor">Sponsor</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              {newUserFormData.role === 'sponsor' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Sponsor Kodu
+                    </label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={newUserFormData.sponsorCode}
+                        onChange={(e) => setNewUserFormData({ ...newUserFormData, sponsorCode: e.target.value })}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Otomatik oluşturulacak"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setNewUserFormData({ ...newUserFormData, sponsorCode: generateSponsorCode() })}
+                        className="bg-gray-500 text-white px-3 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                      >
+                        <Key className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Üst Sponsor
+                    </label>
+                    <select
+                      value={newUserFormData.parentSponsorId}
+                      onChange={(e) => setNewUserFormData({ ...newUserFormData, parentSponsorId: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Üst sponsor yok</option>
+                      {sponsorUsers.map(sponsor => (
+                        <option key={sponsor.id} value={sponsor.userId}>
+                          {getUserName(sponsor.userId)} ({sponsor.sponsorCode})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  İzinler
+                </label>
+                <div className="space-y-2">
+                  {availablePermissions.map(permission => (
+                    <label key={permission} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={newUserFormData.permissions.includes(permission)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNewUserFormData({
+                              ...newUserFormData,
+                              permissions: [...newUserFormData.permissions, permission]
+                            });
+                          } else {
+                            setNewUserFormData({
+                              ...newUserFormData,
+                              permissions: newUserFormData.permissions.filter(p => p !== permission)
+                            });
+                          }
+                        }}
+                        className="mr-2"
+                      />
+                      <span className="text-sm text-gray-700">
+                        {getPermissionLabel(permission)}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={handleNewUserCancel}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+                >
+                  Davet Linki Oluştur
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Invitation Link Modal */}
+        {invitationResult.show && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Davet Linki Oluşturuldu
+              </h3>
+              
+              <p className="text-gray-600 mb-4">
+                Aşağıdaki linki yeni kullanıcıya gönderin. Bu link ile kayıt olduğunda otomatik olarak belirlenen yetkiler atanacaktır.
+              </p>
+              
+              <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Davet Linki:
+                </label>
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={invitationResult.link}
+                    readOnly
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(invitationResult.link);
+                      success('Başarılı!', 'Link kopyalandı');
+                    }}
+                    className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    Kopyala
+                  </button>
+                </div>
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <h4 className="text-sm font-medium text-yellow-900 mb-2">⚠️ Önemli Notlar:</h4>
+                <ul className="text-sm text-yellow-800 space-y-1">
+                  <li>• Link 7 gün boyunca geçerlidir</li>
+                  <li>• Sadece belirtilen e-posta adresi ile kullanılabilir</li>
+                  <li>• Kayıt tamamlandığında otomatik yetki atanır</li>
+                </ul>
+              </div>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setInvitationResult({ link: '', show: false })}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  Kapat
+                </button>
+                <button
+                  onClick={() => {
+                    setInvitationResult({ link: '', show: false });
+                    setShowNewUserForm(false);
+                  }}
+                  className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+                >
+                  Tamam
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
