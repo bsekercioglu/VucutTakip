@@ -95,7 +95,16 @@ function watchFiles() {
   
   // Dosya değişikliklerini izle
   const watcher = chokidar.watch('.', {
-    ignored: ignoredFiles,
+    ignored: [
+      /(^|[\/\\])\../, // Dot files (.git, .env, etc.)
+      'node_modules/**',
+      'dist/**',
+      'build/**',
+      '*.log',
+      'auto-commit.js',
+      'auto-commit-watcher.js',
+      'change-log.json'
+    ],
     persistent: true,
     ignoreInitial: true,
     awaitWriteFinish: {
