@@ -1,12 +1,19 @@
 {
   "changes": [
     {
-      "id": "1755856143354",
-      "timestamp": "2025-08-22T09:49:03.354Z",
+      "id": "1755856181218",
+      "timestamp": "2025-08-22T09:49:41.218Z",
+      "description": "JavaScript/TypeScript dosyası güncellendi: adminService.ts",
+      "filePath": "src\\services\\adminService.ts",
+      "date": "22.08.2025 12:49:41"
+    },
+    {
+      "id": "1755856181225",
+      "timestamp": "2025-08-22T09:49:41.225Z",
       "description": "React bileşeni güncellendi: SponsorAssignment.tsx",
       "filePath": "src\\pages\\SponsorAssignment.tsx",
-      "date": "22.08.2025 12:49:03"
+      "date": "22.08.2025 12:49:41"
     }
   ],
-  "lastUpdate": "2025-08-22T09:49:03.354Z"
+  "lastUpdate": "2025-08-22T09:49:41.225Z"
 }
