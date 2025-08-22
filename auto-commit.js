@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { generateCommitMessage, clearLog, getChangeStats } from './change-logger.js';
 
 // Git durumunu kontrol et ve değişiklikleri commit et
 function autoCommit() {
