@@ -1,19 +1,12 @@
 {
   "changes": [
     {
-      "id": "1755853922582",
-      "timestamp": "2025-08-22T09:12:02.582Z",
-      "description": "JavaScript/TypeScript dosyası güncellendi: adminService.ts",
-      "filePath": "src\\services\\adminService.ts",
-      "date": "22.08.2025 12:12:02"
-    },
-    {
-      "id": "1755853922589",
-      "timestamp": "2025-08-22T09:12:02.589Z",
+      "id": "1755855014436",
+      "timestamp": "2025-08-22T09:30:14.436Z",
       "description": "React bileşeni güncellendi: AdminManagement.tsx",
       "filePath": "src\\pages\\AdminManagement.tsx",
-      "date": "22.08.2025 12:12:02"
+      "date": "22.08.2025 12:30:14"
     }
   ],
-  "lastUpdate": "2025-08-22T09:12:02.589Z"
+  "lastUpdate": "2025-08-22T09:30:14.436Z"
 }
