@@ -37,3 +37,6 @@ firestore-debug.log
 
 # Build files
 build/
+
+# Auto-commit logs
+change-log.json
