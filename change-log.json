@@ -1,12 +1,12 @@
 {
   "changes": [
     {
-      "id": "1755852550266",
-      "timestamp": "2025-08-22T08:49:10.266Z",
+      "id": "1755852589638",
+      "timestamp": "2025-08-22T08:49:49.638Z",
       "description": "React bileşeni güncellendi: AdminManagement.tsx",
       "filePath": "src\\pages\\AdminManagement.tsx",
-      "date": "22.08.2025 11:49:10"
+      "date": "22.08.2025 11:49:49"
     }
   ],
-  "lastUpdate": "2025-08-22T08:49:10.266Z"
+  "lastUpdate": "2025-08-22T08:49:49.638Z"
 }

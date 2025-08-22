@@ -1120,6 +1120,133 @@ const AdminManagement: React.FC = () => {
           )}
         </div>
 
+        {/* Sponsor Users List */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Sponsor Kullanıcılar ({sponsorUsers.length})</h3>
+          </div>
+          
+          {sponsorUsers.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Kullanıcı
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Sponsor Kodu
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Team Level
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Üst Sponsor
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      İzinler
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      İşlemler
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {sponsorUsers.map((sponsor) => (
+                    <tr key={sponsor.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {getUserName(sponsor.userId)}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {getUserEmail(sponsor.userId)}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {sponsor.sponsorCode ? (
+                          <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-mono">
+                            {sponsor.sponsorCode}
+                          </span>
+                        ) : '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                          sponsor.teamLevel === 0 
+                            ? 'bg-purple-100 text-purple-800' 
+                            : sponsor.teamLevel === 1
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {sponsor.teamLevel === undefined ? 'Undefined' : sponsor.teamLevel}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {sponsor.parentSponsorId ? (
+                          <div>
+                            <div className="font-medium">
+                              {getUserName(sponsor.parentSponsorId)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {sponsorUsers.find(s => s.userId === sponsor.parentSponsorId)?.sponsorCode || 'Kod Yok'}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">Üst sponsor yok</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-wrap gap-1">
+                          {sponsor.permissions.slice(0, 2).map((permission) => (
+                            <span
+                              key={permission}
+                              className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
+                            >
+                              {getPermissionLabel(permission)}
+                            </span>
+                          ))}
+                          {sponsor.permissions.length > 2 && (
+                            <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
+                              +{sponsor.permissions.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEdit(sponsor)}
+                            className="text-blue-600 hover:text-blue-800 transition-colors"
+                            title="Düzenle"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          {adminUser && adminUser.userId !== sponsor.userId && (
+                            <button
+                              onClick={() => handleDeleteClick(sponsor.id, getUserName(sponsor.userId))}
+                              className="text-red-600 hover:text-red-800 transition-colors"
+                              title="Sil"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz sponsor kullanıcı yok</h3>
+              <p className="text-gray-600">İlk sponsor kullanıcıyı ekleyerek başlayın.</p>
+            </div>
+          )}
+        </div>
+
         {/* Instructions */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-yellow-900 mb-3">📋 Yetki Yönetimi Rehberi</h3>
