@@ -87,7 +87,7 @@ const AdminManagement: React.FC = () => {
      }
      
       const [allAdminUsers, users] = await Promise.all([
-        getAllAdminUsers(),
+        getAllAdminAndSponsorUsers(),
         getAllUsers()
       ]);
      debugLog.log('✅ AdminManagement: Loaded', allAdminUsers.length, 'admin users and', users.length, 'users');
