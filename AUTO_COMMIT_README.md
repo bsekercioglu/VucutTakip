@@ -1,4 +1,4 @@
-# 🤖 Otomatik Commit Sistemi
+# 🤖 Otomatik Commit Sistemi - Gelişmiş Log Sistemi
 
 Bu sistem, Cursor'da yaptığınız her değişikliği otomatik olarak GitHub'a commit edip push yapar.
 
