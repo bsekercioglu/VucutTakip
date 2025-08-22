@@ -473,7 +473,11 @@ ${invitationLink}
                       </button>
                       
                       <button
-                        onClick={() => createInvitationLink(member)}
+                        onClick={() => {
+                          debugLog.log('🖱️ Davet Linki Oluştur butonuna tıklandı');
+                          debugLog.log('📋 Tıklanan member:', member);
+                          createInvitationLink(member);
+                        }}
                         className="p-2 text-blue-600 hover:text-blue-700 transition-colors"
                         title="Davet Linki Oluştur"
                       >
