@@ -8,6 +8,10 @@ export interface ToastProps {
   message?: string;
   duration?: number;
   onClose: (id: string) => void;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 const Toast: React.FC<ToastProps> = ({ id, type, title, message, duration = 5000, onClose }) => {
