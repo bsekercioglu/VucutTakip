@@ -1,19 +1,26 @@
 {
   "changes": [
     {
-      "id": "1755849960466",
-      "timestamp": "2025-08-22T08:06:00.466Z",
+      "id": "1755849970067",
+      "timestamp": "2025-08-22T08:06:10.067Z",
       "description": "Dosya güncellendi: .git\\refs\\remotes\\origin\\main",
       "filePath": ".git\\refs\\remotes\\origin\\main",
-      "date": "22.08.2025 11:06:00"
+      "date": "22.08.2025 11:06:10"
     },
     {
-      "id": "1755849960469",
-      "timestamp": "2025-08-22T08:06:00.469Z",
+      "id": "1755849970070",
+      "timestamp": "2025-08-22T08:06:10.070Z",
       "description": "Dosya güncellendi: .git\\logs\\refs\\remotes\\origin\\main",
       "filePath": ".git\\logs\\refs\\remotes\\origin\\main",
-      "date": "22.08.2025 11:06:00"
+      "date": "22.08.2025 11:06:10"
+    },
+    {
+      "id": "1755849973600",
+      "timestamp": "2025-08-22T08:06:13.600Z",
+      "description": "Dosya silindi: test-log.js",
+      "filePath": "test-log.js",
+      "date": "22.08.2025 11:06:13"
     }
   ],
-  "lastUpdate": "2025-08-22T08:06:00.469Z"
+  "lastUpdate": "2025-08-22T08:06:13.600Z"
 }
