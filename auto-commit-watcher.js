@@ -158,9 +158,11 @@ function watchFiles() {
    watcher.on('unlink', (filePath) => {
      console.log(`🗑️ Dosya silindi: ${filePath}`);
      
-     // Değişikliği logla
+     // Değişikliği logla (Git dosyalarını hariç tut)
      const relativePath = path.relative('.', filePath);
-     addChange(`Dosya silindi: ${relativePath}`, relativePath);
+     if (!relativePath.startsWith('.git\\') && !relativePath.startsWith('.git/') && relativePath !== 'change-log.json') {
+       addChange(`Dosya silindi: ${relativePath}`, relativePath);
+     }
      
      if (commitTimeout) {
        clearTimeout(commitTimeout);
