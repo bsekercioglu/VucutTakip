@@ -15,7 +15,8 @@ import {
   applyRoleToUser,
   getRolePermissions,
   updateUserRoleWithTeamTransfer,
-  fixAdminTeamLevel
+  fixAdminTeamLevel,
+  assignUsersToSponsor
 } from '../services/adminService';
 import { AdminUser } from '../types/admin';
 import { User } from '../services/firebaseService';
