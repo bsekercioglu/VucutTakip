@@ -1,19 +1,4 @@
 {
-  "changes": [
-    {
-      "id": "1755852163121",
-      "timestamp": "2025-08-22T08:42:43.121Z",
-      "description": "Yeni dokümantasyon eklendi: test-davet-linki.md",
-      "filePath": "test-davet-linki.md",
-      "date": "22.08.2025 11:42:43"
-    },
-    {
-      "id": "1755852165367",
-      "timestamp": "2025-08-22T08:42:45.367Z",
-      "description": "Dokümantasyon güncellendi: test-davet-linki.md",
-      "filePath": "test-davet-linki.md",
-      "date": "22.08.2025 11:42:45"
-    }
-  ],
-  "lastUpdate": "2025-08-22T08:42:45.367Z"
+  "changes": [],
+  "lastUpdate": null
 }
