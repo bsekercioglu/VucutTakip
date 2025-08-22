@@ -85,21 +85,30 @@ const AdminManagement: React.FC = () => {
        return;
      }
      
-      const [admins, users] = await Promise.all([
+      const [allAdminUsers, users] = await Promise.all([
         getAllAdminUsers(),
         getAllUsers()
       ]);
-     debugLog.log('✅ AdminManagement: Loaded', admins.length, 'admins and', users.length, 'users');
+     debugLog.log('✅ AdminManagement: Loaded', allAdminUsers.length, 'admin users and', users.length, 'users');
      
-     // Debug: Admin rollerini logla
-     admins.forEach((admin, index) => {
+     // Admin ve sponsor kullanıcıları ayır
+     const actualAdmins = allAdminUsers.filter(admin => admin.role === 'admin');
+     const actualSponsors = allAdminUsers.filter(admin => admin.role === 'sponsor');
+     
+     debugLog.log('📊 Filtered admins:', actualAdmins.length);
+     debugLog.log('📊 Filtered sponsors:', actualSponsors.length);
+     
+     // Debug: Admin ve sponsor rollerini logla
+     actualAdmins.forEach((admin, index) => {
        console.log(`🔍 Admin ${index + 1}: ID=${admin.id}, UserID=${admin.userId}, Role=${admin.role}`);
      });
      
-     console.log('🔍 Total admins found:', admins.length);
-     console.log('🔍 All users count:', users.length);
+     actualSponsors.forEach((sponsor, index) => {
+       console.log(`🔍 Sponsor ${index + 1}: ID=${sponsor.id}, UserID=${sponsor.userId}, Role=${sponsor.role}, SponsorCode=${sponsor.sponsorCode}`);
+     });
      
-      setAdminUsers(admins);
+      setAdminUsers(actualAdmins);
+      setSponsorUsers(actualSponsors);
       setAllUsers(users);
     } catch (err) {
       debugLog.error('Error loading data:', err);
