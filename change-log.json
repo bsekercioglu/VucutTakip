@@ -1,12 +1,12 @@
 {
   "changes": [
     {
-      "id": "1755855945543",
-      "timestamp": "2025-08-22T09:45:45.543Z",
+      "id": "1755855956853",
+      "timestamp": "2025-08-22T09:45:56.853Z",
       "description": "React bileşeni güncellendi: SponsorAssignment.tsx",
       "filePath": "src\\pages\\SponsorAssignment.tsx",
-      "date": "22.08.2025 12:45:45"
+      "date": "22.08.2025 12:45:56"
     }
   ],
-  "lastUpdate": "2025-08-22T09:45:45.543Z"
+  "lastUpdate": "2025-08-22T09:45:56.853Z"
 }

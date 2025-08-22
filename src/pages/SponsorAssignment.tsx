@@ -75,13 +75,13 @@ const SponsorAssignment: React.FC<SponsorAssignmentProps> = () => {
         return;
       }
       
-      const [admins, users] = await Promise.all([
-        getAllAdminUsers(),
+      const [adminAndSponsorUsers, users] = await Promise.all([
+        getAllAdminAndSponsorUsers(),
         getAllUsers()
       ]);
       
-      debugLog.log('✅ SponsorAssignment: Loaded', admins.length, 'admins and', users.length, 'users');
-      setAdminUsers(admins);
+      debugLog.log('✅ SponsorAssignment: Loaded', adminAndSponsorUsers.length, 'admin and sponsor users and', users.length, 'users');
+      setAdminUsers(adminAndSponsorUsers);
       setAllUsers(users);
     } catch (err) {
       debugLog.error('Error loading data:', err);
