@@ -38,14 +38,25 @@ function autoCommit() {
        // Commit mesajı oluştur
        const commitMessage = generateCommitMessage();
       
+      // Commit mesajını dosyaya yaz
+      const commitMsgFile = '.commit-msg.tmp';
+      fs.writeFileSync(commitMsgFile, commitMessage, 'utf8');
+      
       // Commit yap
-      exec(`git commit -m "${commitMessage}"`, (commitError, commitStdout, commitStderr) => {
+      exec(`git commit -F "${commitMsgFile}"`, (commitError, commitStdout, commitStderr) => {
+        // Geçici dosyayı sil
+        try {
+          fs.unlinkSync(commitMsgFile);
+        } catch (e) {
+          // Dosya zaten silinmiş olabilir
+        }
+        
         if (commitError) {
           console.error('❌ Commit yapılamadı:', commitError);
           return;
         }
         
-        console.log('✅ Commit başarılı:', commitMessage);
+        console.log('✅ Commit başarılı:', commitMessage.split('\n')[0]);
         
         // Push yap
         exec('git push', (pushError, pushStdout, pushStderr) => {

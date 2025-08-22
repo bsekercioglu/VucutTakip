@@ -40,3 +40,4 @@ build/
 
 # Auto-commit logs
 change-log.json
+.commit-msg.tmp
