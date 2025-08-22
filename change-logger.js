@@ -34,10 +34,16 @@ export function addChange(description, filePath = null) {
   const log = readLogFile();
   const timestamp = new Date().toISOString();
   
+  // Dosya türüne göre daha açıklayıcı mesaj oluştur
+  let enhancedDescription = description;
+  if (filePath) {
+    enhancedDescription = generateSmartDescription(filePath, description);
+  }
+  
   const change = {
     id: Date.now().toString(),
     timestamp: timestamp,
-    description: description,
+    description: enhancedDescription,
     filePath: filePath,
     date: new Date().toLocaleString('tr-TR')
   };
@@ -46,9 +52,66 @@ export function addChange(description, filePath = null) {
   log.lastUpdate = timestamp;
   
   writeLogFile(log);
-  console.log(`📝 Değişiklik loglandı: ${description}`);
+  console.log(`📝 Değişiklik loglandı: ${enhancedDescription}`);
   
   return change;
+}
+
+// Akıllı açıklama oluştur
+function generateSmartDescription(filePath, originalDescription) {
+  if (!filePath) return originalDescription;
+  
+  const fileName = filePath.split(/[\/\\]/).pop();
+  const fileExt = fileName.split('.').pop()?.toLowerCase();
+  
+  // Dosya türüne göre açıklama
+  if (originalDescription.includes('Yeni dosya eklendi')) {
+    switch (fileExt) {
+      case 'tsx':
+      case 'jsx':
+        return `Yeni React bileşeni eklendi: ${fileName}`;
+      case 'ts':
+      case 'js':
+        return `Yeni JavaScript/TypeScript dosyası eklendi: ${fileName}`;
+      case 'md':
+        return `Yeni dokümantasyon eklendi: ${fileName}`;
+      case 'css':
+      case 'scss':
+        return `Yeni stil dosyası eklendi: ${fileName}`;
+      case 'json':
+        return `Yeni konfigürasyon dosyası eklendi: ${fileName}`;
+      default:
+        return `Yeni dosya eklendi: ${fileName}`;
+    }
+  }
+  
+  if (originalDescription.includes('Dosya güncellendi')) {
+    switch (fileExt) {
+      case 'tsx':
+      case 'jsx':
+        return `React bileşeni güncellendi: ${fileName}`;
+      case 'ts':
+      case 'js':
+        return `JavaScript/TypeScript dosyası güncellendi: ${fileName}`;
+      case 'md':
+        return `Dokümantasyon güncellendi: ${fileName}`;
+      case 'css':
+      case 'scss':
+        return `Stil dosyası güncellendi: ${fileName}`;
+      case 'json':
+        return `Konfigürasyon dosyası güncellendi: ${fileName}`;
+      case 'html':
+        return `HTML dosyası güncellendi: ${fileName}`;
+      default:
+        return `Dosya güncellendi: ${fileName}`;
+    }
+  }
+  
+  if (originalDescription.includes('Dosya silindi')) {
+    return `Dosya silindi: ${fileName}`;
+  }
+  
+  return originalDescription;
 }
 
 // Son değişiklikleri al
