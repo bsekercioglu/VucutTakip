@@ -55,7 +55,7 @@ Aşağıdaki dosyalar otomatik commit'e dahil edilmez:
 - `auto-commit.js`
 - `auto-commit-watcher.js`
 
-### Commit Mesaj Formatı
+### 📋 Akıllı Commit Mesaj Formatı
 
 ```
 Auto-commit: [Tarih Saat] - Cursor değişiklikleri
