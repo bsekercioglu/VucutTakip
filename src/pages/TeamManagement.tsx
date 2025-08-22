@@ -203,6 +203,8 @@ const TeamManagement: React.FC = () => {
 
   const copyInvitationTemplate = async (member: TeamMember) => {
     try {
+      debugLog.log('🔄 Creating invitation template for member:', member.userId);
+      
       // Davet linkini oluştur
       const invitationLink = await createTeamInvitationLink(member.userId);
       
@@ -231,6 +233,8 @@ ${invitationLink}
       // Şablonu panoya kopyala
       await navigator.clipboard.writeText(template);
       
+      debugLog.log('✅ Invitation template copied to clipboard');
+      
       // Toast mesajı ile şablonu göster
       success(
         'Davet Şablonu Kopyalandı! 📋', 
@@ -250,8 +254,9 @@ ${invitationLink}
       );
       
     } catch (err) {
-      debugLog.error('Error creating invitation template:', err);
-      error('Hata!', 'Davet şablonu oluşturulurken hata oluştu');
+      debugLog.error('❌ Error creating invitation template:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen hata';
+      error('Hata!', `Davet şablonu oluşturulurken hata oluştu: ${errorMessage}`);
     }
   };
 
