@@ -530,7 +530,7 @@ const SponsorAssignment: React.FC<SponsorAssignmentProps> = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {getSponsorUsers().map(sponsor => {
                   const teamMembers = adminUsers.filter(admin => 
-                    admin.role === 'sponsor' && admin.parentSponsorId === sponsor.userId
+                    (admin.role === 'sponsor' || admin.role === 'user') && admin.parentSponsorId === sponsor.userId
                   );
                   
                   return (
