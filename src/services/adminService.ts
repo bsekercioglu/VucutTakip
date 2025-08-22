@@ -613,17 +613,23 @@ export const assignUsersToSponsor = async (sponsorId: string, userIds: string[])
           // User already has admin rights, update parentSponsorId
           const userData = userAdminDoc.data();
           
-          // Eğer kullanıcı zaten sponsor ise, sadece parentSponsorId güncelle
-          if (userData.role === 'sponsor') {
-            await updateDoc(doc(db, 'admins', userId), {
-              parentSponsorId: sponsorId,
-              updatedAt: new Date().toISOString()
-            });
-          } else {
-            // Eğer kullanıcı admin ise, işlem yapma (admin'ler sponsor'a atanamaz)
-            console.log(`⚠️ Admin user ${userId} cannot be assigned to sponsor`);
-            return { userId, success: false, error: 'Admin users cannot be assigned to sponsors' };
-          }
+                     // Eğer kullanıcı zaten sponsor ise, sadece parentSponsorId güncelle
+           if (userData.role === 'sponsor') {
+             await updateDoc(doc(db, 'admins', userId), {
+               parentSponsorId: sponsorId,
+               updatedAt: new Date().toISOString()
+             });
+           } else if (userData.role === 'admin') {
+             // Eğer kullanıcı admin ise, işlem yapma (admin'ler sponsor'a atanamaz)
+             console.log(`⚠️ Admin user ${userId} cannot be assigned to sponsor`);
+             return { userId, success: false, error: 'Admin kullanıcıları sponsor\'a atanamaz' };
+           } else if (userData.role === 'user') {
+             // Eğer kullanıcı zaten user ise, sadece parentSponsorId güncelle
+             await updateDoc(doc(db, 'admins', userId), {
+               parentSponsorId: sponsorId,
+               updatedAt: new Date().toISOString()
+             });
+           }
         } else {
           // Create new user with parentSponsorId (normal kullanıcı olarak)
           const newUserData = {
