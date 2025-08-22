@@ -128,22 +128,26 @@ function watchFiles() {
      }, 5000);
    });
   
-  // Dosya eklendiğinde
-  watcher.on('add', (filePath) => {
-    console.log(`➕ Dosya eklendi: ${filePath}`);
-    
-    if (commitTimeout) {
-      clearTimeout(commitTimeout);
-    }
-    
-    commitTimeout = setTimeout(async () => {
-      try {
-        await autoCommit();
-      } catch (error) {
-        console.error('❌ Otomatik commit başarısız:', error);
-      }
-    }, 5000);
-  });
+     // Dosya eklendiğinde
+   watcher.on('add', (filePath) => {
+     console.log(`➕ Dosya eklendi: ${filePath}`);
+     
+     // Değişikliği logla
+     const relativePath = path.relative('.', filePath);
+     addChange(`Yeni dosya eklendi: ${relativePath}`, relativePath);
+     
+     if (commitTimeout) {
+       clearTimeout(commitTimeout);
+     }
+     
+     commitTimeout = setTimeout(async () => {
+       try {
+         await autoCommit();
+       } catch (error) {
+         console.error('❌ Otomatik commit başarısız:', error);
+       }
+     }, 5000);
+   });
   
   // Dosya silindiğinde
   watcher.on('unlink', (filePath) => {
