@@ -75,7 +75,7 @@ function autoCommit() {
                          console.log('✅ Push başarılı!');
              console.log('🚀 Değişiklikler GitHub\'a gönderildi');
              
-             // Log dosyasını temizle
+             // Log dosyasını temizle (push sonrası)
              clearLog();
              
              resolve();
