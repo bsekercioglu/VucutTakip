@@ -1,26 +1,12 @@
 {
   "changes": [
     {
-      "id": "1755850632334",
-      "timestamp": "2025-08-22T08:17:12.334Z",
-      "description": "JavaScript/TypeScript dosyası güncellendi: change-logger.js",
-      "filePath": "change-logger.js",
-      "date": "22.08.2025 11:17:12"
-    },
-    {
-      "id": "1755850632341",
-      "timestamp": "2025-08-22T08:17:12.341Z",
-      "description": "Dokümantasyon güncellendi: AUTO_COMMIT_README.md",
-      "filePath": "AUTO_COMMIT_README.md",
-      "date": "22.08.2025 11:17:12"
-    },
-    {
-      "id": "1755850632342",
-      "timestamp": "2025-08-22T08:17:12.342Z",
-      "description": "Dokümantasyon güncellendi: README.md",
-      "filePath": "README.md",
-      "date": "22.08.2025 11:17:12"
+      "id": "1755851245271",
+      "timestamp": "2025-08-22T08:27:25.271Z",
+      "description": "React bileşeni güncellendi: TeamManagement.tsx",
+      "filePath": "src\\pages\\TeamManagement.tsx",
+      "date": "22.08.2025 11:27:25"
     }
   ],
-  "lastUpdate": "2025-08-22T08:17:12.342Z"
+  "lastUpdate": "2025-08-22T08:27:25.271Z"
 }

@@ -72,6 +72,23 @@ const TeamManagement: React.FC = () => {
     return userId; // Fallback to userId if no user info found
   };
 
+  // İzin etiketlerini çevir
+  const getPermissionLabel = (permission: string) => {
+    const labels: Record<string, string> = {
+      'manage_users': 'Kullanıcı Yönetimi',
+      'view_all_data': 'Tüm Verileri Görme',
+      'manage_orders': 'Sipariş Yönetimi',
+      'send_recommendations': 'Ürün Önerisi Gönderme',
+      'answer_questions': 'Soru Yanıtlama',
+      'view_reports': 'Raporları Görme',
+      'manage_products': 'Ürün Yönetimi',
+      'view_analytics': 'Analitik Görme',
+      'export_data': 'Veri Dışa Aktarma',
+      'manage_settings': 'Ayarları Yönetme'
+    };
+    return labels[permission] || permission;
+  };
+
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
