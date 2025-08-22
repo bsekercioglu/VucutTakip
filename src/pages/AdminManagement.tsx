@@ -26,6 +26,7 @@ const AdminManagement: React.FC = () => {
   const { user, adminUser, isLoggedIn } = useUser();
   const { success, error } = useToast();
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [sponsorUsers, setSponsorUsers] = useState<AdminUser[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
