@@ -13,7 +13,8 @@ import {
   createUserInvitation,
   applyRoleToUser,
   getRolePermissions,
-  updateUserRoleWithTeamTransfer
+  updateUserRoleWithTeamTransfer,
+  fixAdminTeamLevel
 } from '../services/adminService';
 import { AdminUser } from '../types/admin';
 import { User } from '../services/firebaseService';
@@ -88,6 +89,15 @@ const AdminManagement: React.FC = () => {
         getAllUsers()
       ]);
      debugLog.log('✅ AdminManagement: Loaded', admins.length, 'admins and', users.length, 'users');
+     
+     // Debug: Admin rollerini logla
+     admins.forEach((admin, index) => {
+       console.log(`🔍 Admin ${index + 1}: ID=${admin.id}, UserID=${admin.userId}, Role=${admin.role}`);
+     });
+     
+     console.log('🔍 Total admins found:', admins.length);
+     console.log('🔍 All users count:', users.length);
+     
       setAdminUsers(admins);
       setAllUsers(users);
     } catch (err) {
@@ -156,6 +166,11 @@ const AdminManagement: React.FC = () => {
         console.log('🔍 Debug - Selected role name:', formData.selectedRoleName);
         
         // Eğer rol değişikliği varsa team transfer ile güncelle
+        console.log('🔍 Debug - Comparing roles:');
+        console.log('  - Current admin role:', editingAdmin.role);
+        console.log('  - New form role:', formData.role);
+        console.log('  - Roles are different:', editingAdmin.role !== formData.role);
+        
         if (editingAdmin.role !== formData.role) {
           console.log('🔄 Role change detected, using team transfer update');
           debugLog.log('🔄 Role change detected, using team transfer update');
@@ -175,10 +190,31 @@ const AdminManagement: React.FC = () => {
             customAdminId // Yeni parametre
           );
           
-          if (result.success && result.transferredCount) {
-            success('Başarılı!', `Yetki güncellendi ve ${result.transferredCount} ekip üyesi transfer edildi`);
-          } else if (result.success) {
-            success('Başarılı!', 'Yetki güncellendi');
+          console.log('🔍 Team transfer result:', result);
+          console.log('🔍 Form data role:', formData.role);
+          console.log('🔍 Editing admin role before update:', editingAdmin.role);
+          
+          if (result.success) {
+            if (result.transferredCount && result.transferredCount > 0) {
+              success('Başarılı!', `Yetki güncellendi ve ${result.transferredCount} ekip üyesi transfer edildi`);
+            } else {
+              success('Başarılı!', 'Yetki güncellendi');
+            }
+            setShowAddForm(false);
+            setEditingAdmin(null);
+            resetForm();
+            await loadData();
+            console.log('🔍 Data reloaded after team transfer');
+            
+            // Yeni yüklenen verileri kontrol et
+            const updatedAdmins = await getAllAdminUsers();
+            console.log('🔍 Fresh admin data after reload:');
+            updatedAdmins.forEach((admin, index) => {
+              console.log(`  ${index + 1}. ID: ${admin.id}, UserID: ${admin.userId}, Role: ${admin.role}`);
+            });
+            
+            console.log('🔍 Current admin users after reload:', adminUsers);
+            return; // Başarılı işlem sonrası fonksiyondan çık
           } else {
             error('Hata!', result.error || 'Yetki güncellenirken hata oluştu');
             return;
@@ -196,6 +232,18 @@ const AdminManagement: React.FC = () => {
             updatedAt: new Date().toISOString()
           };
           result = await updateAdminUser(editingAdmin.id, adminData);
+          
+          if (result.success) {
+            success('Başarılı!', 'Yetki güncellendi');
+            setShowAddForm(false);
+            setEditingAdmin(null);
+            resetForm();
+            await loadData();
+            return;
+          } else {
+            error('Hata!', result.error || 'Yetki güncellenirken hata oluştu');
+            return;
+          }
         }
       } else {
         // Yeni admin oluşturma
@@ -241,7 +289,7 @@ const AdminManagement: React.FC = () => {
     
     setFormData({
       userId: admin.userId,
-      role: admin.role === 'user' ? 'sponsor' : admin.role, // 'user' role'ü 'sponsor' olarak işle
+      role: admin.role, // Gerçek rolü kullan
       permissions: admin.permissions,
       sponsorCode: admin.sponsorCode || '',
       parentSponsorId: admin.parentSponsorId || '',
@@ -249,6 +297,10 @@ const AdminManagement: React.FC = () => {
       selectedAdminId: '' // Admin seçimi için boş bırak
     });
     setShowAddForm(true);
+    
+    // Debug log ekle
+    console.log('🔍 handleEdit - Admin role:', admin.role);
+    console.log('🔍 handleEdit - Form role set to:', admin.role);
   };
 
   const handleDeleteClick = (adminId: string, adminName: string) => {
@@ -272,6 +324,22 @@ const AdminManagement: React.FC = () => {
       error('Hata!', 'Beklenmeyen bir hata oluştu');
     }
     setConfirmDialog({ isOpen: false, adminId: '', adminName: '' });
+  };
+
+  const handleFixTeamLevel = async (adminId: string) => {
+    try {
+      debugLog.log('🔧 Fixing teamLevel for admin:', adminId);
+      const result = await fixAdminTeamLevel(adminId);
+      if (result.success) {
+        success('Başarılı!', 'Admin teamLevel düzeltildi');
+        await loadData();
+      } else {
+        error('Hata!', result.error || 'TeamLevel düzeltme işlemi başarısız');
+      }
+    } catch (err) {
+      debugLog.error('Error fixing teamLevel:', err);
+      error('Hata!', 'Beklenmeyen bir hata oluştu');
+    }
   };
 
   const resetForm = () => {
@@ -442,10 +510,12 @@ const AdminManagement: React.FC = () => {
 
         {/* Add/Edit Form */}
         {showAddForm && (
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {editingAdmin ? 'Yetki Düzenle' : 'Yeni Yetki Ekle'}
-            </h3>
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={handleCancel}>
+            <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  {editingAdmin ? 'Yetki Düzenle' : 'Yeni Yetki Ekle'}
+                </h3>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -644,6 +714,8 @@ const AdminManagement: React.FC = () => {
                 </button>
               </div>
             </form>
+              </div>
+            </div>
           </div>
         )}
 
@@ -890,7 +962,7 @@ const AdminManagement: React.FC = () => {
         {/* Admin Users List */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Yetkili Kullanıcılar</h3>
+                            <h3 className="text-lg font-semibold text-gray-900">Admin Kullanıcılar ({adminUsers.length})</h3>
           </div>
           
           {adminUsers.length > 0 ? (
@@ -903,6 +975,9 @@ const AdminManagement: React.FC = () => {
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Rol
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Team Level
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Sponsor Kodu
@@ -951,6 +1026,17 @@ const AdminManagement: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                          admin.teamLevel === 0 
+                            ? 'bg-purple-100 text-purple-800' 
+                            : admin.teamLevel === 1
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {admin.teamLevel === undefined ? 'Undefined' : admin.teamLevel}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {admin.sponsorCode ? (
                           <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-mono">
                             {admin.sponsorCode}
@@ -990,6 +1076,15 @@ const AdminManagement: React.FC = () => {
                           >
                             <Edit3 className="h-4 w-4" />
                           </button>
+                          {admin.role === 'admin' && (
+                            <button
+                              onClick={() => handleFixTeamLevel(admin.id)}
+                              className="text-orange-600 hover:text-orange-800 transition-colors"
+                              title="TeamLevel Düzelt"
+                            >
+                              <Key className="h-4 w-4" />
+                            </button>
+                          )}
                           {admin.userId !== user?.id && (
                             <button
                               onClick={() => handleDeleteClick(admin.id, getUserName(admin.userId))}

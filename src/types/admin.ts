@@ -3,7 +3,7 @@ export interface AdminUser {
   userId: string;
   role: 'admin' | 'sponsor' | 'user';
   permissions: string[];
-  sponsorCode?: string;
+  sponsorCode?: string | null;
   parentSponsorId?: string | null;
   teamLevel: number; // 0: admin, 1: sponsor, 2+: alt sponsor
   teamPath: string[]; // Hiyerarşik yol: ['adminId', 'sponsor1Id', 'sponsor2Id']

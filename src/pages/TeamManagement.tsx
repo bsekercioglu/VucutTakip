@@ -30,7 +30,8 @@ import { debugLog } from '../config/appConfig';
 import { 
   loadUserTeamData, 
   createTeamInvitationLink,
-  getSponsorHierarchy 
+  getSponsorHierarchy,
+  getMultipleUsersInfo
 } from '../services/adminService';
 
 interface TeamMember extends AdminUser {
@@ -55,6 +56,21 @@ const TeamManagement: React.FC = () => {
   const [showInvitationModal, setShowInvitationModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [invitationLink, setInvitationLink] = useState('');
+  const [usersInfo, setUsersInfo] = useState<Map<string, {
+    displayName: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+  }>>(new Map());
+
+  // getUserName fonksiyonunu burada tanımla
+  const getUserName = (userId: string) => {
+    const userInfo = usersInfo.get(userId);
+    if (userInfo) {
+      return userInfo.displayName;
+    }
+    return userId; // Fallback to userId if no user info found
+  };
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
@@ -79,6 +95,11 @@ const TeamManagement: React.FC = () => {
         // Admin için tüm sponsorları getir
         const allSponsors = await loadUserTeamData(user.id);
         
+        // Kullanıcı bilgilerini çek
+        const userIds = allSponsors.map(sponsor => sponsor.userId);
+        const usersInfoMap = await getMultipleUsersInfo(userIds);
+        setUsersInfo(usersInfoMap);
+        
         // Performance verilerini ekle
         const sponsorsWithPerformance: TeamMember[] = allSponsors.map(sponsor => ({
           ...sponsor,
@@ -96,6 +117,12 @@ const TeamManagement: React.FC = () => {
       } else if (adminUser?.role === 'sponsor') {
         // Sponsor için sadece kendi ekibini getir
         const hierarchy = await getSponsorHierarchy(user.id);
+        
+        // Kullanıcı bilgilerini çek
+        const userIds = hierarchy.directMembers.map(member => member.userId);
+        const usersInfoMap = await getMultipleUsersInfo(userIds);
+        setUsersInfo(usersInfoMap);
+        
         const teamMembersData: TeamMember[] = hierarchy.directMembers.map(member => ({
           ...member,
           teamSize: hierarchy.allMembers.length,
@@ -122,8 +149,10 @@ const TeamManagement: React.FC = () => {
   }, []);
 
   const filteredMembers = teamMembers.filter(member => {
+    const userName = getUserName(member.userId).toLowerCase();
     const matchesSearch = member.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.sponsorCode?.toLowerCase().includes(searchTerm.toLowerCase());
+                         member.sponsorCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         userName.includes(searchTerm.toLowerCase());
     const matchesRole = filterRole === 'all' || member.role === filterRole;
     return matchesSearch && matchesRole;
   });
@@ -161,7 +190,7 @@ const TeamManagement: React.FC = () => {
 👋 Merhaba! ${member.sponsorCode} sponsor kodlu ekibimize davet edildiniz.
 
 👥 Ekip Bilgileri:
-• Sponsor: ${member.userId}
+• Sponsor: ${getUserName(member.userId)}
 • Sponsor Kodu: ${member.sponsorCode}
 • Ekip Büyüklüğü: ${member.teamSize} üye
 • Aktif Üyeler: ${member.performance.activeMembers}
@@ -283,7 +312,7 @@ const TeamManagement: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <input
                   type="text"
-                  placeholder="Kullanıcı ID veya Sponsor Kodu ara..."
+                  placeholder="Kullanıcı adı, ID veya Sponsor Kodu ara..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -333,8 +362,10 @@ const TeamManagement: React.FC = () => {
                     </div>
                     
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900">{member.userId}</h3>
-                      <p className="text-sm text-gray-600">Sponsor Kodu: {member.sponsorCode}</p>
+                      <h3 className="text-lg font-medium text-gray-900">{getUserName(member.userId)}</h3>
+                      <p className="text-sm text-gray-600">
+                        {member.sponsorCode ? `Sponsor Kodu: ${member.sponsorCode}` : 'Kullanıcı'}
+                      </p>
                     </div>
                   </div>
                   

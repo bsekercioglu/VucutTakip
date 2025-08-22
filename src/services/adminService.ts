@@ -258,9 +258,24 @@ export const getAllAdminUsers = async (): Promise<AdminUser[]> => {
    }
    
    console.log('✅ Current user is admin, fetching all admins...');
-    const querySnapshot = await getDocs(collection(db, 'admins'));
+   
+   // Sadece role=admin olan kullanıcıları getir
+   const adminQuery = query(
+     collection(db, 'admins'),
+     where('role', '==', 'admin')
+   );
+   
+   const querySnapshot = await getDocs(adminQuery);
    console.log('✅ Successfully fetched', querySnapshot.docs.length, 'admin users');
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AdminUser));
+   
+   const adminUsers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AdminUser));
+   
+   // Debug: Her admin kullanıcısının rolünü logla
+   adminUsers.forEach((admin, index) => {
+     console.log(`🔍 Admin ${index + 1}: ID=${admin.id}, UserID=${admin.userId}, Role=${admin.role}`);
+   });
+   
+   return adminUsers;
   } catch (error) {
    console.error('❌ Error getting all admin users:', error);
    console.error('🔍 Error code:', error.code);
@@ -283,10 +298,16 @@ export const getAllUsers = async () => {
 // Update admin user
 export const updateAdminUser = async (adminId: string, adminData: Partial<AdminUser>) => {
   try {
+    // Clean undefined values from adminData
+    const cleanAdminData = Object.fromEntries(
+      Object.entries(adminData).filter(([_, value]) => value !== undefined)
+    );
+    
     const updateData = {
-      ...adminData,
+      ...cleanAdminData,
       updatedAt: new Date().toISOString()
     };
+    
     await updateDoc(doc(db, 'admins', adminId), updateData);
     return { success: true };
   } catch (error) {
@@ -1044,8 +1065,14 @@ export const updateUserRoleWithTeamTransfer = async (
   customAdminId?: string
 ): Promise<{ success: boolean; transferredCount?: number; error?: string }> => {
   try {
-    console.log('🔄 updateUserRoleWithTeamTransfer called with:', { adminId, newRole, newPermissions, newSponsorCode });
-    debugLog.log('🔄 Updating user role with team transfer:', adminId, 'to role:', newRole);
+    console.log('🔄 updateUserRoleWithTeamTransfer called with:', { 
+      adminId, 
+      newRole, 
+      newPermissions, 
+      newSponsorCode, 
+      customAdminId 
+    });
+    debugLog.log('🔄 Updating user role with team transfer:', adminId, 'to role:', newRole, 'customAdminId:', customAdminId);
     
     const adminRef = doc(db, 'admins', adminId);
     const adminDoc = await getDoc(adminRef);
@@ -1161,7 +1188,7 @@ export const updateUserRoleWithTeamTransfer = async (
       const updateData: Partial<AdminUser> = {
         role: newRole,
         permissions: newPermissions,
-        sponsorCode: undefined, // Sponsor kodu kaldır
+        sponsorCode: null, // Sponsor kodu kaldır (undefined yerine null kullan)
         teamLevel: (currentAdmin.teamLevel || 0) + 1,
         updatedAt: new Date().toISOString()
       };
@@ -1174,10 +1201,23 @@ export const updateUserRoleWithTeamTransfer = async (
       }
       
       console.log('🔍 Updating admin with data:', updateData);
+      console.log('🔍 Role being set to:', newRole);
+      console.log('🔍 Current role was:', currentRole);
       
       await updateDoc(adminRef, updateData);
       
+      // Güncelleme sonrası kontrol
+      const updatedDoc = await getDoc(adminRef);
+      const updatedData = updatedDoc.data();
+      console.log('🔍 After update - Role:', updatedData?.role);
+      console.log('🔍 After update - SponsorCode:', updatedData?.sponsorCode);
+      console.log('🔍 After update - Full updated data:', updatedData);
+      console.log('🔍 Expected role was:', newRole);
+      console.log('🔍 Role match:', updatedData?.role === newRole);
+      
       console.log('✅ Role updated and team transferred successfully');
+      console.log('🔍 Final role check - Role:', updatedData?.role);
+      console.log('🔍 Final role check - SponsorCode:', updatedData?.sponsorCode);
       debugLog.log('✅ Role updated and team transferred successfully');
       return { 
         success: true, 
@@ -1207,19 +1247,24 @@ export const updateUserRoleWithTeamTransfer = async (
       return { success: true };
     }
     
-    // Diğer durumlar için basit güncelleme
-    const updateData: Partial<AdminUser> = {
-      role: newRole,
-      permissions: newPermissions,
-      sponsorCode: newRole === 'sponsor' ? (newSponsorCode || generateSponsorCode()) : undefined,
-      updatedAt: new Date().toISOString()
-    };
+    // Diğer durumlar için basit güncelleme (sponsor'dan user'a geçiş zaten yukarıda yapıldı)
+    if (currentRole !== 'sponsor' || newRole !== 'user') {
+      const updateData: Partial<AdminUser> = {
+        role: newRole,
+        permissions: newPermissions,
+        sponsorCode: newRole === 'sponsor' ? (newSponsorCode || generateSponsorCode()) : null,
+        updatedAt: new Date().toISOString()
+      };
+      
+      await updateDoc(adminRef, updateData);
+      
+      console.log('✅ Role updated successfully');
+      debugLog.log('✅ Role updated successfully');
+    }
     
-    await updateDoc(adminRef, updateData);
-    
-    debugLog.log('✅ Role updated successfully');
     return { success: true };
   } catch (error) {
+    console.error('❌ Error updating user role with team transfer:', error);
     debugLog.error('Error updating user role with team transfer:', error);
     return { 
       success: false, 
@@ -1334,5 +1379,125 @@ export const applyRoleToUser = async (
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
     };
+  }
+};
+
+export const fixAdminTeamLevel = async (adminId: string): Promise<{ success: boolean; error?: string }> => {
+  try {
+    debugLog.log('🔧 Fixing teamLevel for admin:', adminId);
+    
+    const adminRef = doc(db, 'admins', adminId);
+    const adminDoc = await getDoc(adminRef);
+    
+    if (!adminDoc.exists()) {
+      throw new Error('Admin user not found');
+    }
+    
+    const adminData = adminDoc.data() as AdminUser;
+    debugLog.log('🔍 Current admin data:', adminData);
+    
+    // Admin için teamLevel=0 ve teamPath=[] olmalı
+    const updateData: Partial<AdminUser> = {
+      teamLevel: 0,
+      teamPath: [],
+      updatedAt: new Date().toISOString()
+    };
+    
+    await updateDoc(adminRef, updateData);
+    
+    debugLog.log('✅ Admin teamLevel fixed successfully');
+    return { success: true };
+  } catch (error) {
+    debugLog.error('Error fixing admin teamLevel:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
+  }
+};
+
+// Get user information from Firebase Auth and Firestore
+export const getUserInfo = async (userId: string): Promise<{
+  displayName: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+} | null> => {
+  try {
+    debugLog.log('🔍 Getting user info for userId:', userId);
+    
+    // First try to get from users collection
+    try {
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        debugLog.log('✅ User found in users collection:', userData);
+        return {
+          displayName: userData.displayName || userData.firstName + ' ' + userData.lastName || 'Bilinmeyen Kullanıcı',
+          email: userData.email || 'email@example.com',
+          firstName: userData.firstName,
+          lastName: userData.lastName
+        };
+      }
+    } catch (error) {
+      debugLog.log('⚠️ Could not get user from users collection:', error);
+    }
+    
+    // If not found in users collection, try to get from admin collection
+    try {
+      const adminDoc = await getDoc(doc(db, 'admins', userId));
+      if (adminDoc.exists()) {
+        const adminData = adminDoc.data();
+        debugLog.log('✅ User found in admins collection:', adminData);
+        return {
+          displayName: adminData.displayName || adminData.firstName + ' ' + adminData.lastName || 'Bilinmeyen Kullanıcı',
+          email: adminData.email || 'email@example.com',
+          firstName: adminData.firstName,
+          lastName: adminData.lastName
+        };
+      }
+    } catch (error) {
+      debugLog.log('⚠️ Could not get user from admins collection:', error);
+    }
+    
+    // If still not found, return default info
+    debugLog.log('⚠️ User not found in any collection, returning default info');
+    return {
+      displayName: 'Bilinmeyen Kullanıcı',
+      email: 'email@example.com'
+    };
+  } catch (error) {
+    debugLog.error('Error getting user info:', error);
+    return {
+      displayName: 'Bilinmeyen Kullanıcı',
+      email: 'email@example.com'
+    };
+  }
+};
+
+// Get multiple users info
+export const getMultipleUsersInfo = async (userIds: string[]): Promise<Map<string, {
+  displayName: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+}>> => {
+  try {
+    debugLog.log('🔍 Getting multiple users info for:', userIds);
+    
+    const usersInfo = new Map();
+    const promises = userIds.map(async (userId) => {
+      const userInfo = await getUserInfo(userId);
+      if (userInfo) {
+        usersInfo.set(userId, userInfo);
+      }
+    });
+    
+    await Promise.all(promises);
+    debugLog.log('✅ Retrieved info for', usersInfo.size, 'users');
+    return usersInfo;
+  } catch (error) {
+    debugLog.error('Error getting multiple users info:', error);
+    return new Map();
   }
 };
