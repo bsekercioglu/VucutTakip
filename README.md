@@ -11,7 +11,7 @@ Modern ve kullanıcı dostu bir vücut takip uygulaması. React, TypeScript ve F
 - 👤 **Kişisel Profil**: Detaylı profil yönetimi ve vücut ölçümleri
 - 📱 **Responsive Tasarım**: Tüm cihazlarda mükemmel görünüm
 
-## Teknolojiler
+## 🛠️ Teknolojiler
 
 - **Frontend**: React 18, TypeScript, Tailwind CSS
 - **Backend**: Firebase (Authentication, Firestore, Storage)
