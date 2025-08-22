@@ -110,9 +110,11 @@ function watchFiles() {
    watcher.on('change', (filePath) => {
      console.log(`📝 Dosya değişti: ${filePath}`);
      
-     // Değişikliği logla
+     // Değişikliği logla (Git dosyalarını hariç tut)
      const relativePath = path.relative('.', filePath);
-     addChange(`Dosya güncellendi: ${relativePath}`, relativePath);
+     if (!relativePath.startsWith('.git\\') && !relativePath.startsWith('.git/') && relativePath !== 'change-log.json') {
+       addChange(`Dosya güncellendi: ${relativePath}`, relativePath);
+     }
      
      // Önceki timeout'u temizle
      if (commitTimeout) {

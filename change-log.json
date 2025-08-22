@@ -97,7 +97,14 @@
       "description": "Dosya güncellendi: .git\\refs\\remotes\\origin\\main",
       "filePath": ".git\\refs\\remotes\\origin\\main",
       "date": "22.08.2025 11:07:25"
+    },
+    {
+      "id": "1755850052270",
+      "timestamp": "2025-08-22T08:07:32.270Z",
+      "description": "Yeni dosya eklendi: .git\\objects\\3a\\a5a6c144cb5f99e009202088941bd3aca2a2c4",
+      "filePath": ".git\\objects\\3a\\a5a6c144cb5f99e009202088941bd3aca2a2c4",
+      "date": "22.08.2025 11:07:32"
     }
   ],
-  "lastUpdate": "2025-08-22T08:07:25.032Z"
+  "lastUpdate": "2025-08-22T08:07:32.270Z"
 }
