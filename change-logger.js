@@ -65,16 +65,33 @@ export function getAllChanges() {
 
 // Commit mesajı oluştur
 export function generateCommitMessage() {
-  const changes = getRecentChanges(5); // Son 5 değişiklik
+  const allChanges = getRecentChanges(10); // Son 10 değişiklik
   
-  if (changes.length === 0) {
+  // Git dosyalarını filtrele, sadece anlamlı değişiklikleri al
+  const meaningfulChanges = allChanges.filter(change => {
+    if (!change.filePath) return true;
+    
+    // Git dosyalarını hariç tut
+    if (change.filePath.startsWith('.git\\') || change.filePath.startsWith('.git/')) {
+      return false;
+    }
+    
+    // Change-log.json dosyasını hariç tut (kendi kendini logluyor)
+    if (change.filePath === 'change-log.json') {
+      return false;
+    }
+    
+    return true;
+  });
+  
+  if (meaningfulChanges.length === 0) {
     return `Auto-commit: ${new Date().toLocaleString('tr-TR')} - Genel güncellemeler`;
   }
   
   const timestamp = new Date().toLocaleString('tr-TR');
   let message = `Auto-commit: ${timestamp}\n\n`;
   
-  changes.forEach((change, index) => {
+  meaningfulChanges.slice(0, 5).forEach((change, index) => {
     message += `${index + 1}. ${change.description}`;
     if (change.filePath) {
       message += ` (${change.filePath})`;
