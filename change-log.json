@@ -1,33 +1,12 @@
 {
   "changes": [
     {
-      "id": "1755850430285",
-      "timestamp": "2025-08-22T08:13:50.285Z",
-      "description": "Yeni JavaScript/TypeScript dosyası eklendi: debug-commit.js",
+      "id": "1755850443895",
+      "timestamp": "2025-08-22T08:14:03.895Z",
+      "description": "Dosya silindi: debug-commit.js",
       "filePath": "debug-commit.js",
-      "date": "22.08.2025 11:13:50"
-    },
-    {
-      "id": "1755850432437",
-      "timestamp": "2025-08-22T08:13:52.436Z",
-      "description": "Test 1: Dokümantasyon güncellendi",
-      "filePath": "README.md",
-      "date": "22.08.2025 11:13:52"
-    },
-    {
-      "id": "1755850432456",
-      "timestamp": "2025-08-22T08:13:52.456Z",
-      "description": "Test 2: Bileşen eklendi",
-      "filePath": "src/components/NewComponent.tsx",
-      "date": "22.08.2025 11:13:52"
-    },
-    {
-      "id": "1755850432457",
-      "timestamp": "2025-08-22T08:13:52.457Z",
-      "description": "Test 3: Stil dosyası güncellendi",
-      "filePath": "src/styles/main.css",
-      "date": "22.08.2025 11:13:52"
+      "date": "22.08.2025 11:14:03"
     }
   ],
-  "lastUpdate": "2025-08-22T08:13:52.457Z"
+  "lastUpdate": "2025-08-22T08:14:03.895Z"
 }
