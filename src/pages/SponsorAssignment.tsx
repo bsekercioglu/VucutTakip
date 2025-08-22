@@ -168,9 +168,9 @@ const SponsorAssignment: React.FC<SponsorAssignmentProps> = () => {
             setSelectedSponsor('');
             setShowBulkAssignment(false);
             await loadData();
-          } else {
-            error('Hata!', 'Atama işlemi başarısız');
-          }
+                     } else {
+             error('Hata!', result.error || 'Atama işlemi başarısız');
+           }
         } catch (err) {
           error('Hata!', 'Beklenmeyen bir hata oluştu');
         }
