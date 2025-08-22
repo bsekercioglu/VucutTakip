@@ -1,4 +1,4 @@
-# Test Dosyası
+# Test Dosyası - Güncellendi
 
 Bu dosya yeni log sistemini test etmek için oluşturuldu.
 

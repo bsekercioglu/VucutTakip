@@ -1,12 +1,12 @@
 {
   "changes": [
     {
-      "id": "1755850329648",
-      "timestamp": "2025-08-22T08:12:09.648Z",
-      "description": "Dosya silindi: test-commit-message.js",
-      "filePath": "test-commit-message.js",
-      "date": "22.08.2025 11:12:09"
+      "id": "1755850383346",
+      "timestamp": "2025-08-22T08:13:03.346Z",
+      "description": "Dokümantasyon güncellendi: test-new-system.md",
+      "filePath": "test-new-system.md",
+      "date": "22.08.2025 11:13:03"
     }
   ],
-  "lastUpdate": "2025-08-22T08:12:09.648Z"
+  "lastUpdate": "2025-08-22T08:13:03.346Z"
 }
