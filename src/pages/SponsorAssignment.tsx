@@ -122,7 +122,7 @@ const SponsorAssignment: React.FC<SponsorAssignmentProps> = () => {
   // Helper functions
   const getSponsorUsers = () => adminUsers.filter(admin => admin.role === 'sponsor');
   const getRegularUsers = () => allUsers.filter(user => 
-    !adminUsers.some(admin => admin.userId === user.id)
+    !adminUsers.some(admin => admin.userId === user.id && admin.role !== 'user')
   );
 
   const getUserName = (userId: string) => {
