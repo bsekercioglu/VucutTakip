@@ -1,12 +1,12 @@
 {
   "changes": [
     {
-      "id": "1755852252119",
-      "timestamp": "2025-08-22T08:44:12.119Z",
-      "description": "Dosya silindi: debug-davet-linki.md",
-      "filePath": "debug-davet-linki.md",
-      "date": "22.08.2025 11:44:12"
+      "id": "1755852272496",
+      "timestamp": "2025-08-22T08:44:32.496Z",
+      "description": "React bileşeni güncellendi: TeamManagement.tsx",
+      "filePath": "src\\pages\\TeamManagement.tsx",
+      "date": "22.08.2025 11:44:32"
     }
   ],
-  "lastUpdate": "2025-08-22T08:44:12.119Z"
+  "lastUpdate": "2025-08-22T08:44:32.496Z"
 }
