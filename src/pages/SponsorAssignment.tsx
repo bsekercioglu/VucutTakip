@@ -16,6 +16,7 @@ import { useUser } from '../contexts/UserContext';
 import { useToast } from '../hooks/useToast';
 import { 
   getAllAdminUsers,
+  getAllAdminAndSponsorUsers,
   getAllUsers,
   createAdminUser,
   deleteAdminUser,
