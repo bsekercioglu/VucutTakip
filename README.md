@@ -72,7 +72,7 @@ Aşağıdaki koleksiyonlar oluşturulmalı:
 - `firestore.rules` dosyasındaki güvenlik kuralları deploy edilmelidir
 - Admin yetkisi kontrolü otomatik olarak yapılır
 
-## Kullanım
+## 🚀 Kullanım Rehberi
 
 1. **Kayıt Olma**: Üç adımlı kayıt süreci ile hesap oluşturun
 2. **Giriş Yapma**: Email/şifre veya sosyal medya ile giriş yapın
