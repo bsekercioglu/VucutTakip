@@ -194,6 +194,19 @@ const TeamManagement: React.FC = () => {
         teamLevel: member.teamLevel
       });
       
+      // Kullanıcı durumunu kontrol et
+      debugLog.log('👤 Current user:', user?.id);
+      debugLog.log('🔐 Admin user:', adminUser);
+      debugLog.log('🔑 Is logged in:', isLoggedIn);
+      
+      if (!user?.id) {
+        throw new Error('Kullanıcı bilgisi bulunamadı');
+      }
+      
+      if (!isLoggedIn) {
+        throw new Error('Kullanıcı giriş yapmamış');
+      }
+      
       setSelectedMember(member);
       
       debugLog.log('🔗 Calling createTeamInvitationLink...');
