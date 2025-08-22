@@ -918,7 +918,7 @@ export const createTeamInvitationLink = async (sponsorId: string): Promise<strin
       permissions: [],
       teamLevel: (sponsorData.teamLevel || 0) + 1,
       teamPath: [...(sponsorData.teamPath || []), sponsorId],
-      invitedBy: auth.currentUser?.uid,
+      invitedBy: auth.currentUser.uid, // Artık güvenli çünkü yukarıda kontrol ettik
       status: 'pending',
       createdAt: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
