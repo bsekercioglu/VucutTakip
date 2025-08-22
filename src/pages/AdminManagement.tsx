@@ -30,6 +30,10 @@ const AdminManagement: React.FC = () => {
   const [sponsorUsers, setSponsorUsers] = useState<AdminUser[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bulkAssignmentData, setBulkAssignmentData] = useState({
+    selectedSponsorId: '',
+    selectedUserIds: [] as string[]
+  });
   const [showAddForm, setShowAddForm] = useState(false);
   const [showNewUserForm, setShowNewUserForm] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<AdminUser | null>(null);
