@@ -357,6 +357,31 @@ const AdminManagement: React.FC = () => {
     }
   };
 
+  const handleBulkAssignment = async () => {
+    try {
+      if (!bulkAssignmentData.selectedSponsorId || bulkAssignmentData.selectedUserIds.length === 0) {
+        error('Hata!', 'Lütfen sponsor ve kullanıcı seçin');
+        return;
+      }
+
+      const result = await assignUsersToSponsor(
+        bulkAssignmentData.selectedSponsorId,
+        bulkAssignmentData.selectedUserIds
+      );
+
+      if (result.success) {
+        success('Başarılı!', `${result.assignedCount} kullanıcı başarıyla sponsor'a atandı`);
+        setBulkAssignmentData({ selectedSponsorId: '', selectedUserIds: [] });
+        loadData(); // Verileri yenile
+      } else {
+        error('Hata!', result.error || 'Kullanıcı atama işlemi başarısız');
+      }
+    } catch (err) {
+      error('Hata!', 'Kullanıcı atama işlemi sırasında hata oluştu');
+      console.error('Bulk assignment error:', err);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       userId: '',
