@@ -149,22 +149,26 @@ function watchFiles() {
      }, 5000);
    });
   
-  // Dosya silindiğinde
-  watcher.on('unlink', (filePath) => {
-    console.log(`🗑️ Dosya silindi: ${filePath}`);
-    
-    if (commitTimeout) {
-      clearTimeout(commitTimeout);
-    }
-    
-    commitTimeout = setTimeout(async () => {
-      try {
-        await autoCommit();
-      } catch (error) {
-        console.error('❌ Otomatik commit başarısız:', error);
-      }
-    }, 5000);
-  });
+     // Dosya silindiğinde
+   watcher.on('unlink', (filePath) => {
+     console.log(`🗑️ Dosya silindi: ${filePath}`);
+     
+     // Değişikliği logla
+     const relativePath = path.relative('.', filePath);
+     addChange(`Dosya silindi: ${relativePath}`, relativePath);
+     
+     if (commitTimeout) {
+       clearTimeout(commitTimeout);
+     }
+     
+     commitTimeout = setTimeout(async () => {
+       try {
+         await autoCommit();
+       } catch (error) {
+         console.error('❌ Otomatik commit başarısız:', error);
+       }
+     }, 5000);
+   });
   
   return watcher;
 }
