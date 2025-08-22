@@ -611,29 +611,39 @@ export const assignUsersToSponsor = async (sponsorId: string, userIds: string[])
         
         if (userAdminDoc.exists()) {
           // User already has admin rights, update parentSponsorId
-          await updateDoc(doc(db, 'admins', userId), {
+          const userData = userAdminDoc.data();
+          
+          // Eğer kullanıcı zaten sponsor ise, sadece parentSponsorId güncelle
+          if (userData.role === 'sponsor') {
+            await updateDoc(doc(db, 'admins', userId), {
+              parentSponsorId: sponsorId,
+              updatedAt: new Date().toISOString()
+            });
+          } else {
+            // Eğer kullanıcı admin ise, işlem yapma (admin'ler sponsor'a atanamaz)
+            console.log(`⚠️ Admin user ${userId} cannot be assigned to sponsor`);
+            return { userId, success: false, error: 'Admin users cannot be assigned to sponsors' };
+          }
+        } else {
+          // Create new user with parentSponsorId (normal kullanıcı olarak)
+          const newUserData = {
+            userId,
+            role: 'user' as const,
+            permissions: [],
             parentSponsorId: sponsorId,
+            teamLevel: 1,
+            teamPath: [sponsorId],
+            createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
-          });
-                 } else {
-           // Create new sponsor user with parentSponsorId
-           const newSponsorData = {
-             userId,
-             role: 'sponsor' as const,
-             permissions: ['send_recommendations', 'answer_questions'],
-             sponsorCode: generateSponsorCode(),
-             parentSponsorId: sponsorId,
-             createdAt: new Date().toISOString(),
-             updatedAt: new Date().toISOString()
-           };
-           
-           // Clean undefined values
-           const cleanSponsorData = Object.fromEntries(
-             Object.entries(newSponsorData).filter(([_, value]) => value !== undefined)
-           );
-           
-           await setDoc(doc(db, 'admins', userId), cleanSponsorData);
-         }
+          };
+          
+          // Clean undefined values
+          const cleanUserData = Object.fromEntries(
+            Object.entries(newUserData).filter(([_, value]) => value !== undefined)
+          );
+          
+          await setDoc(doc(db, 'admins', userId), cleanUserData);
+        }
         
         return { userId, success: true };
       } catch (error) {
