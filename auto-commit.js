@@ -54,8 +54,11 @@ function autoCommit() {
             return;
           }
           
-          console.log('✅ Push başarılı!');
-          console.log('🚀 Değişiklikler GitHub\'a gönderildi');
+                     console.log('✅ Push başarılı!');
+           console.log('🚀 Değişiklikler GitHub\'a gönderildi');
+           
+           // Log dosyasını temizle
+           clearLog();
         });
       });
     });
