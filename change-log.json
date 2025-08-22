@@ -1,4 +1,19 @@
 {
-  "changes": [],
-  "lastUpdate": null
+  "changes": [
+    {
+      "id": "1755851953734",
+      "timestamp": "2025-08-22T08:39:13.734Z",
+      "description": "JavaScript/TypeScript dosyası güncellendi: adminService.ts",
+      "filePath": "src\\services\\adminService.ts",
+      "date": "22.08.2025 11:39:13"
+    },
+    {
+      "id": "1755851953740",
+      "timestamp": "2025-08-22T08:39:13.740Z",
+      "description": "React bileşeni güncellendi: TeamManagement.tsx",
+      "filePath": "src\\pages\\TeamManagement.tsx",
+      "date": "22.08.2025 11:39:13"
+    }
+  ],
+  "lastUpdate": "2025-08-22T08:39:13.740Z"
 }
