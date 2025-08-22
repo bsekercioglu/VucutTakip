@@ -1,12 +1,19 @@
 {
   "changes": [
     {
-      "id": "1755850232373",
-      "timestamp": "2025-08-22T08:10:32.373Z",
-      "description": "Yeni dokümantasyon eklendi: test-new-system.md",
-      "filePath": "test-new-system.md",
-      "date": "22.08.2025 11:10:32"
+      "id": "1755850277933",
+      "timestamp": "2025-08-22T08:11:17.932Z",
+      "description": "Yeni JavaScript/TypeScript dosyası eklendi: test-commit-message.js",
+      "filePath": "test-commit-message.js",
+      "date": "22.08.2025 11:11:17"
+    },
+    {
+      "id": "1755850280282",
+      "timestamp": "2025-08-22T08:11:20.281Z",
+      "description": "Test değişiklik: README.md dosyası güncellendi",
+      "filePath": "README.md",
+      "date": "22.08.2025 11:11:20"
     }
   ],
-  "lastUpdate": "2025-08-22T08:10:32.373Z"
+  "lastUpdate": "2025-08-22T08:11:20.281Z"
 }
