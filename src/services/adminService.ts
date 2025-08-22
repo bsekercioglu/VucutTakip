@@ -889,6 +889,13 @@ export const createTeamInvitationLink = async (sponsorId: string): Promise<strin
   try {
     debugLog.log('🔍 Creating team invitation link for sponsor:', sponsorId);
     
+    // Check if user is authenticated
+    if (!auth.currentUser?.uid) {
+      throw new Error('Kullanıcı giriş yapmamış');
+    }
+    
+    debugLog.log('✅ User is authenticated:', auth.currentUser.uid);
+    
     // Get sponsor data
     const sponsorDoc = await getDoc(doc(db, 'admins', sponsorId));
     if (!sponsorDoc.exists()) {
