@@ -1,12 +1,19 @@
 {
   "changes": [
     {
-      "id": "1755849821186",
-      "timestamp": "2025-08-22T08:03:41.181Z",
-      "description": "Dosya güncellendi: README.md",
-      "filePath": "README.md",
-      "date": "22.08.2025 11:03:41"
+      "id": "1755849830808",
+      "timestamp": "2025-08-22T08:03:50.808Z",
+      "description": "Dosya güncellendi: .git\\logs\\refs\\remotes\\origin\\main",
+      "filePath": ".git\\logs\\refs\\remotes\\origin\\main",
+      "date": "22.08.2025 11:03:50"
+    },
+    {
+      "id": "1755849830812",
+      "timestamp": "2025-08-22T08:03:50.812Z",
+      "description": "Dosya güncellendi: .git\\refs\\remotes\\origin\\main",
+      "filePath": ".git\\refs\\remotes\\origin\\main",
+      "date": "22.08.2025 11:03:50"
     }
   ],
-  "lastUpdate": "2025-08-22T08:03:41.181Z"
+  "lastUpdate": "2025-08-22T08:03:50.812Z"
 }
