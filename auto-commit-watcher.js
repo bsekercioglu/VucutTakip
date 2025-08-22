@@ -79,18 +79,19 @@ function autoCommit() {
 function watchFiles() {
   console.log('👀 Dosya değişiklikleri izleniyor...');
   
-  // İzlenmeyecek dosyalar
-  const ignoredFiles = [
-    'node_modules/**',
-    '.git/**',
-    'dist/**',
-    'build/**',
-    '*.log',
-    '.env',
-    '.env.local',
-    'auto-commit.js',
-    'auto-commit-watcher.js'
-  ];
+     // İzlenmeyecek dosyalar
+   const ignoredFiles = [
+     'node_modules/**',
+     '.git/**',
+     'dist/**',
+     'build/**',
+     '*.log',
+     '.env',
+     '.env.local',
+     'auto-commit.js',
+     'auto-commit-watcher.js',
+     'change-log.json'
+   ];
   
   // Dosya değişikliklerini izle
   const watcher = chokidar.watch('.', {
