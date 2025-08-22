@@ -483,7 +483,7 @@ const AdminManagement: React.FC = () => {
   };
 
   const availableUsers = allUsers.filter(u => 
-    !adminUsers.some(admin => admin.userId === u.id) || 
+    (!adminUsers.some(admin => admin.userId === u.id) && !sponsorUsers.some(sponsor => sponsor.userId === u.id)) || 
     (editingAdmin && editingAdmin.userId === u.id)
   );
 
