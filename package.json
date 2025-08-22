@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "auto-commit": "node auto-commit.js",
-    "auto-commit-watch": "node auto-commit-watcher.js"
+    "auto-commit-watch": "node auto-commit-watcher.js",
+    "view-logs": "node view-logs.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
