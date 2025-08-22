@@ -1,19 +1,19 @@
 {
   "changes": [
     {
-      "id": "1755851711834",
-      "timestamp": "2025-08-22T08:35:11.834Z",
-      "description": "Yeni dokümantasyon eklendi: test-davet-sablonu.md",
-      "filePath": "test-davet-sablonu.md",
-      "date": "22.08.2025 11:35:11"
+      "id": "1755851732223",
+      "timestamp": "2025-08-22T08:35:32.223Z",
+      "description": "React bileşeni güncellendi: TeamManagement.tsx",
+      "filePath": "src\\pages\\TeamManagement.tsx",
+      "date": "22.08.2025 11:35:32"
     },
     {
-      "id": "1755851716587",
-      "timestamp": "2025-08-22T08:35:16.587Z",
-      "description": "Dosya silindi: test-davet-sablonu.md",
-      "filePath": "test-davet-sablonu.md",
-      "date": "22.08.2025 11:35:16"
+      "id": "1755851735750",
+      "timestamp": "2025-08-22T08:35:35.750Z",
+      "description": "React bileşeni güncellendi: TeamManagement.tsx",
+      "filePath": "src\\pages\\TeamManagement.tsx",
+      "date": "22.08.2025 11:35:35"
     }
   ],
-  "lastUpdate": "2025-08-22T08:35:16.587Z"
+  "lastUpdate": "2025-08-22T08:35:35.750Z"
 }
