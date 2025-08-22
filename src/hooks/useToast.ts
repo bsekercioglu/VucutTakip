@@ -31,8 +31,8 @@ export const useToast = () => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   }, []);
 
-  const success = useCallback((title: string, message?: string, duration?: number) => {
-    return addToast({ type: 'success', title, message, duration });
+  const success = useCallback((title: string, message?: string, options?: { duration?: number; action?: { label: string; onClick: () => void } }) => {
+    return addToast({ type: 'success', title, message, duration: options?.duration, action: options?.action });
   }, [addToast]);
 
   const error = useCallback((title: string, message?: string, duration?: number) => {
