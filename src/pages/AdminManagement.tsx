@@ -90,7 +90,7 @@ const AdminManagement: React.FC = () => {
         getAllAdminAndSponsorUsers(),
         getAllUsers()
       ]);
-     debugLog.log('✅ AdminManagement: Loaded', allAdminUsers.length, 'admin users and', users.length, 'users');
+     debugLog.log('✅ AdminManagement: Loaded', allAdminUsers.length, 'admin and sponsor users and', users.length, 'users');
      
      // Admin ve sponsor kullanıcıları ayır
      const actualAdmins = allAdminUsers.filter(admin => admin.role === 'admin');
