@@ -655,14 +655,15 @@ export const assignUsersToSponsor = async (sponsorId: string, userIds: string[])
     const results = await Promise.all(updatePromises);
     const failedAssignments = results.filter(r => !r.success);
     
-    if (failedAssignments.length > 0) {
-      console.error('Some assignments failed:', failedAssignments);
-      return { 
-        success: false, 
-        error: `${failedAssignments.length} kullanıcı ataması başarısız`,
-        failedAssignments 
-      };
-    }
+         if (failedAssignments.length > 0) {
+       console.error('Some assignments failed:', failedAssignments);
+       const errorDetails = failedAssignments.map(f => `${f.userId}: ${f.error}`).join(', ');
+       return { 
+         success: false, 
+         error: `${failedAssignments.length} kullanıcı ataması başarısız. Detaylar: ${errorDetails}`,
+         failedAssignments 
+       };
+     }
     
     console.log('✅ Successfully assigned all users to sponsor');
     return { success: true, assignedCount: userIds.length };
