@@ -917,13 +917,15 @@ export const createTeamInvitationLink = async (sponsorId: string): Promise<strin
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
     };
     
+    debugLog.log('📝 Invitation data to create:', invitationData);
+    
     const invitationRef = await addDoc(collection(db, 'invitations'), invitationData);
     const invitationLink = `${window.location.origin}/register?invitation=${invitationRef.id}&sponsor=${sponsorId}`;
     
-    console.log('✅ Team invitation link created:', invitationLink);
+    debugLog.log('✅ Team invitation link created:', invitationLink);
     return invitationLink;
   } catch (error) {
-    console.error('❌ Error creating team invitation link:', error);
+    debugLog.error('❌ Error creating team invitation link:', error);
     throw error;
   }
 };
