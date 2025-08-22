@@ -186,13 +186,28 @@ const TeamManagement: React.FC = () => {
 
   const createInvitationLink = async (member: TeamMember) => {
     try {
+      debugLog.log('🔄 Creating invitation link for member:', member.userId);
+      debugLog.log('📋 Member data:', {
+        userId: member.userId,
+        role: member.role,
+        sponsorCode: member.sponsorCode,
+        teamLevel: member.teamLevel
+      });
+      
       setSelectedMember(member);
+      
+      debugLog.log('🔗 Calling createTeamInvitationLink...');
       const link = await createTeamInvitationLink(member.userId);
+      debugLog.log('✅ Link created:', link);
+      
       setInvitationLink(link);
       setShowInvitationModal(true);
+      
+      debugLog.log('✅ Invitation modal opened successfully');
     } catch (err) {
-      debugLog.error('Error creating invitation link:', err);
-      error('Hata!', 'Davet linki oluşturulurken hata oluştu');
+      debugLog.error('❌ Error creating invitation link:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen hata';
+      error('Hata!', `Davet linki oluşturulurken hata oluştu: ${errorMessage}`);
     }
   };
 
