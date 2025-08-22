@@ -34,11 +34,14 @@ function autoCommit() {
           return;
         }
         
-        console.log('✅ Dosyalar stage\'e eklendi');
-        
-        // Commit mesajı oluştur
-        const timestamp = new Date().toLocaleString('tr-TR');
-        const commitMessage = `Auto-commit: ${timestamp} - Cursor değişiklikleri`;
+                 console.log('✅ Dosyalar stage\'e eklendi');
+         
+         // Log istatistiklerini göster
+         const stats = getChangeStats();
+         console.log(`📊 Bugün ${stats.today} değişiklik, toplam ${stats.total} değişiklik`);
+         
+         // Commit mesajı oluştur
+         const commitMessage = generateCommitMessage();
         
         // Commit yap
         exec(`git commit -m "${commitMessage}"`, (commitError, commitStdout, commitStderr) => {
