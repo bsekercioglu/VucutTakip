@@ -1,96 +1,89 @@
 {
   "changes": [
     {
-      "id": "1755850157545",
-      "timestamp": "2025-08-22T08:09:17.545Z",
-      "description": "Yeni dosya eklendi: .git\\objects\\79\\d58093dcaa0fa3de48a500dbb5104a72cf677f",
-      "filePath": ".git\\objects\\79\\d58093dcaa0fa3de48a500dbb5104a72cf677f",
-      "date": "22.08.2025 11:09:17"
+      "id": "1755850169498",
+      "timestamp": "2025-08-22T08:09:29.498Z",
+      "description": "Yeni dosya eklendi: .git\\objects\\20\\e2b993fa243dccfba146633fc104e2308ffa9c",
+      "filePath": ".git\\objects\\20\\e2b993fa243dccfba146633fc104e2308ffa9c",
+      "date": "22.08.2025 11:09:29"
     },
     {
-      "id": "1755850157637",
-      "timestamp": "2025-08-22T08:09:17.637Z",
-      "description": "Yeni dosya eklendi: .git\\objects\\61\\ddc2be4b13bdc3310c89a64df7c1a2bb5088ed",
-      "filePath": ".git\\objects\\61\\ddc2be4b13bdc3310c89a64df7c1a2bb5088ed",
-      "date": "22.08.2025 11:09:17"
-    },
-    {
-      "id": "1755850157639",
-      "timestamp": "2025-08-22T08:09:17.639Z",
-      "description": "Dosya güncellendi: .git\\logs\\HEAD",
-      "filePath": ".git\\logs\\HEAD",
-      "date": "22.08.2025 11:09:17"
-    },
-    {
-      "id": "1755850157641",
-      "timestamp": "2025-08-22T08:09:17.641Z",
-      "description": "Yeni dosya eklendi: .git\\objects\\13\\92e2badc0c76628102606d820ce341968eb6e2",
-      "filePath": ".git\\objects\\13\\92e2badc0c76628102606d820ce341968eb6e2",
-      "date": "22.08.2025 11:09:17"
-    },
-    {
-      "id": "1755850157643",
-      "timestamp": "2025-08-22T08:09:17.643Z",
+      "id": "1755850169589",
+      "timestamp": "2025-08-22T08:09:29.589Z",
       "description": "Dosya güncellendi: .git\\COMMIT_EDITMSG",
       "filePath": ".git\\COMMIT_EDITMSG",
-      "date": "22.08.2025 11:09:17"
+      "date": "22.08.2025 11:09:29"
     },
     {
-      "id": "1755850157645",
-      "timestamp": "2025-08-22T08:09:17.645Z",
-      "description": "Dosya güncellendi: .git\\logs\\refs\\heads\\main",
-      "filePath": ".git\\logs\\refs\\heads\\main",
-      "date": "22.08.2025 11:09:17"
+      "id": "1755850169591",
+      "timestamp": "2025-08-22T08:09:29.591Z",
+      "description": "Yeni dosya eklendi: .git\\objects\\14\\910a84716885899c9ccf7cc53c9a4195039ca2",
+      "filePath": ".git\\objects\\14\\910a84716885899c9ccf7cc53c9a4195039ca2",
+      "date": "22.08.2025 11:09:29"
     },
     {
-      "id": "1755850157647",
-      "timestamp": "2025-08-22T08:09:17.647Z",
+      "id": "1755850169605",
+      "timestamp": "2025-08-22T08:09:29.605Z",
       "description": "Dosya güncellendi: .git\\index",
       "filePath": ".git\\index",
-      "date": "22.08.2025 11:09:17"
+      "date": "22.08.2025 11:09:29"
     },
     {
-      "id": "1755850157650",
-      "timestamp": "2025-08-22T08:09:17.650Z",
+      "id": "1755850169608",
+      "timestamp": "2025-08-22T08:09:29.608Z",
+      "description": "Yeni dosya eklendi: .git\\objects\\f4\\5d2ff07ad5d2c0a454c7463a6a85a2ad64187b",
+      "filePath": ".git\\objects\\f4\\5d2ff07ad5d2c0a454c7463a6a85a2ad64187b",
+      "date": "22.08.2025 11:09:29"
+    },
+    {
+      "id": "1755850169610",
+      "timestamp": "2025-08-22T08:09:29.610Z",
       "description": "Dosya güncellendi: .git\\refs\\heads\\main",
       "filePath": ".git\\refs\\heads\\main",
-      "date": "22.08.2025 11:09:17"
+      "date": "22.08.2025 11:09:29"
     },
     {
-      "id": "1755850157854",
-      "timestamp": "2025-08-22T08:09:17.854Z",
-      "description": "Dosya güncellendi: .git\\logs\\refs\\remotes\\origin\\main",
-      "filePath": ".git\\logs\\refs\\remotes\\origin\\main",
-      "date": "22.08.2025 11:09:17"
+      "id": "1755850169611",
+      "timestamp": "2025-08-22T08:09:29.611Z",
+      "description": "Dosya güncellendi: .git\\logs\\HEAD",
+      "filePath": ".git\\logs\\HEAD",
+      "date": "22.08.2025 11:09:29"
     },
     {
-      "id": "1755850157857",
-      "timestamp": "2025-08-22T08:09:17.857Z",
+      "id": "1755850169613",
+      "timestamp": "2025-08-22T08:09:29.613Z",
+      "description": "Dosya güncellendi: .git\\logs\\refs\\heads\\main",
+      "filePath": ".git\\logs\\refs\\heads\\main",
+      "date": "22.08.2025 11:09:29"
+    },
+    {
+      "id": "1755850169846",
+      "timestamp": "2025-08-22T08:09:29.846Z",
       "description": "Dosya güncellendi: .git\\refs\\remotes\\origin\\main",
       "filePath": ".git\\refs\\remotes\\origin\\main",
-      "date": "22.08.2025 11:09:17"
+      "date": "22.08.2025 11:09:29"
     },
     {
-      "id": "1755850159227",
-      "timestamp": "2025-08-22T08:09:19.227Z",
-      "description": "Dosya güncellendi: .git\\cursor_metadata.pb",
-      "filePath": ".git\\cursor_metadata.pb",
-      "date": "22.08.2025 11:09:19"
-    },
-    {
-      "id": "1755850160125",
-      "timestamp": "2025-08-22T08:09:20.125Z",
+      "id": "1755850169849",
+      "timestamp": "2025-08-22T08:09:29.849Z",
       "description": "Dosya güncellendi: .git\\logs\\refs\\remotes\\origin\\main",
       "filePath": ".git\\logs\\refs\\remotes\\origin\\main",
-      "date": "22.08.2025 11:09:20"
+      "date": "22.08.2025 11:09:29"
     },
     {
-      "id": "1755850160128",
-      "timestamp": "2025-08-22T08:09:20.128Z",
+      "id": "1755850171910",
+      "timestamp": "2025-08-22T08:09:31.910Z",
+      "description": "Dosya güncellendi: .git\\logs\\refs\\remotes\\origin\\main",
+      "filePath": ".git\\logs\\refs\\remotes\\origin\\main",
+      "date": "22.08.2025 11:09:31"
+    },
+    {
+      "id": "1755850171913",
+      "timestamp": "2025-08-22T08:09:31.913Z",
       "description": "Dosya güncellendi: .git\\refs\\remotes\\origin\\main",
       "filePath": ".git\\refs\\remotes\\origin\\main",
-      "date": "22.08.2025 11:09:20"
+      "date": "22.08.2025 11:09:31"
     }
   ],
-  "lastUpdate": "2025-08-22T08:09:20.128Z"
+  "lastUpdate": "2025-08-22T08:09:31.913Z"
 }
