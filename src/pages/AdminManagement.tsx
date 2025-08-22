@@ -487,7 +487,7 @@ const AdminManagement: React.FC = () => {
     (editingAdmin && editingAdmin.userId === u.id)
   );
 
-  const sponsorUsers = adminUsers.filter(admin => admin.role === 'sponsor');
+
 
   return (
     <Layout>
