@@ -1,6 +1,6 @@
 # VücutTakip - Sağlık ve Vücut Takip Uygulaması 🏃‍♂️
 
-Modern ve kullanıcı dostu bir vücut takip uygulaması. React, TypeScript ve Firebase ile geliştirilmiştir.
+Modern ve kullanıcı dostu bir vücut takip uygulaması. React, TypeScript ve Firebase ile geliştirilmiştir. 🚀
 
 ## Özellikler
 
