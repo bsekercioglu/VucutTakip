@@ -13,7 +13,28 @@
       "description": "Dosya güncellendi: .git\\logs\\refs\\remotes\\origin\\main",
       "filePath": ".git\\logs\\refs\\remotes\\origin\\main",
       "date": "22.08.2025 11:08:17"
+    },
+    {
+      "id": "1755850104947",
+      "timestamp": "2025-08-22T08:08:24.947Z",
+      "description": "Yeni dosya eklendi: .git\\objects\\3c\\36278e47fc00c37bf30eebebfe87d9b462def8",
+      "filePath": ".git\\objects\\3c\\36278e47fc00c37bf30eebebfe87d9b462def8",
+      "date": "22.08.2025 11:08:24"
+    },
+    {
+      "id": "1755850105040",
+      "timestamp": "2025-08-22T08:08:25.040Z",
+      "description": "Dosya güncellendi: .git\\COMMIT_EDITMSG",
+      "filePath": ".git\\COMMIT_EDITMSG",
+      "date": "22.08.2025 11:08:25"
+    },
+    {
+      "id": "1755850105055",
+      "timestamp": "2025-08-22T08:08:25.055Z",
+      "description": "Dosya güncellendi: .git\\index",
+      "filePath": ".git\\index",
+      "date": "22.08.2025 11:08:25"
     }
   ],
-  "lastUpdate": "2025-08-22T08:08:17.715Z"
+  "lastUpdate": "2025-08-22T08:08:25.055Z"
 }
