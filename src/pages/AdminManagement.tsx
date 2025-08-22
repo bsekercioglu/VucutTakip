@@ -1259,6 +1259,83 @@ const AdminManagement: React.FC = () => {
           </div>
         </div>
 
+        {/* Toplu Sponsor Atama */}
+        <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-green-900 mb-3">👥 Toplu Sponsor Atama</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-green-800 mb-2">
+                Sponsor Seçin
+              </label>
+              <select
+                value={bulkAssignmentData.selectedSponsorId}
+                onChange={(e) => setBulkAssignmentData({ ...bulkAssignmentData, selectedSponsorId: e.target.value })}
+                className="w-full px-3 py-2 border border-green-300 rounded-md focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="">Sponsor seçin...</option>
+                {sponsorUsers.map(sponsor => (
+                  <option key={sponsor.id} value={sponsor.userId}>
+                    {getUserName(sponsor.userId)} ({sponsor.sponsorCode})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-green-800 mb-2">
+                Atanacak Kullanıcılar
+              </label>
+              <div className="max-h-40 overflow-y-auto border border-green-300 rounded-md p-2">
+                {availableUsers.length > 0 ? (
+                  availableUsers.map(user => (
+                    <label key={user.id} className="flex items-center space-x-2 py-1">
+                      <input
+                        type="checkbox"
+                        checked={bulkAssignmentData.selectedUserIds.includes(user.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setBulkAssignmentData({
+                              ...bulkAssignmentData,
+                              selectedUserIds: [...bulkAssignmentData.selectedUserIds, user.id]
+                            });
+                          } else {
+                            setBulkAssignmentData({
+                              ...bulkAssignmentData,
+                              selectedUserIds: bulkAssignmentData.selectedUserIds.filter(id => id !== user.id)
+                            });
+                          }
+                        }}
+                        className="rounded border-green-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm text-green-800">
+                        {user.firstName} {user.lastName} ({user.email})
+                      </span>
+                    </label>
+                  ))
+                ) : (
+                  <p className="text-sm text-green-600">Atanacak kullanıcı bulunamadı</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex space-x-2">
+              <button
+                onClick={handleBulkAssignment}
+                disabled={!bulkAssignmentData.selectedSponsorId || bulkAssignmentData.selectedUserIds.length === 0}
+                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                Seçili Kullanıcıları Ata
+              </button>
+              <button
+                onClick={() => setBulkAssignmentData({ selectedSponsorId: '', selectedUserIds: [] })}
+                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+              >
+                Temizle
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Manual Firebase Setup */}
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-blue-900 mb-3">🔧 Manuel Admin Ekleme (Firebase Console)</h3>
