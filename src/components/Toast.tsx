@@ -81,6 +81,14 @@ const Toast: React.FC<ToastProps> = ({ id, type, title, message, duration = 5000
           {message && (
             <p className="text-sm text-gray-600 mt-1">{message}</p>
           )}
+          {action && (
+            <button
+              onClick={action.onClick}
+              className="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+            >
+              {action.label}
+            </button>
+          )}
         </div>
         <button
           onClick={handleClose}
