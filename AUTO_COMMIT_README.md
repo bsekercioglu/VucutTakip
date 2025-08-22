@@ -2,7 +2,7 @@
 
 Bu sistem, Cursor'da yaptığınız her değişikliği otomatik olarak GitHub'a commit edip push yapar.
 
-## 📋 Özellikler
+## 📋 Özellikler - Gelişmiş Log Sistemi
 
 - ✅ **Otomatik Commit**: Dosya değişikliklerini otomatik algılar
 - ✅ **Akıllı Bekleme**: Değişikliklerden sonra 5 saniye bekler
