@@ -105,24 +105,28 @@ function watchFiles() {
   
   let commitTimeout = null;
   
-  // Dosya değişikliği olduğunda
-  watcher.on('change', (filePath) => {
-    console.log(`📝 Dosya değişti: ${filePath}`);
-    
-    // Önceki timeout'u temizle
-    if (commitTimeout) {
-      clearTimeout(commitTimeout);
-    }
-    
-    // 5 saniye bekle ve commit yap
-    commitTimeout = setTimeout(async () => {
-      try {
-        await autoCommit();
-      } catch (error) {
-        console.error('❌ Otomatik commit başarısız:', error);
-      }
-    }, 5000);
-  });
+     // Dosya değişikliği olduğunda
+   watcher.on('change', (filePath) => {
+     console.log(`📝 Dosya değişti: ${filePath}`);
+     
+     // Değişikliği logla
+     const relativePath = path.relative('.', filePath);
+     addChange(`Dosya güncellendi: ${relativePath}`, relativePath);
+     
+     // Önceki timeout'u temizle
+     if (commitTimeout) {
+       clearTimeout(commitTimeout);
+     }
+     
+     // 5 saniye bekle ve commit yap
+     commitTimeout = setTimeout(async () => {
+       try {
+         await autoCommit();
+       } catch (error) {
+         console.error('❌ Otomatik commit başarısız:', error);
+       }
+     }, 5000);
+   });
   
   // Dosya eklendiğinde
   watcher.on('add', (filePath) => {
