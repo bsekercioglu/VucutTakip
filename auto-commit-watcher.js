@@ -42,6 +42,12 @@ function autoCommit() {
          
          // Commit mesajı oluştur
          const commitMessage = generateCommitMessage();
+         
+         // Debug: Commit mesajını konsola yazdır
+         console.log('📋 Oluşturulan commit mesajı:');
+         console.log('─'.repeat(50));
+         console.log(commitMessage);
+         console.log('─'.repeat(50));
         
         // Commit mesajını dosyaya yaz
         const commitMsgFile = '.commit-msg.tmp';
