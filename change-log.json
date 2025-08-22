@@ -1,12 +1,12 @@
 {
   "changes": [
     {
-      "id": "1755852600138",
-      "timestamp": "2025-08-22T08:50:00.138Z",
-      "description": "React bileşeni güncellendi: AdminManagement.tsx",
-      "filePath": "src\\pages\\AdminManagement.tsx",
-      "date": "22.08.2025 11:50:00"
+      "id": "1755852626620",
+      "timestamp": "2025-08-22T08:50:26.620Z",
+      "description": "Yeni dokümantasyon eklendi: SPONSOR_LISTESI_EKLENDI.md",
+      "filePath": "SPONSOR_LISTESI_EKLENDI.md",
+      "date": "22.08.2025 11:50:26"
     }
   ],
-  "lastUpdate": "2025-08-22T08:50:00.138Z"
+  "lastUpdate": "2025-08-22T08:50:26.620Z"
 }
