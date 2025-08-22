@@ -201,8 +201,12 @@ const TeamManagement: React.FC = () => {
     success('Başarılı!', 'Davet linki kopyalandı');
   };
 
-  const copyInvitationTemplate = (member: TeamMember) => {
-    const template = `🎉 VücutTakip Ekip Daveti!
+  const copyInvitationTemplate = async (member: TeamMember) => {
+    try {
+      // Davet linkini oluştur
+      const invitationLink = await createTeamInvitationLink(member.userId);
+      
+      const template = `🎉 VücutTakip Ekip Daveti!
 
 👋 Merhaba! ${member.sponsorCode} sponsor kodlu ekibimize davet edildiniz.
 
@@ -218,14 +222,37 @@ const TeamManagement: React.FC = () => {
 • Başarı Oranı: ${Math.round((member.performance.activeMembers / member.teamSize) * 100)}%
 
 🔗 Kayıt olmak için aşağıdaki linki kullanın:
-[DAVET_LINKI_BURAYA]
+${invitationLink}
 
 📱 VücutTakip ile sağlıklı yaşam yolculuğunuza başlayın!
 
 #VücutTakip #Ekip #SağlıklıYaşam`;
 
-    navigator.clipboard.writeText(template);
-    success('Başarılı!', 'Ekip davet şablonu kopyalandı');
+      // Şablonu panoya kopyala
+      await navigator.clipboard.writeText(template);
+      
+      // Toast mesajı ile şablonu göster
+      success(
+        'Davet Şablonu Kopyalandı! 📋', 
+        `Şablon panoya kopyalandı. Şablonu görmek için tıklayın.`,
+        {
+          duration: 8000,
+          action: {
+            label: 'Şablonu Göster',
+            onClick: () => {
+              // Şablonu modal olarak göster
+              setSelectedMember(member);
+              setInvitationLink(invitationLink);
+              setShowInvitationModal(true);
+            }
+          }
+        }
+      );
+      
+    } catch (err) {
+      debugLog.error('Error creating invitation template:', err);
+      error('Hata!', 'Davet şablonu oluşturulurken hata oluştu');
+    }
   };
 
   const getRoleIcon = (role: string) => {
