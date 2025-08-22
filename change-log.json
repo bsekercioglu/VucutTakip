@@ -1,12 +1,12 @@
 {
   "changes": [
     {
-      "id": "1755851565824",
-      "timestamp": "2025-08-22T08:32:45.824Z",
+      "id": "1755851582551",
+      "timestamp": "2025-08-22T08:33:02.551Z",
       "description": "React bileşeni güncellendi: Toast.tsx",
       "filePath": "src\\components\\Toast.tsx",
-      "date": "22.08.2025 11:32:45"
+      "date": "22.08.2025 11:33:02"
     }
   ],
-  "lastUpdate": "2025-08-22T08:32:45.824Z"
+  "lastUpdate": "2025-08-22T08:33:02.551Z"
 }

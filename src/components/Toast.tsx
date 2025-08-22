@@ -14,7 +14,7 @@ export interface ToastProps {
   };
 }
 
-const Toast: React.FC<ToastProps> = ({ id, type, title, message, duration = 5000, onClose }) => {
+const Toast: React.FC<ToastProps> = ({ id, type, title, message, duration = 5000, onClose, action }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
