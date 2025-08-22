@@ -1,19 +1,12 @@
 {
   "changes": [
     {
-      "id": "1755852238092",
-      "timestamp": "2025-08-22T08:43:58.092Z",
-      "description": "Yeni dokümantasyon eklendi: debug-davet-linki.md",
+      "id": "1755852252119",
+      "timestamp": "2025-08-22T08:44:12.119Z",
+      "description": "Dosya silindi: debug-davet-linki.md",
       "filePath": "debug-davet-linki.md",
-      "date": "22.08.2025 11:43:58"
-    },
-    {
-      "id": "1755852240558",
-      "timestamp": "2025-08-22T08:44:00.558Z",
-      "description": "Dokümantasyon güncellendi: debug-davet-linki.md",
-      "filePath": "debug-davet-linki.md",
-      "date": "22.08.2025 11:44:00"
+      "date": "22.08.2025 11:44:12"
     }
   ],
-  "lastUpdate": "2025-08-22T08:44:00.558Z"
+  "lastUpdate": "2025-08-22T08:44:12.119Z"
 }
