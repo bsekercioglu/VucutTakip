@@ -522,59 +522,127 @@ ${invitationLink}
         {/* Invitation Modal */}
         {showInvitationModal && selectedMember && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Davet Linki Oluşturuldu
+                Davet Linki ve Şablonu
               </h3>
               
-              <p className="text-gray-600 mb-4">
-                <strong>{selectedMember.userId}</strong> için davet linki oluşturuldu. Bu link ile yeni üyeler ekibe katılabilir.
-              </p>
-              
-              <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Davet Linki:
-                </label>
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={invitationLink}
-                    readOnly
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
-                  />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Davet Linki Bölümü */}
+                <div>
+                  <h4 className="text-md font-medium text-gray-700 mb-3">🔗 Davet Linki</h4>
+                  <p className="text-gray-600 mb-4">
+                    <strong>{getUserName(selectedMember.userId)}</strong> için davet linki oluşturuldu.
+                  </p>
+                  
+                  <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Davet Linki:
+                    </label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={invitationLink}
+                        readOnly
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
+                      />
+                      <button
+                        onClick={copyInvitationLink}
+                        className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
+                      >
+                        Kopyala
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h5 className="text-sm font-medium text-yellow-900 mb-2">⚠️ Önemli Notlar:</h5>
+                    <ul className="text-sm text-yellow-800 space-y-1">
+                      <li>• Link 7 gün boyunca geçerlidir</li>
+                      <li>• Yeni üyeler otomatik olarak ekibe katılır</li>
+                      <li>• Sponsor kodu: {selectedMember.sponsorCode}</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Şablon Bölümü */}
+                <div>
+                  <h4 className="text-md font-medium text-gray-700 mb-3">📋 Davet Şablonu</h4>
+                  <p className="text-gray-600 mb-4">
+                    Aşağıdaki şablon panoya kopyalandı. İhtiyacınıza göre düzenleyebilirsiniz.
+                  </p>
+                  
+                  <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Şablon:
+                    </label>
+                    <textarea
+                      value={`🎉 VücutTakip Ekip Daveti!
+
+👋 Merhaba! ${selectedMember.sponsorCode} sponsor kodlu ekibimize davet edildiniz.
+
+👥 Ekip Bilgileri:
+• Sponsor: ${getUserName(selectedMember.userId)}
+• Sponsor Kodu: ${selectedMember.sponsorCode}
+• Ekip Büyüklüğü: ${selectedMember.teamSize} üye
+• Aktif Üyeler: ${selectedMember.performance.activeMembers}
+
+📊 Ekip Performansı:
+• Toplam Sipariş: ${selectedMember.performance.totalOrders}
+• Toplam Gelir: ${selectedMember.performance.totalRevenue} TL
+• Başarı Oranı: ${Math.round((selectedMember.performance.activeMembers / selectedMember.teamSize) * 100)}%
+
+🔗 Kayıt olmak için aşağıdaki linki kullanın:
+${invitationLink}
+
+📱 VücutTakip ile sağlıklı yaşam yolculuğunuza başlayın!
+
+#VücutTakip #Ekip #SağlıklıYaşam`}
+                      readOnly
+                      rows={12}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm font-mono resize-none"
+                    />
+                  </div>
+                  
                   <button
-                    onClick={copyInvitationLink}
-                    className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
+                    onClick={() => {
+                      const template = `🎉 VücutTakip Ekip Daveti!
+
+👋 Merhaba! ${selectedMember.sponsorCode} sponsor kodlu ekibimize davet edildiniz.
+
+👥 Ekip Bilgileri:
+• Sponsor: ${getUserName(selectedMember.userId)}
+• Sponsor Kodu: ${selectedMember.sponsorCode}
+• Ekip Büyüklüğü: ${selectedMember.teamSize} üye
+• Aktif Üyeler: ${selectedMember.performance.activeMembers}
+
+📊 Ekip Performansı:
+• Toplam Sipariş: ${selectedMember.performance.totalOrders}
+• Toplam Gelir: ${selectedMember.performance.totalRevenue} TL
+• Başarı Oranı: ${Math.round((selectedMember.performance.activeMembers / selectedMember.teamSize) * 100)}%
+
+🔗 Kayıt olmak için aşağıdaki linki kullanın:
+${invitationLink}
+
+📱 VücutTakip ile sağlıklı yaşam yolculuğunuza başlayın!
+
+#VücutTakip #Ekip #SağlıklıYaşam`;
+                      navigator.clipboard.writeText(template);
+                      success('Başarılı!', 'Şablon tekrar kopyalandı');
+                    }}
+                    className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
                   >
-                    Kopyala
+                    Şablonu Tekrar Kopyala
                   </button>
                 </div>
               </div>
               
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                <h4 className="text-sm font-medium text-yellow-900 mb-2">⚠️ Önemli Notlar:</h4>
-                <ul className="text-sm text-yellow-800 space-y-1">
-                  <li>• Link 7 gün boyunca geçerlidir</li>
-                  <li>• Yeni üyeler otomatik olarak ekibe katılır</li>
-                  <li>• Sponsor kodu: {selectedMember.sponsorCode}</li>
-                </ul>
-              </div>
-              
-              <div className="flex space-x-3">
+              <div className="flex justify-end mt-6">
                 <button
                   onClick={() => setShowInvitationModal(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+                  className="bg-gray-300 text-gray-700 py-2 px-6 rounded-md hover:bg-gray-400 transition-colors"
                 >
                   Kapat
-                </button>
-                <button
-                  onClick={() => {
-                    copyInvitationTemplate(selectedMember);
-                    setShowInvitationModal(false);
-                  }}
-                  className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
-                >
-                  Şablonu Kopyala
                 </button>
               </div>
             </div>
