@@ -284,6 +284,51 @@ export const getAllAdminUsers = async (): Promise<AdminUser[]> => {
   }
 };
 
+// Get all admin and sponsor users (for admin management)
+export const getAllAdminAndSponsorUsers = async (): Promise<AdminUser[]> => {
+  try {
+   console.log('🔍 Getting all admin and sponsor users...');
+   console.log('🔍 Current user:', auth.currentUser?.uid);
+   
+   // First check if current user is admin
+   if (!auth.currentUser) {
+     console.log('❌ No authenticated user');
+     return [];
+   }
+   
+   const currentUserAdmin = await getDoc(doc(db, 'admins', auth.currentUser.uid));
+   if (!currentUserAdmin.exists()) {
+     console.log('❌ Current user is not admin');
+     return [];
+   }
+   
+   console.log('✅ Current user is admin, fetching all admin and sponsor users...');
+   
+   // Admin ve sponsor kullanıcılarını getir
+   const adminAndSponsorQuery = query(
+     collection(db, 'admins'),
+     where('role', 'in', ['admin', 'sponsor'])
+   );
+   
+   const querySnapshot = await getDocs(adminAndSponsorQuery);
+   console.log('✅ Successfully fetched', querySnapshot.docs.length, 'admin and sponsor users');
+   
+   const adminAndSponsorUsers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AdminUser));
+   
+   // Debug: Her kullanıcının rolünü logla
+   adminAndSponsorUsers.forEach((user, index) => {
+     console.log(`🔍 User ${index + 1}: ID=${user.id}, UserID=${user.userId}, Role=${user.role}, SponsorCode=${user.sponsorCode}`);
+   });
+   
+   return adminAndSponsorUsers;
+  } catch (error) {
+   console.error('❌ Error getting all admin and sponsor users:', error);
+   console.error('🔍 Error code:', error.code);
+   console.error('🔍 Error message:', error.message);
+    return [];
+  }
+};
+
 // Get all users (only for admins)
 export const getAllUsers = async () => {
   try {
