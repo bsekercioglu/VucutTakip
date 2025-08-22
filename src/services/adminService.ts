@@ -887,7 +887,7 @@ export const loadUserTeamData = async (userId: string): Promise<AdminUser[]> => 
 
 export const createTeamInvitationLink = async (sponsorId: string): Promise<string> => {
   try {
-    console.log('🔍 Creating team invitation link for sponsor:', sponsorId);
+    debugLog.log('🔍 Creating team invitation link for sponsor:', sponsorId);
     
     // Get sponsor data
     const sponsorDoc = await getDoc(doc(db, 'admins', sponsorId));
@@ -896,6 +896,12 @@ export const createTeamInvitationLink = async (sponsorId: string): Promise<strin
     }
     
     const sponsorData = sponsorDoc.data() as AdminUser;
+    debugLog.log('📋 Sponsor data:', {
+      sponsorCode: sponsorData.sponsorCode,
+      teamLevel: sponsorData.teamLevel,
+      teamPath: sponsorData.teamPath,
+      role: sponsorData.role
+    });
     
     // Create invitation document
     const invitationData = {
